@@ -428,6 +428,7 @@ export default class Experience {
         u_sheetV: { value: 0 },
         u_hover: { value: 0 },
         u_arrowMode: { value: 0 },
+        u_controlPad: { value: 0 },
         u_crossMode: { value: 0 },
         u_openMode: { value: 0 },
         u_ctaMode: { value: 0 },
@@ -660,6 +661,15 @@ export default class Experience {
     return pose;
   }
 
+  // Give the signed-distance edge room to antialias beyond the visible circle.
+  // The layout and shader resolution remain those of the original hit target.
+  padCircularControl(mesh, rect) {
+    const pad = 2 / Math.max(1, this.renderer.getPixelRatio());
+    mesh.material.uniforms.u_controlPad.value = pad / Math.max(1, rect.height);
+    mesh.scale.x *= (rect.width + 2 * pad) / rect.width;
+    mesh.scale.y *= (rect.height + 2 * pad) / rect.height;
+  }
+
   updateHome(dt, force = false) {
     if (!this.homeMetrics?.length || (!force && this.route !== 'home' && !this.returningHome)) return;
     if (!this.reducedMotion) {
@@ -758,6 +768,7 @@ export default class Experience {
         height: arrowSize,
       };
       this.applyPose(card.arrowMesh, arrowRect, cardSheet, bulge);
+      this.padCircularControl(card.arrowMesh, arrowRect);
       card.arrowMesh.material.uniforms.u_alpha.value = card.titleAlpha;
       card.arrowMesh.material.uniforms.u_markOut.value = card.arrowOut;
       card.arrowMesh.material.uniforms.u_markIn.value = card.arrowIn;
@@ -1174,6 +1185,7 @@ export default class Experience {
       }
       const rect = item.el.getBoundingClientRect();
       this.applyPose(item.mesh, rect, null, 0);
+      if (item.round) this.padCircularControl(item.mesh, rect);
       const uniforms = item.mesh.material.uniforms;
       const corner = (parseFloat(getComputedStyle(item.el).borderRadius) || 0) / Math.max(1, rect.height);
       uniforms.u_corner.value = corner;
@@ -1340,6 +1352,7 @@ export default class Experience {
     close.el = el;
     const rect = el.getBoundingClientRect();
     this.applyPose(close.mesh, rect, null, 0);
+    this.padCircularControl(close.mesh, rect);
     const u = close.mesh.material.uniforms;
     const scrubFade = this.projectScrubParts ? 1 - Math.min(1, Math.abs(this.projectScrub.p)) : 1;
     u.u_alpha.value = close.alpha * scrubFade;
@@ -1926,22 +1939,19 @@ export default class Experience {
     this.projectOffset.total = Math.max(1, (track?.scrollHeight || 0) + gap + extraBottom + leadOffset);
     this.projectOffset.max = Math.max(0, Math.max(...this.projectScrollItems.map((item) => item.end)) + extraBottom - panelRect.height);
     if (reset) this.projectOffset.current = this.projectOffset.target = 0;
-    if (!this.desktop) {
-      const { current, target, total, max } = this.projectOffset;
-      if (target < 0 || target > total) this.projectOffset.target = mod(target, total);
-      if (current < 0 || current > total) this.projectOffset.current = mod(current, total);
-      this.projectOffset.target = clamp(this.projectOffset.target, 0, max);
-    }
+    // Keep both the requested and rendered positions inside the post after
+    // layout changes, including viewport and orientation changes.
+    this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
+    this.projectOffset.current = clamp(this.projectOffset.current, 0, this.projectOffset.max);
     this.syncProjectScroll(true);
   }
 
   syncProjectScroll(force = false) {
     if (!this.projectDom?.panel || !this.projectScrollItems.length) return;
-    const finite = !this.desktop;
-    const { current, total, max } = this.projectOffset;
+    const { current, max } = this.projectOffset;
     const margin = (this.projectDom.panel.clientHeight || 0) * 0.25;
     for (const item of this.projectScrollItems) {
-      const y = finite ? current : rangeWrap(current, -(total - item.end), item.end);
+      const y = current;
       if (force || (y > item.start - margin && y < item.end + margin)) {
         item.out = false;
         item.el._parked = false;
@@ -1955,9 +1965,7 @@ export default class Experience {
     }
     const progress = this.projectDom.progress;
     if (progress) {
-      const ratio = finite
-        ? max > 0 ? clamp(current / max) : 0
-        : total > 0 ? mod(current, total) / total : 0;
+      const ratio = max > 0 ? clamp(current / max) : 0;
       progress.style.strokeDashoffset = `${100 - ratio * 100}`;
     }
   }
@@ -2124,6 +2132,9 @@ export default class Experience {
         uniforms: {
           u_color: { value: new THREE.Color('#d9a441') },
           u_light: { value: new THREE.Color('#fff2cc') },
+          u_clip: { value: new THREE.Vector4() },
+          u_clipR: { value: 0 },
+          u_clipOn: { value: 0 },
           u_alpha: { value: this.reducedMotion ? 1 : 0 },
         },
         transparent: true,
@@ -2168,21 +2179,41 @@ export default class Experience {
     }
     const baseBulge = this.reducedMotion ? 0 : velocity * Math.abs(velocity) * 0.22 * this.frustumH;
     this.projectBulge = baseBulge;
-    const bulge = this.desktop ? baseBulge : baseBulge * 1.3;
-    // Keep the landed phone panel itself flat. Perspective on its former
-    // background-only bulge moved the antialiased side edges into the black
-    // gutters; the project media retain their full scroll deformation.
+    // Give larger-viewport media its own scroll response; keep the existing
+    // sheet response and the phone's established media deformation unchanged.
+    const mediaVelocity = this.desktop && !this.reducedMotion
+      ? Math.tanh((this.projectOffset.target - this.projectOffset.current) / 700)
+      : velocity;
+    const bulge = this.desktop
+      ? mediaVelocity * Math.abs(mediaVelocity) * 0.22 * this.frustumH * 1.15
+      : baseBulge * 1.3;
     if (!this.webgl) return;
     this.syncProjectTitle();
     this.syncProjectPills(dt);
     const hero = this.projectSurfaces?.hero;
-    if (this.desktop && hero?.landed && !hero.flying && !this.projectScrubParts) {
-      // The reference applies 30% of the media bulge to the landed sheet on
-      // larger viewports. Phones intentionally keep the stable flat panel.
-      hero.mesh.material.uniforms.u_bulgeA.value = baseBulge * 0.3;
-      hero.mesh.material.uniforms.u_bulgeH.value = this.frustumH;
-    }
     const dpr = this.renderer.getPixelRatio();
+    if (!this.desktop && this.projectSurfaces) {
+      for (const side of [this.projectSurfaces.prev, this.projectSurfaces.next]) {
+        if (side) side.mesh.material.uniforms.u_clipOn.value = 0;
+      }
+    }
+    if (hero) {
+      const u = hero.mesh.material.uniforms;
+      const landed = hero.landed && !hero.flying && !this.projectScrubParts;
+      if (landed) {
+        // Reuse the same damped scroll deformation as the larger sheet.
+        u.u_bulgeA.value = baseBulge * 0.3;
+        u.u_bulgeH.value = this.frustumH;
+      }
+      // On phones, bound the moving surface to its sheet to prevent the
+      // antialiased edge from spilling into the stable side gutters. Disable
+      // the clip for project flights and horizontal scrubbing.
+      u.u_clipOn.value = !this.desktop && landed ? 1 : 0;
+      if (u.u_clipOn.value) {
+        u.u_clip.value.set(panelRect.left * dpr, (this.vh - panelRect.bottom) * dpr, panelRect.width * dpr, panelRect.height * dpr);
+        u.u_clipR.value = (parseFloat(getComputedStyle(panel).borderRadius) || 0) * dpr;
+      }
+    }
     for (const item of this.projectMedia) {
       const rect = item.el.getBoundingClientRect();
       const pose = this.applyPose(item.mesh, rect, null, bulge);
@@ -2207,6 +2238,12 @@ export default class Experience {
       award.mesh.position.copy(pose.pos);
       award.mesh.scale.setScalar(Math.max(0.0001, pose.scale.y * award.enter));
       award.mesh.rotation.y = this.clock * 0.6 + velocity * 4;
+      // The trophy is a separate WebGL mesh, not a DOM child of the sheet.
+      // Match the sheet's rounded clip as its mobile copy scrolls out of view.
+      const u = award.mesh.material.uniforms;
+      u.u_clipOn.value = this.desktop ? 0 : 1;
+      u.u_clip.value.set(panelRect.left * dpr, (this.vh - panelRect.bottom) * dpr, panelRect.width * dpr, panelRect.height * dpr);
+      u.u_clipR.value = (parseFloat(getComputedStyle(panel).borderRadius) || 0) * dpr;
     }
   }
 
@@ -2514,7 +2551,7 @@ export default class Experience {
       }
     } else if (this.route === 'project') {
       this.projectOffset.target += deltaY;
-      if (!this.desktop) this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
+      this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
     }
   }
 
