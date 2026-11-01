@@ -336,6 +336,15 @@ html.webgl.grabbing [data-no-drag] {
   cursor: grabbing;
 }
 
+/* Project controls and every part of their hit area take priority over the
+   global drag cursor, even when a surface drag is already in progress. */
+@media (hover: hover) and (pointer: fine) {
+  html.webgl:has(.project-page):is(.grabbable, .grabbing) :is(a, button, input, select, textarea, summary, audio[controls], video[controls], [role="button"], [data-no-drag]),
+  html.webgl:has(.project-page):is(.grabbable, .grabbing) :is(a, button, input, select, textarea, summary, audio[controls], video[controls], [role="button"], [data-no-drag]) * {
+    cursor: pointer;
+  }
+}
+
 .home-card-title {
   position: absolute;
   bottom: 1rem;
