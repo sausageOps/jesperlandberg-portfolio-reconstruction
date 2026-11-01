@@ -25,6 +25,7 @@ const surfaceChunks = /* glsl */ `
   uniform float u_sheetP;
   uniform float u_sheetV;
   uniform float u_hover;
+  uniform vec2 u_hoverPoint;
   uniform float u_dent;
   uniform float u_leanA;
   uniform float u_leanW;
@@ -61,7 +62,8 @@ const surfaceChunks = /* glsl */ `
   }
   float dome(vec2 uv) {
     vec2 q = uv * 2.0 - 1.0;
-    return (1.0 - q.x * q.x) * (1.0 - q.y * q.y);
+    float envelope = (1.0 - q.x * q.x) * (1.0 - q.y * q.y);
+    return envelope * (0.65 + 0.35 * clamp(1.0 - distance(uv, u_hoverPoint), 0.0, 1.0));
   }
   float leanRamp(float s) {
     s = clamp(s, -1.0, 1.0);
@@ -84,7 +86,7 @@ const surfaceChunks = /* glsl */ `
     w.z += sheetZ(w.x) * u_sheetP;
     if (u_sheetW > 0.001) {
       float qw = w.x / u_sheetW;
-      w.y += SHEET_DIAG * w.x * u_sheetP;
+      w.y += SHEET_DIAG * w.x * u_sheetC * u_sheetP;
       if (u_sheetV > 0.001) {
         float m = 1.0 - smoothstep(-1.0, 0.3, qw);
         w.y += 0.1 * u_sheetW * u_sheetV * m * u_sheetP;
@@ -96,8 +98,8 @@ const surfaceChunks = /* glsl */ `
   float shadeAt(float wx, vec2 uv, float resY) {
     if (u_sheetD < 0.001) return 0.0;
     float d = (u_sheetW > 0.001 && u_sheetP > 0.001)
-      ? clamp((u_sheetD - sheetZ(wx)) / (2.0 * u_sheetD), 0.0, 1.0) * u_sheetP : 0.0;
-    if (u_hover > 0.0001) d += (u_hover * u_dent * resY * dome(uv)) / (2.0 * u_sheetD);
+      ? clamp((u_sheetD - sheetZ(wx)) / (2.0 * u_sheetD), 0.0, 1.0) * u_sheetP * smoothstep(0.0, resY * 0.04, u_sheetD) : 0.0;
+    if (u_hover > 0.0001) d += (u_hover * u_dent * resY * dome(uv)) / max(2.0 * u_sheetD, resY * 0.25);
     return clamp(d, 0.0, 1.0);
   }
   float offsetAt(float wx, vec2 uv, float resY) {
@@ -130,6 +132,14 @@ const surfaceChunks = /* glsl */ `
 
 export const surfaceVertex = /* glsl */ `
   uniform vec2 u_res;
+  uniform float u_arcW;
+  uniform float u_arcD;
+  uniform float u_arcOuterD;
+  uniform float u_arcOuterStart;
+  uniform float u_arcEdgeBend;
+  uniform float u_panelBend;
+  uniform float u_panelCenter;
+  uniform float u_panelHalfWidth;
   varying vec2 vUv;
   varying vec3 vFlat;
   ${surfaceChunks}
@@ -145,6 +155,28 @@ export const surfaceVertex = /* glsl */ `
     if (u_bulgeH > 0.001) {
       float t = clamp(w.y / u_bulgeH, -1.0, 1.0);
       w.z += u_bulgeA * (1.0 - t * t);
+    }
+    // A shallow horizontal arc is independent of the velocity-driven sheet.
+    // Perspective projects this depth into gently bowed panel edges.
+    if (u_arcW > 0.001) {
+      float x = w.x / u_arcW;
+      float arc = x * x / (1.0 + 0.35 * x * x);
+      // Beyond the center panel, turn the shared surface gently away on
+      // either side. The squared falloff joins the center without a seam.
+      float outer = max(abs(x) - u_arcOuterStart, 0.0);
+      float outerArc = outer * outer / (1.0 + 0.75 * outer * outer);
+      w.z -= (u_arcD * arc + u_arcOuterD * outerArc) * u_sheetP;
+      // On narrow screens the visible neighbor is only a thin strip. Bend
+      // the shared surface toward the horizon so its edge remains readable.
+      float bend = smoothstep(u_arcOuterStart, u_arcOuterStart + 0.22, abs(x));
+      w.y *= 1.0 - u_arcEdgeBend * bend * u_sheetP;
+    }
+    // Continue the same shallow arc across each neighboring panel, fading
+    // to zero at its edges so adjoining surfaces retain their existing pose.
+    if (u_panelBend > 0.0 && u_panelHalfWidth > 0.001) {
+      float localX = clamp((w.x - u_panelCenter) / u_panelHalfWidth, -1.0, 1.0);
+      float bow = (1.0 - localX * localX) / (1.0 + 0.35 * localX * localX);
+      w.z += u_panelBend * bow * u_sheetP;
     }
     gl_Position = projectionMatrix * viewMatrix * w;
   }

@@ -222,6 +222,11 @@ export default class Experience {
     this.interactive = true;
     if (this.homeElements.length) {
       this.layoutHome(true);
+      // Let the same damped track used by wheel and drag carry the reveal
+      // into its resting position while the loader bars become panels.
+      if (this.route === 'home' && !this.reducedMotion) {
+        this.homeOffset.current -= this.vw * 0.14;
+      }
       this.playHomeIntro(false);
     }
     this.callbacks.onReady?.();
@@ -420,6 +425,14 @@ export default class Experience {
         u_clip: { value: new THREE.Vector4() },
         u_clipR: { value: 0 },
         u_clipOn: { value: 0 },
+        u_arcW: { value: 0 },
+        u_arcD: { value: 0 },
+        u_arcOuterD: { value: 0 },
+        u_arcOuterStart: { value: 0.58 },
+        u_arcEdgeBend: { value: 0 },
+        u_panelBend: { value: 0 },
+        u_panelCenter: { value: 0 },
+        u_panelHalfWidth: { value: 0 },
         u_sheetW: { value: 0 },
         u_sheetD: { value: 0 },
         u_sheetT: { value: 1 },
@@ -427,6 +440,7 @@ export default class Experience {
         u_sheetP: { value: textMode ? 1 : 1 },
         u_sheetV: { value: 0 },
         u_hover: { value: 0 },
+        u_hoverPoint: { value: new THREE.Vector2(0.5, 0.5) },
         u_arrowMode: { value: 0 },
         u_controlPad: { value: 0 },
         u_crossMode: { value: 0 },
@@ -476,6 +490,7 @@ export default class Experience {
     this.clearHomeMeshes();
     this.homeCards = this.featured.map((project, index) => {
       const material = this.makeSurface(this.blank, project);
+      material.uniforms.u_dent.value = 0.012;
       this.applyTexture(material, project.asset, project);
       const mesh = new THREE.Mesh(this.quadGeometry, material);
       mesh.renderOrder = 0;
@@ -542,40 +557,21 @@ export default class Experience {
     const previousSlug = this.getNearestHomeSlug() || this.activeHomeSlug || this.featured[1]?.slug;
     this.homeBase = [];
     let cursor = 0;
-    let gap = this.root;
-    if (this.desktop) {
-      const height = Math.min(this.vh * 0.435, 55 * this.root);
-      this.homeMetrics = this.featured.map((project) => {
-        const width = height * (project.width / project.height);
-        const metric = { width, height, center: cursor + width / 2 };
-        cursor += width + gap;
-        this.homeBase.push(metric.center);
-        return metric;
-      });
-    } else {
-      gap = 2 * this.root;
-      const width = this.vw - 4 * this.root;
-      this.homeMetrics = this.featured.map((project) => {
-        const height = width * (project.height / project.width);
-        const baseTop = cursor;
-        const metric = {
-          width,
-          height,
-          center: cursor + height / 2,
-          baseTop,
-          start: baseTop - this.vh,
-          end: baseTop + height,
-          out: true,
-          rect: null,
-        };
-        cursor += height + gap;
-        this.homeBase.push(metric.center);
-        return metric;
-      });
-    }
+    // Keep every project on the same horizontal track, including touch layouts.
+    const mobile = this.vw < 650;
+    const tablet = !mobile && this.vw < 1024;
+    const width = this.vw * (mobile ? 0.778 : tablet ? 0.767 : 0.583);
+    const height = Math.min(this.vh * 0.7, width / (mobile ? 0.89 : tablet ? 1.73 : 1.67));
+    const gap = this.vw * (mobile ? 0.06075 : tablet ? 0.035775 : 0.02175);
+    this.homeMetrics = this.featured.map(() => {
+      const metric = { width, height, center: cursor + width / 2 };
+      cursor += width + gap;
+      this.homeBase.push(metric.center);
+      return metric;
+    });
     this.homeTotal = Math.max(1, cursor);
     this.homeContentHeight = Math.max(1, cursor - gap);
-    this.homeOffset.max = Math.max(0, this.homeContentHeight - this.vh);
+    this.homeOffset.max = this.homeBase[this.homeBase.length - 1];
     const selected = Math.max(0, this.featured.findIndex((project) => project.slug === previousSlug));
     if (!this.homeLayoutReady || immediate) {
       const position = this.homePositionForIndex(selected);
@@ -608,13 +604,16 @@ export default class Experience {
   sheetParams() {
     const velocity = Math.min(1, Math.abs(this.homeVelocity));
     if (this.desktop) {
+      // Blend only the resting shape back into the original sheet as motion
+      // starts; the original velocity-driven twist and depth remain intact.
+      const motion = Math.min(1, velocity / 0.05);
       return {
         W: this.frustumW,
-        D: this.frustumW * 0.2 * (1 + 1.1 * velocity),
+        D: this.frustumW * (0.2 * motion + 0.22 * velocity),
         T: 1.15,
-        C: 1,
-        S: 1,
-        A: -0.12 * this.frustumW,
+        C: motion,
+        S: 3 - 2 * motion,
+        A: -0.12 * this.frustumW * motion,
         V: velocity,
       };
     }
@@ -634,13 +633,15 @@ export default class Experience {
     };
   }
 
-  applyPose(mesh, rect, sheet = null, bulge = 0) {
+  applyPose(mesh, rect, sheet = null, bulge = 0, outerArc = null) {
     const pose = this.rectToPose(rect);
     mesh.position.copy(pose.pos);
     mesh.scale.copy(pose.scale);
     const u = mesh.material.uniforms;
     u.u_res.value.set(pose.scale.x, pose.scale.y);
     if (sheet) {
+      u.u_arcW.value = sheet.W;
+      u.u_arcD.value = sheet.arc || 0;
       u.u_sheetW.value = sheet.W;
       u.u_sheetD.value = sheet.D;
       u.u_sheetT.value = sheet.T;
@@ -650,12 +651,25 @@ export default class Experience {
       u.u_leanA.value = sheet.A;
       u.u_leanW.value = sheet.W;
     } else {
+      u.u_arcW.value = 0;
+      u.u_arcD.value = 0;
       u.u_sheetW.value = 0;
       u.u_sheetD.value = 0;
       u.u_sheetV.value = 0;
       u.u_leanA.value = 0;
       u.u_leanW.value = 0;
     }
+    if (outerArc) {
+      u.u_arcW.value = this.frustumW;
+      u.u_arcD.value = outerArc.depth;
+      u.u_arcOuterD.value = outerArc.depth;
+      u.u_arcOuterStart.value = outerArc.start;
+      u.u_arcEdgeBend.value = outerArc.bend;
+    } else {
+      u.u_arcOuterD.value = 0;
+      u.u_arcEdgeBend.value = 0;
+    }
+    u.u_panelBend.value = 0;
     u.u_bulgeA.value = bulge;
     u.u_bulgeH.value = this.frustumH;
     return pose;
@@ -670,71 +684,76 @@ export default class Experience {
     mesh.scale.y *= (rect.height + 2 * pad) / rect.height;
   }
 
+  homeOuterArc() {
+    return { depth: this.frustumW * 0.35, start: 0.58, bend: 0 };
+  }
+
   updateHome(dt, force = false) {
     if (!this.homeMetrics?.length || (!force && this.route !== 'home' && !this.returningHome)) return;
     if (!this.reducedMotion) {
-      const damping = 0.1 * Math.min((dt * 60) || 1, 2);
+      const damping = 1 - Math.exp(-6.3 * (dt || 1 / 60));
       this.homeOffset.current += (this.homeOffset.target - this.homeOffset.current) * damping;
       this.homeOffset.current = Math.round(this.homeOffset.current * 100) / 100;
     } else this.homeOffset.current = this.homeOffset.target;
+    // Rebase both offsets together, without changing their relative motion.
+    const cycles = Math.round(this.homeOffset.current / this.homeTotal);
+    this.homeOffset.current -= cycles * this.homeTotal;
+    this.homeOffset.target -= cycles * this.homeTotal;
     const rawVelocity = Math.tanh((this.homeOffset.target - this.homeOffset.current) / (this.desktop ? 550 : 500));
     this.homeVelocity = this.desktop ? rawVelocity * Math.abs(rawVelocity) : rawVelocity;
     const sheet = this.sheetParams();
-    const cardSheet = this.desktop ? sheet : null;
+    const cardSheet = this.desktop ? { ...sheet, arc: this.frustumW * 0.35 } : null;
+    const outerArc = this.homeOuterArc();
     const bulge = this.desktop || this.reducedMotion ? 0 : rawVelocity * Math.abs(rawVelocity) * 0.22 * this.frustumH * 1.3;
-    const axisCenter = this.desktop ? this.vw / 2 : this.vh / 2;
+    const axisCenter = this.vw / 2;
 
     this.homeCards.forEach((card, index) => {
       const metric = this.homeMetrics[index];
-      let rect;
-      let parked = false;
-      if (this.desktop) {
-        const relative = centeredWrap(metric.center - this.homeOffset.current, this.homeTotal);
-        rect = {
-          x: axisCenter + relative - metric.width / 2,
-          y: this.vh / 2 - metric.height / 2,
-          width: metric.width,
-          height: metric.height,
-        };
-      } else {
-        const current = this.homeOffset.current - this.vh / 2;
-        const y = rangeWrap(current, -(this.homeTotal - metric.end), metric.end);
-        const margin = this.vh * 0.25;
-        if (force || (y > metric.start - margin && y < metric.end + margin)) {
-          metric.out = false;
-          if (card.el) card.el._parked = false;
-        } else if (metric.out) {
-          parked = true;
-          if (card.el) card.el._parked = true;
-        } else {
-          metric.out = true;
-        }
-        if (parked && metric.rect) {
-          rect = metric.rect;
-        } else {
-          rect = {
-            x: 2 * this.root,
-            y: metric.baseTop - y,
-            width: metric.width,
-            height: metric.height,
-          };
-          metric.rect = rect;
-        }
-      }
+      const relative = centeredWrap(metric.center - this.homeOffset.current, this.homeTotal);
+      // Scale continuously with distance from the viewport center, not the
+      // discrete active index; keep narrow-screen previews within view.
+      const distance = clamp(Math.abs(relative) / (metric.width + this.vw * 0.029));
+      const smoothDistance = distance * distance * (3 - 2 * distance);
+      const scaleAmount = this.vw >= 1024 ? 0.12 : this.vw >= 650 ? 0.10 : 0.08;
+      const scale = 1 - scaleAmount * smoothDistance;
+      const width = metric.width * scale;
+      const height = metric.height * scale;
+      // Compensate part of the space opened by scaling so the visible gap
+      // stays close to the desktop reference as neighboring cards recede.
+      const placement = this.vw >= 1024 ? relative - Math.sign(relative) * (metric.width - width) * 0.22 : relative;
+      const rect = {
+        x: axisCenter + placement - width / 2,
+        y: this.vh / 2 - height / 2,
+        width,
+        height,
+      };
+      const parked = false;
       this.homeRects.set(card.project.slug, rect);
       if (card.el && !parked) {
+        // Perspective pulls the shrunken outer panels toward the viewport.
+        // Extend their narrow-screen hit areas so visible previews remain clickable.
+        const hitInset = this.vw < 1024 ? metric.width - width : 0;
+        const hitLeft = relative > 0 ? hitInset : 0;
         Object.assign(card.el.style, {
-          width: `${rect.width}px`,
+          width: `${rect.width + hitInset}px`,
           height: `${rect.height}px`,
-          transform: `translate3d(${rect.x}px, ${rect.y}px, 0)`,
+          transform: `translate3d(${rect.x - hitLeft}px, ${rect.y}px, 0)`,
         });
       }
       if (!this.webgl) return;
-      const pose = this.applyPose(card.mesh, rect, cardSheet, bulge);
+      const pose = this.applyPose(card.mesh, rect, cardSheet, bulge, outerArc);
+      const panelBend = this.frustumH * 0.1 * smoothDistance;
+      const setPanelBend = (mesh) => {
+        const u = mesh.material.uniforms;
+        u.u_panelBend.value = panelBend;
+        u.u_panelCenter.value = pose.pos.x;
+        u.u_panelHalfWidth.value = pose.scale.x / 2;
+      };
+      setPanelBend(card.mesh);
       pose.pos.x += card.ox;
       pose.pos.z += card.oz;
       card.mesh.position.copy(pose.pos);
-      const corner = (this.desktop ? 2 : 1.5) * this.root / rect.height;
+      const corner = 0.4 * this.root / rect.height;
       card.mesh.material.uniforms.u_corner.value = corner;
       if (card.boot) {
         const progress = expoInOut(card.boot.value);
@@ -754,10 +773,11 @@ export default class Experience {
       const titleRect = {
         x: rect.x + insetX,
         y: rect.y + rect.height - bottom - card.titleDims.height,
-        width: card.titleDims.width,
+        width: Math.min(card.titleDims.width, Math.max(1, rect.width - 2 * insetX - 3 * this.root)),
         height: card.titleDims.height,
       };
-      this.applyPose(card.titleMesh, titleRect, cardSheet, bulge);
+      this.applyPose(card.titleMesh, titleRect, cardSheet, bulge, outerArc);
+      setPanelBend(card.titleMesh);
       card.titleMesh.material.uniforms.u_alpha.value = card.titleAlpha;
 
       const arrowSize = 2.5 * this.root;
@@ -767,7 +787,8 @@ export default class Experience {
         width: arrowSize,
         height: arrowSize,
       };
-      this.applyPose(card.arrowMesh, arrowRect, cardSheet, bulge);
+      this.applyPose(card.arrowMesh, arrowRect, cardSheet, bulge, outerArc);
+      setPanelBend(card.arrowMesh);
       this.padCircularControl(card.arrowMesh, arrowRect);
       card.arrowMesh.material.uniforms.u_alpha.value = card.titleAlpha;
       card.arrowMesh.material.uniforms.u_markOut.value = card.arrowOut;
@@ -779,7 +800,7 @@ export default class Experience {
       if (video) this.playVideo(video, this.route === 'home' && this.isRectVisible(rect, 100));
     });
     this.activeHomeSlug = this.getNearestHomeSlug();
-    if (this.webgl) this.syncFloor(sheet);
+    if (this.webgl) this.syncFloor({ ...sheet, A: -0.12 * this.frustumW });
   }
 
   syncFloor(sheet) {
@@ -905,7 +926,7 @@ export default class Experience {
 
   hoverCard(slug, hover) {
     const card = this.homeCards.find((item) => item.project.slug === slug);
-    if (!card || this.reducedMotion || !this.finePointer) return;
+    if (!card || this.reducedMotion || !this.finePointer || (hover && this.drag?.moved)) return;
     gsap.to(card.mesh.material.uniforms.u_hover, { value: hover ? 1 : 0, duration: 0.5, ease: 'expo.out', overwrite: 'auto' });
     gsap.to(card, {
       arrowOut: hover ? 1 : 0,
@@ -921,10 +942,23 @@ export default class Experience {
     });
   }
 
+  moveCardHover(slug, event) {
+    if (!this.finePointer || this.reducedMotion || event.pointerType !== 'mouse' || this.drag?.moved) return;
+    const card = this.homeCards.find((item) => item.project.slug === slug);
+    if (!card) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const point = card.mesh.material.uniforms.u_hoverPoint.value;
+    gsap.to(point, {
+      x: clamp((event.clientX - rect.left) / Math.max(1, rect.width)),
+      y: 1 - clamp((event.clientY - rect.top) / Math.max(1, rect.height)),
+      duration: 0.25, ease: 'power2.out', overwrite: true,
+    });
+  }
+
   centerOn(slug, immediate = true) {
     const index = this.featured.findIndex((project) => project.slug === slug);
     if (index < 0 || !this.homeBase.length) return;
-    this.homeOffset.target = this.homePositionForIndex(index);
+    this.homeOffset.target = this.homeOffset.current + centeredWrap(this.homePositionForIndex(index) - this.homeOffset.current, this.homeTotal);
     if (immediate) this.homeOffset.current = this.homeOffset.target;
     this.activeHomeSlug = slug;
     this.updateHome(0, true);
@@ -938,9 +972,7 @@ export default class Experience {
     const index = this.featured.findIndex((project) => project.slug === slug);
     if (index < 0 || !this.homeMetrics?.length) return null;
     const metric = this.homeMetrics[index];
-    return this.desktop
-      ? { x: this.vw / 2 - metric.width / 2, y: this.vh / 2 - metric.height / 2, width: metric.width, height: metric.height }
-      : { x: 2 * this.root, y: this.vh / 2 - metric.height / 2, width: metric.width, height: metric.height };
+    return { x: this.vw / 2 - metric.width / 2, y: this.vh / 2 - metric.height / 2, width: metric.width, height: metric.height };
   }
 
   setRoute(route, project = null) {
@@ -1477,7 +1509,7 @@ export default class Experience {
       ? { white: 0, alpha: 1, shade: 1, sheetP: 1 }
       : { white: 1, alpha: targetRole === 'hero' ? 1 : 0.3, shade: 0, sheetP: 0 };
     const targetRadius = targetRole === 'home'
-      ? (this.desktop ? 2 : 1.5) * this.root
+      ? 0.4 * this.root
       : targetEl ? parseFloat(getComputedStyle(targetEl).borderRadius) || 0 : (this.desktop ? 2 : 1.5) * this.root;
     const sourceCorner = start.corner * Math.max(1, from.height || to.height);
     const identity = new THREE.Quaternion();
@@ -1506,7 +1538,14 @@ export default class Experience {
           mesh.position.lerpVectors(start.pos, pose.pos, d);
           mesh.scale.lerpVectors(start.scale, pose.scale, d);
           mesh.quaternion.slerpQuaternions(start.quat, identity, d);
+          const outerArc = this.homeOuterArc();
+          u.u_arcOuterD.value = outerArc.depth;
+          u.u_arcOuterStart.value = outerArc.start;
+          u.u_arcEdgeBend.value = outerArc.bend;
+          u.u_panelBend.value = 0;
           if (sheet) {
+            u.u_arcW.value = sheet.W;
+            u.u_arcD.value = outerArc.depth;
             u.u_sheetW.value = sheet.W;
             u.u_sheetD.value = sheet.D;
             u.u_sheetT.value = sheet.T;
@@ -1516,6 +1555,8 @@ export default class Experience {
             u.u_leanA.value = sheet.A;
             u.u_leanW.value = sheet.W;
           } else {
+            u.u_arcW.value = this.frustumW;
+            u.u_arcD.value = outerArc.depth;
             u.u_sheetW.value = 0;
             u.u_sheetD.value = 0;
             u.u_sheetV.value = 0;
@@ -1654,7 +1695,7 @@ export default class Experience {
         hero.mesh.quaternion.copy(homeCard.mesh.quaternion);
         const sourceUniforms = homeCard.mesh.material.uniforms;
         const targetUniforms = hero.mesh.material.uniforms;
-        for (const key of ['u_alpha', 'u_shade', 'u_shadeS', 'u_corner', 'u_white', 'u_scrim', 'u_sheetW', 'u_sheetD', 'u_sheetT', 'u_sheetC', 'u_sheetP', 'u_sheetV', 'u_hover', 'u_dent', 'u_leanA', 'u_leanW', 'u_bulgeA', 'u_bulgeH']) {
+        for (const key of ['u_alpha', 'u_shade', 'u_shadeS', 'u_corner', 'u_white', 'u_scrim', 'u_arcW', 'u_arcD', 'u_arcOuterD', 'u_arcOuterStart', 'u_arcEdgeBend', 'u_panelBend', 'u_panelCenter', 'u_panelHalfWidth', 'u_sheetW', 'u_sheetD', 'u_sheetT', 'u_sheetC', 'u_sheetP', 'u_sheetV', 'u_hover', 'u_dent', 'u_leanA', 'u_leanW', 'u_bulgeA', 'u_bulgeH']) {
           if (sourceUniforms[key] && targetUniforms[key]) targetUniforms[key].value = sourceUniforms[key].value;
         }
         targetUniforms.u_texture.value = sourceUniforms.u_texture.value;
@@ -2541,13 +2582,13 @@ export default class Experience {
   }
 
   pushScroll(deltaY, deltaX = 0, event = null) {
-    if (!this.interactive || !this.webgl || event?.ctrlKey) return;
+    if (!this.interactive || !this.webgl || event?.ctrlKey || this.overlay) return;
     if (this.route === 'project' && this.projectDrag?.axis === 'x') return;
     if (this.route === 'home') {
       this.homeOffset.target += deltaY + (deltaX || 0);
       if (this.desktop) {
         const delta = this.homeOffset.target - this.homeOffset.current;
-        this.homeOffset.target = this.homeOffset.current + Math.tanh(delta / this.vw) * this.vw;
+        this.homeOffset.target = this.homeOffset.current + clamp(delta, -this.vw * 1.5, this.vw * 1.5);
       }
     } else if (this.route === 'project') {
       this.projectOffset.target += deltaY;
@@ -2583,9 +2624,19 @@ export default class Experience {
   bindEvents() {
     this.bound.resize = () => this.resize();
     this.bound.wheel = (event) => {
-      if (!this.interactive || !this.webgl || event.ctrlKey) return;
+      if (!this.interactive || !this.webgl || event.ctrlKey || this.overlay) return;
+      if (this.route !== 'home' && this.route !== 'project') return;
       const input = this.scrollInput;
       const mode = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? this.vh : 1;
+      if (this.route === 'home') {
+        if (!event.target.closest?.('.home')) return;
+        // Trackpads can report horizontal deltas as well as vertical ones.
+        // Use the dominant axis rather than counting a diagonal gesture twice.
+        const delta = (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) * mode;
+        input.pending += delta;
+        input.event = event;
+        return;
+      }
       const delta = event.deltaY * mode;
       const elapsed = event.timeStamp - input.stamp;
       if (elapsed < 30) input.fastStamp = event.timeStamp;
@@ -2596,19 +2647,26 @@ export default class Experience {
       input.event = event;
     };
     this.bound.touchStart = (event) => {
+      if (this.overlay || (this.route === 'home' && !event.target.closest?.('.home'))) return;
+      if (this.route === 'home') this.suppressClick = false;
       const touch = event.targetTouches?.[0] || event;
-      this.touchScroll = { y: touch.clientY, delta: 0 };
+      this.touchScroll = { x: touch.clientX, y: touch.clientY, delta: 0, moved: false };
     };
     this.bound.touchMove = (event) => {
       if (!this.touchScroll) return;
       const touch = event.targetTouches?.[0] || event;
-      const delta = this.touchScroll.y - touch.clientY;
+      const dx = this.touchScroll.x - touch.clientX;
+      const dy = this.touchScroll.y - touch.clientY;
+      const delta = this.route === 'home' ? dx : dy;
+      this.touchScroll.x = touch.clientX;
       this.touchScroll.y = touch.clientY;
+      if (this.route === 'home' && Math.abs(dx) > 2) this.touchScroll.moved = true;
       this.touchScroll.delta = delta;
       this.pushScroll(delta * 3.25, 0, event);
     };
     this.bound.touchEnd = (event) => {
       if (this.touchScroll?.delta) this.pushScroll(this.touchScroll.delta * 35, 0, event);
+      if (this.route === 'home' && this.touchScroll?.moved) this.suppressClick = true;
       this.touchScroll = null;
     };
     this.bound.touchCancel = () => { this.touchScroll = null; };
@@ -2711,18 +2769,19 @@ export default class Experience {
       if (this.drag && this.route === 'home' && !this.overlay) {
         const totalX = Math.abs(event.clientX - this.drag.x);
         const totalY = Math.abs(event.clientY - this.drag.y);
-        const primary = this.desktop ? totalX : totalY;
-        const cross = this.desktop ? totalY : totalX;
+        const primary = totalX;
+        const cross = totalY;
         if (!this.drag.moved) {
           if (primary <= 10 || primary <= cross) return;
           this.drag.moved = true;
+          this.homeCards.forEach((card) => this.hoverCard(card.project.slug, false));
           this.drag.lastX = event.clientX;
           this.drag.lastY = event.clientY;
           document.documentElement.classList.add('grabbing');
           return;
         }
         event.preventDefault();
-        const delta = (this.desktop ? this.drag.lastX - event.clientX : this.drag.lastY - event.clientY) * 1.5;
+        const delta = (this.drag.lastX - event.clientX) * 1.5;
         this.drag.lastDelta = delta;
         this.drag.lastTime = event.timeStamp;
         this.drag.lastX = event.clientX;
@@ -2828,7 +2887,7 @@ export default class Experience {
     this.hole.radius = ((this.desktop ? 60 : 42) * this.root) / 2 / this.vw;
 
     this.flushScroll(elapsed / (1000 / 60));
-    this.updateHome(dt);
+    this.updateHome(Math.min(0.2, Math.max(0.001, elapsed / 1000)));
     this.syncProjectScrub(elapsed / (1000 / 60));
     this.updateProject(dt);
     if (this.ready) this.attachHomeVideos();
