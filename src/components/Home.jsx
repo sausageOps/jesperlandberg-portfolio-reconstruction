@@ -34,8 +34,9 @@ export default function Home({ experience, onOpen }) {
             draggable={false}
             aria-label={`Open ${project.title} project`}
             style={{ '--card-image': `url("${project.asset}")`, '--card-ratio': `${project.width} / ${project.height}` }}
-            onPointerEnter={() => experience?.hoverCard(project.slug, true)}
-            onPointerLeave={() => experience?.hoverCard(project.slug, false)}
+            onPointerEnter={(event) => { if (event.pointerType === 'mouse') experience?.hoverCard(project.slug, true); }}
+            onPointerMove={(event) => experience?.moveCardHover(project.slug, event)}
+            onPointerLeave={(event) => { if (event.pointerType === 'mouse') experience?.hoverCard(project.slug, false); }}
             onClick={(event) => {
               if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               event.preventDefault();

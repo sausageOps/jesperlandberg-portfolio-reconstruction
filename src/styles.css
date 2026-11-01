@@ -288,7 +288,7 @@ input:focus-visible {
   top: 0;
   left: 0;
   display: block;
-  border-radius: 2rem;
+  border-radius: 0.4rem;
   pointer-events: auto;
   cursor: grab;
   user-select: none;
@@ -983,10 +983,10 @@ html.webgl.grabbing [data-no-drag] {
 
 .no-webgl .card-run {
   display: flex;
-  gap: 1rem;
+  gap: 2.175vw;
   align-items: center;
   overflow-x: auto;
-  padding: 12rem max(2rem, calc(50vw - 30rem));
+  padding: 0 22.75vw;
   pointer-events: auto;
   scroll-snap-type: x mandatory;
 }
@@ -996,10 +996,9 @@ html.webgl.grabbing [data-no-drag] {
   top: auto;
   left: auto;
   flex: 0 0 auto;
-  width: 60rem;
-  max-width: 80vw;
-  height: auto;
-  aspect-ratio: var(--card-ratio);
+  width: 54.5vw;
+  max-width: none;
+  height: min(70vh, 32.635vw);
   background-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 45%), var(--card-image);
   background-position: center;
   background-size: cover;
@@ -1097,7 +1096,7 @@ html.webgl.grabbing [data-no-drag] {
   }
 
   .home-card {
-    border-radius: 1.5rem;
+    border-radius: 0.4rem;
   }
 
   .index-list {
@@ -1262,17 +1261,13 @@ html.webgl.grabbing [data-no-drag] {
   }
 
   .no-webgl .card-run {
-    flex-direction: column;
-    gap: 2rem;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 12rem 2rem;
-    scroll-snap-type: y mandatory;
+    gap: 6.075vw;
+    padding: 0 11.1vw;
   }
 
   .no-webgl .home-card {
-    width: 100%;
-    max-width: none;
+    width: 77.8vw;
+    height: min(70vh, 87.416vw);
   }
 }
 
@@ -1285,4 +1280,14 @@ html.webgl.grabbing [data-no-drag] {
     animation-delay: 0ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+@media (min-width: 650px) and (max-width: 1023px) {
+  .no-webgl .card-run { gap: 3.5775vw; padding: 0 11.65vw; }
+  .no-webgl .home-card { width: 76.7vw; height: min(70vh, 44.335vw); }
+}
+
+@media (min-width: 1024px) {
+  .no-webgl .card-run { padding-inline: 20.85vw; }
+  .no-webgl .home-card { width: 58.3vw; height: min(70vh, 34.91vw); }
 }
