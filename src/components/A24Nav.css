@@ -48,10 +48,6 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
 }
 /* The captured page-bg is the Index-open dimmer, not a permanent gradient. */
 .route-home .a24-nav__backdrop { background: linear-gradient(#0000004d, #0003); }
-@media (min-width: 992px) {
-  .route-home .a24-nav { color: #f2f2f2; }
-  .route-home .a24-nav[data-covering-loader='true'] { color: #f2f2f2; }
-}
 @media (max-width: 991px) {
   .route-home .a24-nav__backdrop { background: linear-gradient(#0003, #0000004d), #0000004d; }
 }
@@ -67,6 +63,15 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
   pointer-events: none;
 }
 .a24-nav[data-open='true'] .a24-nav__background { height: var(--a24-open-height); transition-duration: var(--a24-open-duration); }
+/* The white underlay is centred with auto margins and its width comes from the
+   measured dock. While the nav is changing state (loader -> items, or a route
+   transition) that measurement changes in the same frame the items appear, so a
+   width transition would leave the bar lagging behind the labels - labels
+   spilling outside it, and on the dock the list gliding to its new width. Snap
+   the width in those phases; the idle phase keeps the width transition that
+   animates the dock <-> panel growth. */
+.a24-nav:not([data-motion='idle']) .a24-nav__background { transition-property: height; }
+.a24-nav:not([data-motion='idle']) .a24-nav__list { transition-property: none; }
 .a24-nav__inner { position: relative; display: flex; justify-content: center; align-items: center; width: 100%; padding-top: .5em; }
 .a24-nav__list { position: relative; display: flex; justify-content: center; align-items: center; }
 .a24-nav__list > li { flex: none; }
@@ -81,17 +86,22 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
 .a24-nav__hover::after { content: attr(data-text); clip-path: inset(0 0 100%); transform-origin: top; translate: 0 -.25em; scale: 1.05; }
 .a24-nav__page { transition: opacity .3s var(--a24-ease); }
 .a24-nav__page--other { opacity: .6; }
-.a24-nav__page--current::after { content: ''; position: absolute; width: .3em; height: .3em; border-radius: 50%; background: currentColor; top: calc(100% - .2em); left: 50%; transform: translateX(-50%); }
+.a24-nav__page--current::after { content: ''; position: absolute; width: .3em; height: .3em; border-radius: 50%; background: currentColor; top: calc(50% + .8625em); left: 50%; transform: translateX(-50%); }
+/* The dropdown toggles reserve space for the chevron, so their dot is centred
+   on the label text rather than on the whole control. Both rules keep the dot
+   at the same distance below the label for every top-level item. */
+.a24-nav__toggle.a24-nav__page--current::after { left: calc(50% - .625em); }
 .a24-nav[data-open='true'] { color: #000; }
 .a24-nav__toggle { white-space: nowrap; }
-.a24-nav__label-mask { position: relative; display: inline-block; overflow: hidden; padding: .25em 0; transition: width .55s var(--a24-ease); }
-.a24-nav__toggle { padding-top: 0; padding-bottom: 0; }
+/* The mask's vertical padding is the reveal room for the label/count flip;
+   the matching negative margin keeps the control at the reference's link box. */
+.a24-nav__label-mask { position: relative; display: inline-block; overflow: hidden; padding: .25em 0; margin: -.25em 0; transition: width .55s var(--a24-ease); }
 .a24-nav__label-word, .a24-nav__label-count { display: block; white-space: nowrap; transition: transform .55s var(--a24-ease); }
 .a24-nav__label-count { position: absolute; top: .25em; left: 0; transform: translateY(130%); }
-.a24-nav[data-open='true'] .a24-nav__label-word { transform: translateY(-130%); }
-.a24-nav[data-open='true'] .a24-nav__label-count { transform: translateY(0); }
+.a24-nav__toggle[aria-expanded='true'] .a24-nav__label-word { transform: translateY(-130%); }
+.a24-nav__toggle[aria-expanded='true'] .a24-nav__label-count { transform: translateY(0); }
 .a24-nav__chevron { display: block; width: .875em; flex: none; transition: transform var(--a24-close-duration) var(--a24-ease); }
-.a24-nav[data-open='true'] .a24-nav__chevron { transform: rotate(180deg); transition-duration: var(--a24-open-duration); }
+.a24-nav__toggle[aria-expanded='true'] .a24-nav__chevron { transform: rotate(180deg); transition-duration: var(--a24-open-duration); }
 
 .a24-nav__dropdown {
   position: fixed;
@@ -107,7 +117,7 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
   pointer-events: none;
   transition: height var(--a24-close-duration) var(--a24-ease), opacity calc(var(--a24-close-duration) * .6) var(--a24-ease), visibility 0s linear calc(var(--a24-close-duration) * .6);
 }
-.a24-nav[data-open='true'] .a24-nav__dropdown {
+.a24-nav__dropdown[data-open='true'] {
   height: var(--a24-open-height);
   opacity: 1;
   visibility: visible;
@@ -137,7 +147,7 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
 .a24-nav__item--active .a24-nav__item-bg, .a24-nav__item:focus-visible .a24-nav__item-bg { transform: scaleY(1); }
 .a24-nav__item--active .a24-nav__year, .a24-nav__item:focus-visible .a24-nav__year { transform: translateY(0); }
 .a24-nav__scrollbar { position: absolute; z-index: 4; inset: 32% 1em 32% auto; width: .375em; background: #d6d3d1; opacity: 0; pointer-events: none; cursor: pointer; user-select: none; transform: translateY(.5em); transition: opacity calc(var(--a24-close-duration) * .6) var(--a24-ease), transform var(--a24-close-duration) var(--a24-ease); }
-.a24-nav[data-open='true'] .a24-nav__scrollbar { opacity: 1; pointer-events: auto; transform: translateY(0); transition: opacity calc(var(--a24-open-duration) * .5) var(--a24-ease) .12s, transform var(--a24-open-duration) var(--a24-ease) .12s; }
+.a24-nav__dropdown[data-open='true'] .a24-nav__scrollbar { opacity: 1; pointer-events: auto; transform: translateY(0); transition: opacity calc(var(--a24-open-duration) * .5) var(--a24-ease) .12s, transform var(--a24-open-duration) var(--a24-ease) .12s; }
 .a24-nav__thumb { position: absolute; top: 0; width: 100%; background: #000; touch-action: none; }
 html .a24-nav .a24-nav__scrollbar .a24-nav__thumb { cursor: grab; }
 html .a24-nav .a24-nav__scrollbar[data-dragging='true'],
@@ -158,41 +168,111 @@ html .a24-nav .a24-nav__scrollbar[data-dragging='true'] .a24-nav__thumb { cursor
 @keyframes a24-nav-text-jitter { 0%, 100% { translate: 0; } 30% { translate: .02em -.012em; } 60% { translate: -.015em .018em; } 80% { translate: .01em .008em; } }
 
 @media (max-width: 991px) {
-  .a24-nav { --a24-open-height: min(25em, 62vh); --a24-dock-height: 3.5em; --a24-open-width: min(100%, max(var(--a24-dock-width, 100%), 23.75em)); inset: auto 0 0; padding: 0 1em calc(1em + env(safe-area-inset-bottom, 0px)); color: #000; font-size: clamp(12.4px, 1.61453vw, 16px); }
+  .a24-nav { --a24-open-height: min(25em, 62vh); --a24-dock-height: 3.5em; --a24-open-width: min(100%, max(var(--a24-dock-width, 100%), 23.75em)); inset: auto 0 0; /* same 1em dock edge gap as desktop, +3% */ padding: 0 1em calc(max(1.03em, 12px) + env(safe-area-inset-bottom, 0px)); color: #000; /* Tablet dock ramp, a further 2% smaller (12.83px at 480 ->
+     13.50px at 991; 13.10 -> 13.77 in the previous pass). Every dock dimension
+     is em-based off this value, so the whole dock scales by the same factor. */
+    font-size: clamp(12.8331px, calc(.130222vw + 12.2076px), 13.4985px); }
   .a24-nav__container { padding: 0 1.25em; }
   .a24-nav__background { inset: auto auto 0 50%; width: var(--a24-dock-width, 100%); max-width: 100%; height: var(--a24-dock-height); transform: translateX(-50%); transition: height var(--a24-close-duration) var(--a24-ease), width var(--a24-close-duration) var(--a24-ease); }
   .a24-nav[data-open='true'] .a24-nav__background { width: var(--a24-open-width); }
   .a24-nav__inner { z-index: 2; height: var(--a24-dock-height); padding: 0; }
-  .a24-nav__list { width: calc(var(--a24-dock-width, 100%) - 1em); max-width: 100%; gap: .25em; transition: width var(--a24-close-duration) var(--a24-ease); }
+  .a24-nav__list { width: calc(var(--a24-dock-width, 100%) - 1em); max-width: 100%; transition: width var(--a24-close-duration) var(--a24-ease); }
   .a24-nav[data-open='true'] .a24-nav__list { width: calc(var(--a24-open-width) - 1em); transition-duration: var(--a24-open-duration); }
   .a24-nav__list > li:first-child, .a24-nav__list > li:last-child { display: flex; flex: 1 1 0; min-width: max-content; align-items: center; }
   .a24-nav__list > li:first-child { justify-content: flex-start; }
   .a24-nav__list > li:last-child { justify-content: flex-end; }
   .a24-nav__logo, .a24-nav__toggle { flex: none; }
-  .a24-nav__link { padding: .25em .75em; }
+  /* Full-height hit areas: 3.5em tall instead of 2em (42-50px, was 24-26px).
+     Content stays centred, so labels and the active dot do not move. */
+  .a24-nav__link, .a24-nav__logo { height: var(--a24-dock-height); }
   .a24-nav__page > span, .a24-nav__label-mask { font-size: 1em; }
-  .a24-nav__toggle { padding-top: 0; padding-bottom: 0; }
-  .a24-nav__label-mask { padding: .35em 0; }
+  /* .7em keeps 0.2em (~2.2px) between the label box and the dot after the
+     reductions, with 0.75em (~8.3-10.1px) clearance above the dock edge. */
+  .a24-nav__page--current::after { top: calc(50% + .7em); }
+  .a24-nav__label-mask { padding: .35em 0; margin: -.35em 0; }
   .a24-nav__label-count { top: .35em; }
   .a24-nav__chevron { transform: rotate(180deg); }
-  .a24-nav[data-open='true'] .a24-nav__chevron { transform: rotate(0); }
+  .a24-nav__toggle[aria-expanded='true'] .a24-nav__chevron { transform: rotate(0); }
   .a24-nav__dropdown { position: absolute; inset: auto auto 100% 50%; width: calc(100% + 1em); margin: 0; padding: 0 0 2.25em; transform: translateX(-50%); }
-  .a24-nav[data-open='true'] .a24-nav__dropdown { height: calc(var(--a24-open-height) - var(--a24-dock-height)); }
+  .a24-nav__dropdown[data-open='true'] { height: calc(var(--a24-open-height) - var(--a24-dock-height)); }
   .a24-nav__scroll { padding: 2.25em 0 .75em; }
   .a24-nav .a24-nav__items { max-width: 16em; margin: 0 auto; padding: 0 0 .75em; }
   .a24-nav__item { padding: .625em .5em; }
   .a24-nav__item-inner { font-size: 1em; }
   .a24-nav__scrollbar { inset: calc(var(--a24-open-height) / 2 - 7.25em / 2) .375em auto auto; width: .5em; height: 7.25em; }
-  /* Keep the existing portfolio controls usable above the added bottom dock. */
-  .a24-nav ~ .hud .hud-bottom { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
   .a24-nav__notice, .a24-nav[data-open='true'] .a24-nav__notice { top: auto; bottom: calc(var(--a24-dock-height) + 2em); }
   .a24-nav[data-open='true'] .a24-nav__notice { bottom: calc(var(--a24-open-height) + 2em); }
 }
-@media (max-width: 767px) { .a24-nav { font-size: clamp(10.013px, 2.08605vw, 16px); } }
+/* Desktop uses the same dock container as tablet/mobile: one white panel whose
+   width is the measured dock width, containing the logo and the nav items, with
+   the same height, label treatment and dark-on-white contrast. It hangs from the
+   top edge instead of the bottom, and grows into the dropdown panel when open. */
+@media (min-width: 992px) {
+  /* Every dock dimension below is in em, so one scale factor enlarges the whole
+     desktop system together: panel width/height, logo, label size, chevron,
+     padding, spacing and the active dot. Tablet/mobile never match this query. */
+  .a24-nav {
+    --a24-dock-scale: 1.15;
+    /* Floor of 10.5px below 1260px: the tablet-portrait desktop bar was only
+       9.8px labels / 34px tall there. 10.5px base = 12.08px labels, 42.3px dock,
+       and >=1260px is bit-for-bit the previous curve. The short/ultra-wide rule
+       below deliberately keeps its own floorless base so >=1261px is untouched. */
+    --a24-dock-font: clamp(10.5px, .833333vw, 32px);
+    font-size: calc(var(--a24-dock-font) * var(--a24-dock-scale));
+    --a24-dock-height: 3.5em;
+    /* 1em edge gap +3% (see the matching rule in the <=991 block). */
+    padding: 1.03em 1em 0;
+    color: #000;
+  }
+  .a24-nav__background {
+    width: var(--a24-dock-width, 28em);
+    height: var(--a24-dock-height);
+    transition: height var(--a24-close-duration) var(--a24-ease), width var(--a24-close-duration) var(--a24-ease);
+  }
+  .a24-nav[data-open='true'] .a24-nav__background { width: 28em; }
+  .a24-nav__inner { height: var(--a24-dock-height); padding: 0; }
+  .a24-nav__page > span, .a24-nav__label-mask { font-size: 1em; }
+  .a24-nav__label-mask { padding: .35em 0; margin: -.35em 0; }
+  .a24-nav__label-count { top: .35em; }
+  /* .55em left only 0.05em (~0.5-0.9px) between the label box and the dot;
+     .65em gives 0.15em (1.5-2.7px) while keeping 0.8em above the pill's bottom. */
+  .a24-nav__page--current::after { top: calc(50% + .65em); }
+
+  /* Fix 3: the white pill starts 1.03em below the viewport top, but the panel
+     was fixed at top:0, so its scroll area, 3em fade and scrollbar all stopped
+     1.03em above the pill's bottom edge (blank strip + early clip). Start the
+     panel at the pill's top and give that offset back in the padding, so the
+     panel spans exactly the pill (1.03em -> 1.03em + 24em) and item positions
+     stay identical. */
+  .a24-nav__dropdown { top: 1.03em; padding-top: calc(5em - 1.03em); }
+}
+
+/* The reference caps its fluid root size with 16/9 of the viewport height on
+   short, ultra-wide screens; the nav's em base follows the same rule. */
+@media (min-width: 992px) and (min-aspect-ratio: 11/5) {
+  /* Same fluid base as the page on short, ultra-wide screens; the desktop scale
+     above is applied to it, so the enlargement holds at every desktop ratio. */
+  .a24-nav { --a24-dock-font: clamp(8.2667px, calc(min(100dvw, 100dvh * 16 / 9) / 120), 32px); }
+}
+/* Handover band for the 992px breakpoint. The dock's last size (991px) is
+   13.498px and the desktop bar now starts at its 10.5px floor (12.075px) from
+   1024px, so between 992 and 1023 the base size interpolates linearly between
+   those two values (the existing font-size: calc(--a24-dock-font *
+   --a24-dock-scale) keeps the 15% scale). Endpoints are exact:
+     992px  -> 13.498px   (continuous with <=991px, +0.003%)
+     1023px -> 12.075px   (continuous with >=1024px, -0.002%)
+   Nothing outside 992-1023px is affected. */
+@media (min-width: 992px) and (max-width: 1023px) {
+  .a24-nav { --a24-dock-font: calc(51.3454px - 3.9927vw); }
+}
 @media (max-width: 479px) {
-  .a24-nav { font-size: clamp(10.689px, 3.34029vw, 16px); }
-  .a24-nav__logo { width: 5em; }
-  .a24-nav__logo-svg { width: 100%; }
+  /* Phone dock ramp, a further 3% smaller (same curve, same ~404px cap point:
+     360/375/390 scale by exactly 0.97, 430 sits on the cap). The dock height
+     keeps a 40px floor so the full-height tap areas stay usable after three
+     successive reductions (pure 3.5em would be 38.8px at 360px). */
+  .a24-nav { --a24-dock-height: max(3.5em, 40px); font-size: clamp(9.85px, 3.07808vw, 12.4403px); }
+  .a24-nav__logo { width: auto; }
+  .a24-nav__logo-svg { width: 2.5em; }
 }
 /* Navigation loading is independent of the portfolio's own asset loader. */
 .a24-nav[data-covering-loader='true'] { z-index: 101; }

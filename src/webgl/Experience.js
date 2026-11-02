@@ -607,7 +607,9 @@ export default class Experience {
     const mobile = this.vw < 650;
     const tablet = !mobile && this.vw < 1024;
     const width = this.vw * (mobile ? 0.778 : tablet ? 0.767 : 0.583);
-    const height = Math.min(this.vh * 0.7, width / (mobile ? 0.89 : tablet ? 1.73 : 1.67));
+    // Mobile only: the cards are 15% taller (width, gap and centring untouched).
+    // Both height terms scale, so the 70vh guard still limits the tallest card.
+    const height = Math.min(this.vh * 0.7, width / (mobile ? 0.89 : tablet ? 1.73 : 1.67)) * (mobile ? 1.15 : 1);
     const gap = this.vw * (mobile ? 0.06075 : tablet ? 0.035775 : 0.02175);
     this.homeMetrics = this.featured.map(() => {
       const metric = { width, height, center: cursor + width / 2 };
