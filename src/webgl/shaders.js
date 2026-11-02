@@ -192,6 +192,16 @@ export const surfaceFragment = /* glsl */ `
   uniform float u_corner;
   uniform float u_white;
   uniform vec3 u_wash;
+  uniform float u_projectSurface;
+  uniform sampler2D u_projectGrain;
+  uniform float u_projectGrainReady;
+  uniform vec2 u_projectViewport;
+  uniform vec2 u_projectGrainOffset;
+  uniform float u_projectGrainTile;
+  uniform float u_projectPixelRatio;
+  uniform float u_projectGrainOpacity;
+  uniform float u_projectGrainInk;
+  uniform vec3 u_projectBackgroundColor;
   uniform float u_scrim;
   uniform float u_textMode;
   uniform float u_arrowMode;
@@ -393,7 +403,16 @@ export const surfaceFragment = /* glsl */ `
       float g = 1.0 - smoothstep(0.0, 0.5, vUv.y);
       tex.rgb = mix(tex.rgb, vec3(0.0), u_scrim * 0.65 * g * g);
     }
-    tex.rgb = mix(tex.rgb, u_wash, u_white);
+    vec3 wash = u_wash;
+    if (u_projectSurface > 0.5) {
+      vec2 screen = vec2(gl_FragCoord.x / u_projectPixelRatio,
+        u_projectViewport.y - gl_FragCoord.y / u_projectPixelRatio);
+      vec2 grainUv = (screen - u_projectViewport * 0.5 - u_projectGrainOffset) / u_projectGrainTile + 0.5;
+      float grain = texture2D(u_projectGrain, vec2(grainUv.x, 1.0 - grainUv.y)).a;
+      wash = mix(u_projectBackgroundColor, vec3(u_projectGrainInk),
+        grain * u_projectGrainOpacity * u_projectGrainReady);
+    }
+    tex.rgb = mix(tex.rgb, wash, u_white);
     float alpha = tex.a * u_alpha;
     if (u_corner > 0.0001) {
       vec2 sz = vec2(u_res.x / max(u_res.y, 0.0001), 1.0);
@@ -411,47 +430,6 @@ export const surfaceFragment = /* glsl */ `
     }
     if (alpha < 0.001) discard;
     gl_FragColor = vec4(tex.rgb, alpha);
-  }
-`;
-
-export const floorVertex = /* glsl */ `
-  uniform float u_run;
-  uniform float u_leanA;
-  uniform float u_leanW;
-  varying vec2 vUv;
-  varying float vFar;
-  void main() {
-    vUv = uv;
-    vec4 w = modelMatrix * vec4(position, 1.0);
-    vFar = -w.z / max(u_run, 0.0001);
-    if (u_leanW > 0.001) {
-      float s = clamp(w.x / u_leanW, -1.0, 1.0);
-      w.z += u_leanA * s * (1.5 - 0.5 * s * s);
-    }
-    gl_Position = projectionMatrix * viewMatrix * w;
-  }
-`;
-
-export const floorFragment = /* glsl */ `
-  uniform vec3 u_c0;
-  uniform vec3 u_c1;
-  uniform float u_alpha;
-  uniform float u_grid;
-  uniform vec2 u_gridF;
-  varying vec2 vUv;
-  varying float vFar;
-  void main() {
-    float fade = 1.0 - smoothstep(0.2, 0.95, vFar);
-    float contact = exp(-abs(vFar) * 14.0);
-    vec3 col = mix(u_c1, u_c0, smoothstep(0.0, 0.8, vFar));
-    col *= 1.0 - contact * 0.55;
-    vec2 g = vec2(vUv.x * u_gridF.x, vFar * u_gridF.y);
-    vec2 gf = abs(fract(g) - 0.5);
-    vec2 gw = fwidth(g) * 1.5;
-    vec2 lines = vec2(1.0) - smoothstep(vec2(0.0), gw, gf);
-    float line = max(lines.x, lines.y);
-    col += line * u_grid * fade;
-    gl_FragColor = vec4(col, u_alpha * fade);
   }
 `;
 

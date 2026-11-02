@@ -1,6 +1,10 @@
-export default function Hud({ route, overlay, onHome, onFull, onProfile, onNewsletter }) {
+import A24Nav from './A24Nav.jsx';
+
+export default function Hud({ route, navRouteKey, loading, overlay, onHome, onFull, onProfile, onNewsletter }) {
   const visible = route !== 'project';
   return (
+    <>
+    <A24Nav onHome={onHome} loading={loading} routeKey={navRouteKey} hidden={!visible} />
     <div className={`hud ${visible ? '' : 'hud-hidden'}`} inert={!visible || undefined}>
       <div className="hud-top">
         <a
@@ -51,5 +55,6 @@ export default function Hud({ route, overlay, onHome, onFull, onProfile, onNewsl
         </button>
       </div>
     </div>
+    </>
   );
 }
