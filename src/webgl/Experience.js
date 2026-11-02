@@ -7,8 +7,6 @@ import {
   skyFragment,
   surfaceVertex,
   surfaceFragment,
-  floorVertex,
-  floorFragment,
   postFragment,
   trailFragment,
   llamaVertex,
@@ -182,6 +180,7 @@ export default class Experience {
       this.setupScene();
       this.webgl = true;
       document.documentElement.classList.add('webgl');
+      this.prepareProjectBackground();
     } catch (error) {
       console.warn('WebGL unavailable; using the accessible DOM fallback.', error);
       this.webgl = false;
@@ -262,6 +261,17 @@ export default class Experience {
     this.quadGeometry = new THREE.PlaneGeometry(1, 1, 32, 16);
     this.blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
     this.blank.needsUpdate = true;
+    this.projectBackground = {
+      texture: { value: this.blank },
+      ready: { value: 0 },
+      viewport: { value: new THREE.Vector2(1, 1) },
+      offset: { value: new THREE.Vector2() },
+      tile: { value: 1 },
+      pixelRatio: { value: 1 },
+      opacity: { value: 0 },
+      ink: { value: 0 },
+      color: { value: new THREE.Vector3(242 / 255, 242 / 255, 242 / 255) },
+    };
     this.arrowTexture = arrowTexture();
   }
 
@@ -278,34 +288,9 @@ export default class Experience {
     );
     this.sky.renderOrder = -100;
     this.sky.frustumCulled = false;
+    // The homepage background is a separate, non-interactive layer behind the canvas.
+    this.sky.visible = this.route !== 'home';
     this.scene.add(this.sky);
-
-    const floorGeometry = new THREE.PlaneGeometry(1, 1, 48, 24);
-    floorGeometry.rotateX(-Math.PI / 2);
-    this.floor = new THREE.Mesh(
-      floorGeometry,
-      new THREE.ShaderMaterial({
-        vertexShader: floorVertex,
-        fragmentShader: floorFragment,
-        uniforms: {
-          u_run: { value: 1 },
-          u_leanA: { value: 0 },
-          u_leanW: { value: 1 },
-          u_c0: { value: new THREE.Color(0x000000) },
-          u_c1: { value: new THREE.Color(0x000000) },
-          u_alpha: { value: 0 },
-          u_grid: { value: 0.08 },
-          u_gridF: { value: new THREE.Vector2(1, 1) },
-        },
-        transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
-    );
-    this.floor.renderOrder = -50;
-    this.floor.frustumCulled = false;
-    this.scene.add(this.floor);
 
     this.target = new THREE.WebGLRenderTarget(1, 1, {
       minFilter: THREE.LinearFilter,
@@ -335,6 +320,9 @@ export default class Experience {
         u_trailTexel: { value: new THREE.Vector2(1 / 256, 1 / 256) },
       },
       transparent: true,
+      // The home and project scene targets are already premultiplied over transparency.
+      // Blending them again darkens antialiased panel edges during pointer effects.
+      blending: this.route === 'home' || this.route === 'project' ? THREE.NoBlending : THREE.NormalBlending,
       depthTest: false,
       depthWrite: false,
     });
@@ -396,6 +384,54 @@ export default class Experience {
     return this.textureCache.get(url);
   }
 
+  // The opaque project canvas cannot expose the CSS layer underneath it. Use
+  // the same CSS tile and its live computed animation on the background mesh,
+  // behind the separately rendered project media and controls.
+  prepareProjectBackground() {
+    const app = document.querySelector('.app');
+    if (!app) return;
+    const image = getComputedStyle(app).getPropertyValue('--a24-grain-image').trim();
+    const url = image.match(/url\(["']?(.*?)["']?\)/)?.[1];
+    if (!url || this.projectBackgroundRequested) return;
+    this.projectBackgroundRequested = true;
+    this.loadTexture(url).then((texture) => {
+      if (this.destroyed || texture === this.blank) return;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      // CSS scales this tile directly rather than using mipmapped thumbnails.
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.needsUpdate = true;
+      this.projectBackground.texture.value = texture;
+      this.projectBackground.ready.value = 1;
+    });
+  }
+
+  syncProjectBackground() {
+    if (!this.projectSurfaces) return;
+    if (!this.projectBackgroundRequested) this.prepareProjectBackground();
+    const app = document.querySelector('.app');
+    if (!app) return;
+    const style = getComputedStyle(app, '::after');
+    const matrix = style.transform === 'none' ? null : new DOMMatrixReadOnly(style.transform);
+    const bg = this.projectBackground;
+    bg.viewport.value.set(this.vw, this.vh);
+    bg.pixelRatio.value = this.renderer.getPixelRatio();
+    bg.offset.value.set(matrix?.m41 || 0, matrix?.m42 || 0);
+    bg.tile.value = parseFloat(style.backgroundSize) || 1;
+    bg.opacity.value = parseFloat(style.opacity) || 0;
+    // The panel wash uses the non-inverted ink; inversion only affects the
+    // dark CSS backdrop, not the shader's light project interior.
+    const contrast = parseFloat(style.filter.match(/contrast\(([^)]+)\)/)?.[1] || '1');
+    const brightness = parseFloat(style.filter.match(/brightness\(([^)]+)\)/)?.[1] || '1');
+    bg.ink.value = (0.5 - 0.5 * contrast) * brightness;
+    const colorValue = getComputedStyle(app).getPropertyValue('--a24-background-color').trim();
+    if (colorValue && colorValue !== this.projectBackgroundColorValue) {
+      const color = new THREE.Color(colorValue).convertLinearToSRGB();
+      bg.color.value.set(color.r, color.g, color.b);
+      this.projectBackgroundColorValue = colorValue;
+    }
+  }
+
   applyTexture(material, url, fallbackSize) {
     material.uniforms.u_size.value.set(fallbackSize.width, fallbackSize.height);
     this.loadTexture(url).then((texture) => {
@@ -420,6 +456,16 @@ export default class Experience {
         u_corner: { value: 0 },
         u_white: { value: 0 },
         u_wash: { value: new THREE.Color(0xffffff) },
+        u_projectSurface: { value: 0 },
+        u_projectGrain: this.projectBackground.texture,
+        u_projectGrainReady: this.projectBackground.ready,
+        u_projectViewport: this.projectBackground.viewport,
+        u_projectGrainOffset: this.projectBackground.offset,
+        u_projectGrainTile: this.projectBackground.tile,
+        u_projectPixelRatio: this.projectBackground.pixelRatio,
+        u_projectGrainOpacity: this.projectBackground.opacity,
+        u_projectGrainInk: this.projectBackground.ink,
+        u_projectBackgroundColor: this.projectBackground.color,
         u_scrim: { value: 0 },
         u_textMode: { value: textMode ? 1 : 0 },
         u_clip: { value: new THREE.Vector4() },
@@ -800,29 +846,6 @@ export default class Experience {
       if (video) this.playVideo(video, this.route === 'home' && this.isRectVisible(rect, 100));
     });
     this.activeHomeSlug = this.getNearestHomeSlug();
-    if (this.webgl) this.syncFloor({ ...sheet, A: -0.12 * this.frustumW });
-  }
-
-  syncFloor(sheet) {
-    if (!this.floor) return;
-    this.floor.visible = (this.route === 'home' || this.returningHome) && this.desktop;
-    if (!this.floor.visible || !this.homeMetrics?.length) return;
-    const rect = this.homeRects.get(this.featured[0].slug);
-    if (!rect) return;
-    const pose = this.rectToPose(rect);
-    const a = pose.pos.y - pose.scale.y / 2 - this.frustumH * 0.06;
-    const run = this.frustumH * 6;
-    const near = Math.min(this.camera.position.z * (1 - Math.abs(a) / this.frustumH) + this.frustumH * 0.2, this.camera.position.z * 0.8);
-    const length = near + run;
-    const width = this.frustumW * 2 * 4;
-    this.floor.scale.set(width, 1, length);
-    this.floor.position.set(0, a, (near - run) / 2);
-    const u = this.floor.material.uniforms;
-    u.u_run.value = run;
-    u.u_leanA.value = sheet.A;
-    u.u_leanW.value = sheet.W;
-    const cell = this.frustumH * 0.22;
-    u.u_gridF.value.set(width / cell, run / cell);
   }
 
   playHomeIntro(returning = false) {
@@ -912,16 +935,6 @@ export default class Experience {
         ease: returning ? 'power1.out' : 'expo.out',
       });
     });
-    if (this.floor) {
-      gsap.killTweensOf(this.floor.material.uniforms.u_alpha);
-      this.floor.material.uniforms.u_alpha.value = 0;
-      gsap.to(this.floor.material.uniforms.u_alpha, {
-        value: 0.9,
-        duration: this.reducedMotion ? 0 : 1.1,
-        delay: this.reducedMotion ? 0 : returning ? 0.15 : 0.9,
-        ease: 'power2.out',
-      });
-    }
   }
 
   hoverCard(slug, hover) {
@@ -983,8 +996,8 @@ export default class Experience {
     if (this.webgl) {
       this.homeGroup.visible = route === 'home' || this.returningHome;
       this.projectGroup.visible = route === 'project';
-      this.sky.visible = route !== 'project' || this.returningHome;
-      this.floor.visible = (route === 'home' || this.returningHome) && this.desktop;
+      this.sky.visible = route !== 'home' && route !== 'project';
+      this.postMaterial.blending = route === 'home' || route === 'project' ? THREE.NoBlending : THREE.NormalBlending;
     }
     document.documentElement.classList.toggle('grabbable', route === 'home' || route === 'project');
     if (route === 'home') {
@@ -1003,8 +1016,6 @@ export default class Experience {
     this.centerOn(project.slug, true);
     this.homeGroup.visible = true;
     this.projectGroup.visible = true;
-    this.sky.visible = true;
-    this.floor.visible = this.desktop;
     if (this.ready) this.playHomeIntro(true);
     const selected = this.homeCards.find(card => card.project.slug === project.slug);
     if (selected) {
@@ -1067,6 +1078,7 @@ export default class Experience {
     const material = this.makeSurface(this.blank, project);
     this.applyTexture(material, project.asset, project);
     material.uniforms.u_white.value = 1;
+    material.uniforms.u_projectSurface.value = 1;
     material.uniforms.u_shade.value = 0;
     material.uniforms.u_sheetP.value = 0;
     material.uniforms.u_alpha.value = role === 'hero' ? 1 : 0.3;
@@ -1711,10 +1723,8 @@ export default class Experience {
         gsap.to(card.titleMesh.material.uniforms.u_alpha, { value: 0, duration: 0.25, ease: 'power1.out', overwrite: 'auto' });
         gsap.to(card.arrowMesh.material.uniforms.u_alpha, { value: 0, duration: 0.25, ease: 'power1.out', overwrite: 'auto' });
       }
-      if (this.floor) gsap.to(this.floor.material.uniforms.u_alpha, { value: 0, duration: 0.45, ease: 'power1.out', overwrite: 'auto' });
       this.flyProjectSurface(hero, source, rects.panel, 'hero', rects.panelEl, () => {
         this.homeGroup.visible = false;
-        this.floor.visible = false;
       });
     } else {
       this.setProjectSurfaceRest(hero, rects.panel, 'hero', rects.panelEl);
@@ -2893,6 +2903,7 @@ export default class Experience {
     if (this.ready) this.attachHomeVideos();
     if (!this.webgl) return;
 
+    this.syncProjectBackground();
     this.syncBall(dt);
     this.stepTrail(dt);
     const u = this.postMaterial.uniforms;
@@ -2903,6 +2914,8 @@ export default class Experience {
     if (post) this.postTime += dt;
     u.u_time.value = this.postTime;
 
+    // Home and project surfaces share the existing CSS background behind the canvas.
+    this.renderer.setClearColor(0x000000, this.route === 'home' || this.route === 'project' ? 0 : 1);
     if (post) {
       this.renderer.setRenderTarget(this.target);
       this.renderer.clear(true, true, true);
@@ -2961,7 +2974,6 @@ export default class Experience {
     this.postMaterial?.dispose();
     this.trailMaterial?.dispose();
     for (const target of this.trail || []) target.dispose();
-    this.floor?.material.dispose();
     this.sky?.material.dispose();
     this.renderer?.dispose();
   }

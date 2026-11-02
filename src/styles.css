@@ -124,6 +124,74 @@ input:focus-visible {
   inset: 0;
 }
 
+.app {
+  --a24-background-color: #f2f2f2;
+  --a24-grain-image: url('/assets/images/a24-grain-substitute.png');
+}
+
+/* The source's noise image was not in the capture. This small, locally
+   generated translucent tile approximates its appearance in the screenshots.
+   Home and project routes share this one animated backdrop. */
+.app.route-home::before,
+.app.route-project::before,
+.app.route-home::after,
+.app.route-project::after,
+.no-webgl .project-background::after, .no-webgl .related-background::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+}
+.app.route-home::before,
+.app.route-project::before {
+  z-index: 0;
+  inset: 0;
+  background: #171717;
+}
+.app.route-home::after,
+.app.route-project::after,
+.no-webgl .project-background::after, .no-webgl .related-background::after {
+  z-index: 1;
+  font-size: clamp(8.2667px, .833333vw, 32px);
+  inset: -1em;
+  opacity: .2;
+  filter: contrast(75%) brightness(70%);
+  background: transparent var(--a24-grain-image) 50% / 7.8125em repeat;
+  will-change: transform;
+  animation: a24-home-grain .6s step-end infinite;
+}
+/* The same dark grain needs a light ink color to remain visible on charcoal. */
+.app.route-home::after,
+.app.route-project::after { filter: contrast(75%) brightness(70%) invert(1); }
+@keyframes a24-home-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-.5em, .3em); }
+  40% { transform: translate(.4em, -.2em); }
+  60% { transform: translate(-.3em, -.4em); }
+  80% { transform: translate(.2em, .5em); }
+}
+@media (min-width: 992px) and (min-aspect-ratio: 11/5) {
+  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(8.2667px, calc(100dvh * 16 / 9 / 120), 32px); }
+}
+@media (max-width: 991px) {
+  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(12.4px, 1.61453vw, 16px); }
+}
+@media (max-width: 767px) {
+  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.013px, 2.08605vw, 16px); }
+}
+@media (max-width: 479px) {
+  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.689px, 3.34029vw, 16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { animation: none; }
+}
+
+/* Retain contrast for the portfolio controls against the charcoal homepage. */
+.route-home .hud { color: #f2f2f2; }
+.route-home .view-nav { color: #aaa; }
+.route-home .view-nav a:hover,
+.route-home .view-nav a.active,
+.route-home .view-nav a[aria-current='page'] { color: #f2f2f2; }
+
 .webgl-canvas {
   position: fixed;
   inset: 0;
@@ -231,7 +299,7 @@ input:focus-visible {
   z-index: 100;
   display: grid;
   place-items: center;
-  background: #000000;
+  background: transparent;
   opacity: 1;
   transition: opacity 0.55s ease, visibility 0.55s;
 }
@@ -729,12 +797,37 @@ html.webgl.grabbing [data-no-drag] {
   background: #ffffff;
 }
 
+/* The fallback background is a non-scrolling sibling, clipped to the same
+   rounded sheet. Its grain stays behind the scrollable content. */
+.project-background,
+.related-background { display: none; }
+.no-webgl .project-sheet,
+.no-webgl .related-sheet { background: transparent; }
+.no-webgl .project-background,
+.no-webgl .related-background {
+  display: block;
+  pointer-events: none;
+  background: var(--a24-background-color);
+  overflow: hidden;
+  transform: translateZ(0);
+}
+.no-webgl .project-background {
+  position: fixed;
+  border-radius: 2rem;
+}
+.no-webgl .related-background {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
 .webgl .project-sheet,
 .webgl .related-sheet {
   background: transparent;
 }
 
-.project-sheet {
+.project-sheet,
+.project-background {
   inset: 2rem 5rem;
   overflow: hidden;
 }
@@ -1138,7 +1231,8 @@ html.webgl.grabbing [data-no-drag] {
     width: 4rem;
   }
 
-  .project-sheet {
+  .project-sheet,
+  .project-background {
     inset: 1.5rem 2rem;
     overflow: hidden;
     border-radius: 1.5rem;

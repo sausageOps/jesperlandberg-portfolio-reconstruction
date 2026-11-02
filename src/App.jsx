@@ -206,20 +206,24 @@ export default function App() {
 
   return (
     <div className={`app route-${route} ${overlay ? 'has-overlay' : ''}`}>
-      <a className="skip-link" href="#main-content">Skip to content</a>
-      <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />
-      <div id="main-content">{routeContent}</div>
-      <Hud
-        route={route}
-        overlay={overlay}
-        onHome={goHome}
-        onFull={goFull}
-        onProfile={openProfile}
-        onNewsletter={openNewsletter}
-      />
-      <Overlays type={loading ? null : overlay} onClose={closeOverlay} />
+      <div inert={loaderMounted || undefined} style={{ opacity: loaderMounted ? 0 : 1 }}>
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />
+        <div id="main-content">{routeContent}</div>
+        <Hud
+          route={route}
+          navRouteKey={route === 'project' ? path : route}
+          loading={loading}
+          overlay={overlay}
+          onHome={goHome}
+          onFull={goFull}
+          onProfile={openProfile}
+          onNewsletter={openNewsletter}
+        />
+        <Overlays type={loading ? null : overlay} onClose={closeOverlay} />
+        <div className="sr-only" aria-live="polite">{route === 'project' && project ? `${project.title} project` : route === 'full' ? 'Full project index' : 'Featured projects'}</div>
+      </div>
       {loaderMounted && <Loader progress={progress} leaving={!loading} />}
-      <div className="sr-only" aria-live="polite">{route === 'project' && project ? `${project.title} project` : route === 'full' ? 'Full project index' : 'Featured projects'}</div>
     </div>
   );
 }

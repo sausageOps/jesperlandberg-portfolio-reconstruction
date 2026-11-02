@@ -96,7 +96,7 @@ export default function Project({ project, featured, experience, transitionFrom,
         onPointerEnter={() => experience?.hoverProjectSurface(previous.slug, true)}
         onPointerLeave={() => experience?.hoverProjectSurface(previous.slug, false)}
         onPointerCancel={() => experience?.hoverProjectSurface(previous.slug, false)}
-      />
+      ><span className="related-background" aria-hidden="true" /></button>
       <button
         className="related-sheet related-next"
         aria-label={`Next project: ${next.title}`}
@@ -104,7 +104,8 @@ export default function Project({ project, featured, experience, transitionFrom,
         onPointerEnter={() => experience?.hoverProjectSurface(next.slug, true)}
         onPointerLeave={() => experience?.hoverProjectSurface(next.slug, false)}
         onPointerCancel={() => experience?.hoverProjectSurface(next.slug, false)}
-      />
+      ><span className="related-background" aria-hidden="true" /></button>
+      <div className="project-background" aria-hidden="true" />
       <section ref={panel} className="project-sheet" aria-label={project.title}>
         <div ref={content} className="project-content">
           <div className="project-copy">
