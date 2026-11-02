@@ -1,76 +1,72 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import A24Logo from './A24Logo.jsx';
 import useA24NavMotion from './useA24NavMotion.js';
+import { menuKeys, navMenus } from '../data/navigation.js';
 import './A24Nav.css';
 
-// The supplied television capture contains this index, not the films index.
-const televisionIndex = [
-  ['Hazbin Hotel', '2024–'],
-  ['The Sympathizer', '2024'],
-  ['Sunny', '2024'],
-  ['Beef', '2023–'],
-  ['The Curse', '2023–2024'],
-  ['Such Brave Girls', '2023–'],
-  ['Irma Vep', '2022'],
-  ['Mo', '2022–2025'],
-  ['Dreaming Whilst Black', '2023–'],
-  ['Euphoria', '2019–2026'],
-  ['Ramy', '2019–2022'],
-  ['Random Acts of Flyness', '2018–2022'],
-];
-
 const fineDesktop = () => window.matchMedia('(min-width: 992px) and (hover: hover) and (pointer: fine)').matches;
+const resetScrollInfo = () => Object.fromEntries(menuKeys.map((key) => [key, { ratio: 1, offset: 0, top: 0, bottom: 0 }]));
+const resetLabelWidths = () => Object.fromEntries(menuKeys.map((key) => [key, { word: 0, count: 0 }]));
 
-export default function A24Nav({ onHome, loading, routeKey, hidden }) {
+export default function A24Nav({ onHome, onNavigate, loading, routeKey, activeKey, activePath, hidden }) {
   const motion = useA24NavMotion(loading, routeKey, hidden);
   const showControls = ['idle', 'exit-items', 'reveal-items'].includes(motion.phase);
   const showLoading = !showControls;
-  const [open, setOpen] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [openMenu, setOpenMenu] = useState(null);
   const [dockWidth, setDockWidth] = useState(null);
-  const [labelWidths, setLabelWidths] = useState({ word: 0, count: 0 });
-  const [scrollInfo, setScrollInfo] = useState({ ratio: 1, offset: 0, top: 0, bottom: 0 });
+  const [labelWidths, setLabelWidths] = useState(resetLabelWidths);
+  const [scrollInfo, setScrollInfo] = useState(resetScrollInfo);
   const navRef = useRef(null);
-  const regionRef = useRef(null);
-  const toggleRef = useRef(null);
   const listRef = useRef(null);
-  const scrollerRef = useRef(null);
-  const trackRef = useRef(null);
-  const thumbRef = useRef(null);
-  const wordRef = useRef(null);
-  const countRef = useRef(null);
+  const regionRefs = useRef({});
+  const toggleRefs = useRef({});
+  const scrollerRefs = useRef({});
+  const trackRefs = useRef({});
+  const thumbRefs = useRef({});
+  const maskRefs = useRef({});
+  const wordRefs = useRef({});
+  const countRefs = useRef({});
   const dragRef = useRef(null);
   const pendingFocus = useRef(null);
   const suppressHover = useRef(false);
   const resetTimer = useRef(null);
   const logoPosition = useRef(null);
+  const dockBox = useRef({ width: null });
+  const lastOpenMenu = useRef(null);
+  const open = openMenu !== null;
 
   const close = useCallback((restoreFocus = false) => {
-    setOpen(false);
-    setNotice('');
-    if (restoreFocus) toggleRef.current?.focus({ preventScroll: true });
+    const previous = lastOpenMenu.current;
+    setOpenMenu(null);
+    if (restoreFocus && previous) toggleRefs.current[previous]?.focus({ preventScroll: true });
   }, []);
 
-  const show = useCallback(() => {
+  const show = useCallback((menu) => {
     clearTimeout(resetTimer.current);
-    setNotice('');
-    setOpen(true);
+    setOpenMenu(menu);
   }, []);
 
-  const updateScroll = useCallback(() => {
-    const scroller = scrollerRef.current;
-    const track = trackRef.current;
-    if (!scroller || !track) return;
+  const updateScroll = useCallback((menu) => {
+    const scroller = scrollerRefs.current[menu];
+    const track = trackRefs.current[menu];
+    if (!scroller || !track || !navRef.current) return;
     const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
     const ratio = max ? Math.max(0.2, Math.min(1, scroller.clientHeight / scroller.scrollHeight)) : 1;
     const fade = Math.max(1, parseFloat(getComputedStyle(navRef.current).fontSize) * 3);
-    setScrollInfo({
-      ratio,
-      offset: max ? (scroller.scrollTop / max) * (track.clientHeight * (1 - ratio)) : 0,
-      top: max ? Math.min(1, scroller.scrollTop / fade) : 0,
-      bottom: max ? Math.min(1, (max - scroller.scrollTop) / fade) : 0,
-    });
+    setScrollInfo((info) => ({
+      ...info,
+      [menu]: {
+        ratio,
+        offset: max ? (scroller.scrollTop / max) * (track.clientHeight * (1 - ratio)) : 0,
+        top: max ? Math.min(1, scroller.scrollTop / fade) : 0,
+        bottom: max ? Math.min(1, (max - scroller.scrollTop) / fade) : 0,
+      },
+    }));
   }, []);
+
+  useLayoutEffect(() => {
+    if (openMenu) lastOpenMenu.current = openMenu;
+  }, [openMenu]);
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -85,26 +81,36 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
         range.selectNodeContents(element);
         return range.getBoundingClientRect().width;
       };
-      const word = textWidth(wordRef.current);
-      const count = textWidth(countRef.current);
-      setLabelWidths({ word, count });
-      if (!open && window.matchMedia('(max-width: 991px)').matches) {
+      const widths = {};
+      let maskCorrection = 0;
+      menuKeys.forEach((key) => {
+        const word = textWidth(wordRefs.current[key]);
+        const count = textWidth(countRefs.current[key]);
+        widths[key] = { word, count };
+        const mask = maskRefs.current[key];
+        if (mask) maskCorrection += word - mask.getBoundingClientRect().width;
+      });
+      setLabelWidths(widths);
+      // Measured at every width: the dock width drives the white panel on
+      // tablet/mobile and, since it reuses the same container, on desktop too.
+      if (!open) {
         const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
         const fontSize = parseFloat(getComputedStyle(nav).fontSize) || 16;
         const children = [...list.children].filter((child) => child.tagName === 'LI' && !child.hidden);
         const width = children.reduce((sum, child) => sum + (child.firstElementChild?.getBoundingClientRect().width || 0), 0);
-        const maskWidth = wordRef.current?.parentElement?.getBoundingClientRect().width || 0;
-        // Size the closed dock for the closed label even during the reverse animation.
-        setDockWidth(Math.ceil(width + word - maskWidth + gap * (children.length - 1) + fontSize));
+        // Size the closed dock for the closed labels even during the reverse animation.
+        setDockWidth(Math.ceil(width + maskCorrection + gap * (children.length - 1) + fontSize));
       }
-      requestAnimationFrame(updateScroll);
+      menuKeys.forEach((key) => requestAnimationFrame(() => updateScroll(key)));
     };
     measure();
     window.addEventListener('resize', measure);
     document.fonts?.ready.then(measure);
-    const observer = new ResizeObserver(updateScroll);
-    if (scrollerRef.current) observer.observe(scrollerRef.current);
-    if (trackRef.current) observer.observe(trackRef.current);
+    const observer = new ResizeObserver(() => menuKeys.forEach((key) => updateScroll(key)));
+    menuKeys.forEach((key) => {
+      if (scrollerRefs.current[key]) observer.observe(scrollerRefs.current[key]);
+      if (trackRefs.current[key]) observer.observe(trackRefs.current[key]);
+    });
     return () => { window.removeEventListener('resize', measure); observer.disconnect(); };
   }, [open, updateScroll, motion.phase, hidden]);
 
@@ -112,7 +118,15 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
     const logo = listRef.current?.firstElementChild;
     if (!logo) return;
     const left = logo.getBoundingClientRect().left;
-    if (logoPosition.current !== null && ['enter-loading', 'reveal-items'].includes(motion.phase)
+    // The nudge only smooths changes where the dock keeps its width (a
+    // route-to-route reveal). When the dock itself is resized - the loading
+    // pill turning into the item pill - the items appear at their final,
+    // centred positions in the same frame; sliding the logo alone would drag
+    // the dock content off the viewport centre for the length of the nudge.
+    const listWidth = listRef.current.getBoundingClientRect().width;
+    const widthChanged = dockBox.current.width !== null && Math.abs(listWidth - dockBox.current.width) > 0.5;
+    dockBox.current.width = listWidth;
+    if (logoPosition.current !== null && !widthChanged && ['enter-loading', 'reveal-items'].includes(motion.phase)
       && !window.matchMedia('(max-width: 991px), (prefers-reduced-motion: reduce)').matches) {
       const delta = logoPosition.current - left;
       if (Math.abs(delta) > 0.5) logo.animate(
@@ -140,25 +154,28 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
   }, [motion.phase, showControls]);
 
   useLayoutEffect(() => {
-    if (!open) return;
-    if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
-    if (pendingFocus.current !== null) {
-      const items = scrollerRef.current?.querySelectorAll('[data-a24-item]');
-      items?.[pendingFocus.current]?.focus();
+    if (!openMenu) return;
+    const scroller = scrollerRefs.current[openMenu];
+    if (scroller) scroller.scrollTop = 0;
+    if (pendingFocus.current?.menu === openMenu) {
+      const items = scroller?.querySelectorAll('[data-a24-item]');
+      items?.[pendingFocus.current.index]?.focus();
       pendingFocus.current = null;
     }
-  }, [open]);
+  }, [openMenu]);
 
   useEffect(() => {
     if (open) {
-      requestAnimationFrame(updateScroll);
+      if (openMenu) requestAnimationFrame(() => updateScroll(openMenu));
     } else {
+      const previous = lastOpenMenu.current;
       resetTimer.current = window.setTimeout(() => {
-        if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
+        const scroller = previous ? scrollerRefs.current[previous] : null;
+        if (scroller) scroller.scrollTop = 0;
       }, 520);
     }
     return () => clearTimeout(resetTimer.current);
-  }, [open, updateScroll]);
+  }, [open, openMenu, updateScroll]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -185,29 +202,32 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
     };
   }, [open, close]);
 
-  const focusItem = (index) => {
-    const items = [...(scrollerRef.current?.querySelectorAll('[data-a24-item]') || [])];
+  const focusItem = (menu, index) => {
+    const items = [...(scrollerRefs.current[menu]?.querySelectorAll('[data-a24-item]') || [])];
     if (!items.length) return;
     items[(index + items.length) % items.length].focus();
   };
-  const handleToggleKey = (event) => {
+
+  const handleToggleKey = (menu, event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       event.stopPropagation();
       suppressHover.current = false;
-      const target = event.key === 'ArrowDown' ? 0 : televisionIndex.length - 1;
-      if (open) focusItem(target);
-      else { pendingFocus.current = target; show(); }
+      const target = event.key === 'ArrowDown' ? 0 : navMenus[menu].items.length - 1;
+      if (openMenu === menu) focusItem(menu, target);
+      else { pendingFocus.current = { menu, index: target }; show(menu); }
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       event.stopPropagation();
-      suppressHover.current = !open;
-      if (open) close();
-      else { suppressHover.current = false; show(); }
+      suppressHover.current = openMenu !== menu;
+      if (openMenu === menu) close();
+      else { suppressHover.current = false; show(menu); }
     }
   };
-  const handleListKey = (event) => {
-    const items = [...scrollerRef.current.querySelectorAll('[data-a24-item]')];
+
+  const handleListKey = (menu, event) => {
+    const items = [...(scrollerRefs.current[menu]?.querySelectorAll('[data-a24-item]') || [])];
+    if (!items.length) return;
     const index = items.indexOf(document.activeElement);
     let target;
     if (event.key === 'ArrowDown') target = index + 1;
@@ -217,7 +237,7 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
     if (target !== undefined) {
       event.preventDefault();
       event.stopPropagation();
-      focusItem(target);
+      focusItem(menu, target);
     } else if (event.key === 'Tab') {
       if (event.shiftKey && index === 0) {
         event.preventDefault();
@@ -226,35 +246,47 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
     }
   };
 
-  const onTrackPointerDown = (event) => {
+  const onTrackPointerDown = (menu, event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    const track = trackRef.current;
-    const thumb = thumbRef.current;
-    const scroller = scrollerRef.current;
-    if (!track || !thumb || !scroller || scrollInfo.ratio >= 1) return;
+    const track = trackRefs.current[menu];
+    const thumb = thumbRefs.current[menu];
+    const scroller = scrollerRefs.current[menu];
+    if (!track || !thumb || !scroller || scrollInfo[menu].ratio >= 1) return;
     event.preventDefault();
     event.stopPropagation();
     const thumbRect = thumb.getBoundingClientRect();
     dragRef.current = {
+      menu,
       id: event.pointerId,
       grab: event.target === thumb ? event.clientY - thumbRect.top : thumbRect.height / 2,
     };
     track.setPointerCapture(event.pointerId);
     track.dataset.dragging = 'true';
-    moveThumb(event);
+    moveThumb(menu, event);
   };
-  const moveThumb = (event) => {
-    if (!dragRef.current || dragRef.current.id !== event.pointerId) return;
-    const track = trackRef.current;
-    const scroller = scrollerRef.current;
-    const travel = track.clientHeight * (1 - scrollInfo.ratio);
-    const position = Math.max(0, Math.min(travel, event.clientY - track.getBoundingClientRect().top - dragRef.current.grab));
+
+  const moveThumb = (menu, event) => {
+    const drag = dragRef.current;
+    if (!drag || drag.menu !== menu || drag.id !== event.pointerId) return;
+    const track = trackRefs.current[menu];
+    const scroller = scrollerRefs.current[menu];
+    if (!track || !scroller) return;
+    const travel = track.clientHeight * (1 - scrollInfo[menu].ratio);
+    const position = Math.max(0, Math.min(travel, event.clientY - track.getBoundingClientRect().top - drag.grab));
     if (travel > 0) scroller.scrollTop = position / travel * (scroller.scrollHeight - scroller.clientHeight);
-    updateScroll();
+    updateScroll(menu);
   };
+
   const stopThumbDrag = (event) => {
     dragRef.current = null;
     delete event.currentTarget.dataset.dragging;
+  };
+
+  const navigateTo = (event, to) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    close();
+    onNavigate(to);
   };
 
   return (
@@ -285,58 +317,126 @@ export default function A24Nav({ onHome, loading, routeKey, hidden }) {
             <li className="a24-nav__loading-slot" hidden={!showLoading}>
               <span className="a24-nav__loading" role="status" aria-live="polite"><span>{motion.word}</span><span className="a24-nav__spinner" aria-hidden="true" /></span>
             </li>
-            <li className="a24-nav__control-slot" hidden={!showControls} inert={motion.busy || undefined}><button className="a24-nav__link a24-nav__page a24-nav__page--other" type="button" aria-disabled="true" title="Films is not available locally" onClick={() => setNotice('Films is not available in this project.')}><span className="a24-nav__hover" data-text="Films"><span>Films</span></span></button></li>
-            <li className="a24-nav__control-slot" hidden={!showControls} inert={motion.busy || undefined}><button className="a24-nav__link a24-nav__page a24-nav__page--current" type="button" aria-disabled="true" title="Television is not available locally" onClick={() => setNotice('Television is not available in this project.')}><span className="a24-nav__hover" data-text="Television"><span>Television</span></span></button></li>
-            <li
-              ref={regionRef}
-              className="a24-nav__index-region a24-nav__control-slot"
-              hidden={!showControls}
-              inert={motion.busy || undefined}
-              onMouseEnter={() => { if (fineDesktop()) { suppressHover.current = false; show(); } }}
-              onMouseLeave={() => { suppressHover.current = false; if (fineDesktop() && !dragRef.current) close(); }}
-              onFocus={(event) => { if (!suppressHover.current && (fineDesktop() || event.target.matches(':focus-visible'))) show(); }}
-              onBlur={(event) => { if (!dragRef.current && !event.currentTarget.contains(event.relatedTarget)) { suppressHover.current = false; close(); } }}
-            >
-              <button ref={toggleRef} type="button" className="a24-nav__link a24-nav__toggle" aria-label="Index" aria-expanded={open} aria-controls="a24-television-index" aria-haspopup="true"
-                onClick={() => { suppressHover.current = false; if (fineDesktop()) show(); else if (open) close(); else show(); }} onKeyDown={handleToggleKey}>
-                <span className="a24-nav__label-mask" style={{ width: labelWidths[open ? 'count' : 'word'] || undefined }}>
-                  <span ref={wordRef} className="a24-nav__label-word" aria-hidden="true">Index</span>
-                  <span ref={countRef} className="a24-nav__label-count" aria-hidden="true">{televisionIndex.length}</span>
-                </span>
-                <svg className="a24-nav__chevron" viewBox="0 0 17 10" fill="none" aria-hidden="true"><path d="M1.5 1.5L8.5 8.5L15.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </button>
-              <div id="a24-television-index" className="a24-nav__dropdown" aria-hidden={!open} inert={!open || undefined}>
-                <div className="a24-nav__scroll" ref={scrollerRef} onScroll={updateScroll} onKeyDown={handleListKey} style={{ '--a24-fade-top': scrollInfo.top, '--a24-fade-bottom': scrollInfo.bottom }}>
-                  <ul className="a24-nav__items">
-                    {televisionIndex.map(([title, year], index) => (
-                      <li key={title}>
-                        <button type="button" data-a24-item className={`a24-nav__item ${index === 0 ? 'a24-nav__item--active' : ''}`} aria-disabled="true" title={`${title} is not available locally`} onClick={() => setNotice(`${title} is not available in this project.`)}
-                          onPointerEnter={(event) => {
-                            if (!fineDesktop() || index === 0) return;
-                            const bounds = event.currentTarget.getBoundingClientRect();
-                            event.currentTarget.firstElementChild.style.transformOrigin = event.clientY - bounds.top < bounds.height / 2 ? 'center top' : 'center bottom';
-                          }}
-                          onPointerLeave={(event) => {
-                            if (!fineDesktop() || index === 0) return;
-                            const bounds = event.currentTarget.getBoundingClientRect();
-                            event.currentTarget.firstElementChild.style.transformOrigin = event.clientY - bounds.top < bounds.height / 2 ? 'center top' : 'center bottom';
-                          }}>
-                          <span className="a24-nav__item-bg" aria-hidden="true" />
-                          <span className="a24-nav__item-inner"><span className="a24-nav__item-title">{title}</span><span className="a24-nav__year-mask"><span className="a24-nav__year">{year}</span></span></span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div ref={trackRef} className="a24-nav__scrollbar" aria-hidden="true" onPointerDown={onTrackPointerDown} onPointerMove={moveThumb} onPointerUp={stopThumbDrag} onPointerCancel={stopThumbDrag} onLostPointerCapture={stopThumbDrag} onWheel={(event) => { if (scrollerRef.current) scrollerRef.current.scrollTop += event.deltaY; }}>
-                  <div ref={thumbRef} className="a24-nav__thumb" style={{ height: `${scrollInfo.ratio * 100}%`, transform: `translateY(${scrollInfo.offset}px)` }} />
-                </div>
-              </div>
+            <li className="a24-nav__control-slot" hidden={!showControls} inert={motion.busy || undefined}>
+              <a
+                className={`a24-nav__link a24-nav__page ${activeKey === 'life' ? 'a24-nav__page--current' : ''}`}
+                href="/"
+                aria-current={activeKey === 'life' ? 'page' : undefined}
+                onClick={(event) => {
+                  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  event.preventDefault();
+                  close();
+                  onHome();
+                }}
+              >
+                <span className="a24-nav__hover" data-text="Life"><span>Life</span></span>
+              </a>
             </li>
+            {menuKeys.map((menuKey) => {
+              const menu = navMenus[menuKey];
+              const isOpen = openMenu === menuKey;
+              const isActive = activeKey === menuKey;
+              const widths = labelWidths[menuKey];
+              const info = scrollInfo[menuKey];
+              return (
+                <li
+                  key={menuKey}
+                  ref={(element) => { regionRefs.current[menuKey] = element; }}
+                  className="a24-nav__index-region a24-nav__control-slot"
+                  hidden={!showControls}
+                  inert={motion.busy || undefined}
+                  onMouseEnter={() => { if (fineDesktop()) { suppressHover.current = false; show(menuKey); } }}
+                  onMouseLeave={() => { suppressHover.current = false; if (fineDesktop() && !dragRef.current) close(); }}
+                  onFocus={(event) => { if (!suppressHover.current && (fineDesktop() || event.target.matches(':focus-visible'))) show(menuKey); }}
+                  onBlur={(event) => { if (!dragRef.current && !event.currentTarget.contains(event.relatedTarget)) { suppressHover.current = false; close(); } }}
+                >
+                  <button
+                    ref={(element) => { toggleRefs.current[menuKey] = element; }}
+                    type="button"
+                    className={`a24-nav__link a24-nav__toggle a24-nav__page ${isActive ? 'a24-nav__page--current' : ''}`}
+                    aria-label={menu.label}
+                    aria-expanded={isOpen}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-controls={`a24-${menuKey}-index`}
+                    aria-haspopup="true"
+                    onClick={() => {
+                      suppressHover.current = false;
+                      if (fineDesktop()) show(menuKey);
+                      else if (isOpen) close();
+                      else show(menuKey);
+                    }}
+                    onKeyDown={(event) => handleToggleKey(menuKey, event)}
+                  >
+                    <span ref={(element) => { maskRefs.current[menuKey] = element; }} className="a24-nav__label-mask" style={{ width: widths[isOpen ? 'count' : 'word'] || undefined }}>
+                      <span ref={(element) => { wordRefs.current[menuKey] = element; }} className="a24-nav__label-word" aria-hidden="true">{menu.label}</span>
+                      <span ref={(element) => { countRefs.current[menuKey] = element; }} className="a24-nav__label-count" aria-hidden="true">{menu.items.length}</span>
+                    </span>
+                    <svg className="a24-nav__chevron" viewBox="0 0 17 10" fill="none" aria-hidden="true"><path d="M1.5 1.5L8.5 8.5L15.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                  <div
+                    id={`a24-${menuKey}-index`}
+                    className="a24-nav__dropdown"
+                    data-open={isOpen ? 'true' : 'false'}
+                    aria-hidden={!isOpen}
+                    inert={!isOpen || undefined}
+                  >
+                    <div
+                      ref={(element) => { scrollerRefs.current[menuKey] = element; }}
+                      className="a24-nav__scroll"
+                      onScroll={() => updateScroll(menuKey)}
+                      onKeyDown={(event) => handleListKey(menuKey, event)}
+                      style={{ '--a24-fade-top': info.top, '--a24-fade-bottom': info.bottom }}
+                    >
+                      <ul className="a24-nav__items">
+                        {menu.items.map((item) => {
+                          const isCurrent = activePath === item.to;
+                          return (
+                            <li key={item.slug}>
+                              <a
+                                href={item.to}
+                                data-a24-item
+                                className={`a24-nav__item ${isCurrent ? 'a24-nav__item--active' : ''}`}
+                                aria-current={isCurrent ? 'page' : undefined}
+                                onClick={(event) => navigateTo(event, item.to)}
+                                onPointerEnter={(event) => {
+                                  if (!fineDesktop() || isCurrent) return;
+                                  const bounds = event.currentTarget.getBoundingClientRect();
+                                  event.currentTarget.firstElementChild.style.transformOrigin = event.clientY - bounds.top < bounds.height / 2 ? 'center top' : 'center bottom';
+                                }}
+                                onPointerLeave={(event) => {
+                                  if (!fineDesktop() || isCurrent) return;
+                                  const bounds = event.currentTarget.getBoundingClientRect();
+                                  event.currentTarget.firstElementChild.style.transformOrigin = event.clientY - bounds.top < bounds.height / 2 ? 'center top' : 'center bottom';
+                                }}
+                              >
+                                <span className="a24-nav__item-bg" aria-hidden="true" />
+                                <span className="a24-nav__item-inner"><span className="a24-nav__item-title">{item.title}</span></span>
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                    <div
+                      ref={(element) => { trackRefs.current[menuKey] = element; }}
+                      className="a24-nav__scrollbar"
+                      aria-hidden="true"
+                      onPointerDown={(event) => onTrackPointerDown(menuKey, event)}
+                      onPointerMove={(event) => moveThumb(menuKey, event)}
+                      onPointerUp={stopThumbDrag}
+                      onPointerCancel={stopThumbDrag}
+                      onLostPointerCapture={stopThumbDrag}
+                      onWheel={(event) => { const scroller = scrollerRefs.current[menuKey]; if (scroller) scroller.scrollTop += event.deltaY; }}
+                    >
+                      <div ref={(element) => { thumbRefs.current[menuKey] = element; }} className="a24-nav__thumb" style={{ height: `${info.ratio * 100}%`, transform: `translateY(${info.offset}px)` }} />
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
-      <div className={`a24-nav__notice ${notice ? 'a24-nav__notice--visible' : ''}`} role="status">{notice}</div>
     </nav>
   );
 }

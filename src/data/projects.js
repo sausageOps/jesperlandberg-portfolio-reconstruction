@@ -1483,22 +1483,7 @@ export const featured = [
 export const site = {
   "name": "Jesper Landberg",
   "role": "Design engineer",
-  "email": "jesper@alpacka.studio",
   "summary": "Jesper Landberg, Swedish design engineer, named Awwwards Independent of the Year in 2022 and 2024, building visually rich, motion-driven websites.",
   "about": "Usually lead or sole developer, responsible for front-end architecture, animation, interaction and CMS, alongside international agencies and creative teams. Freelance, and available to studios and clients anywhere.",
-  "awards": "77 awards — 30× Awwwards, 40× FWA, 3× Webby, 2× Lovie",
-  "profiles": [
-    {
-      "label": "Instagram",
-      "url": "https://www.instagram.com/jesperlandberg222/"
-    },
-    {
-      "label": "X",
-      "url": "https://x.com/jesper_alpacka"
-    },
-    {
-      "label": "LinkedIn",
-      "url": "https://www.linkedin.com/in/jesper-landberg-ba2984256/"
-    }
-  ]
+  "awards": "77 awards — 30× Awwwards, 40× FWA, 3× Webby, 2× Lovie"
 };

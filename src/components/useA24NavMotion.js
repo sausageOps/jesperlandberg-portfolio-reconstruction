@@ -69,7 +69,7 @@ export default function useA24NavMotion(loading, routeKey, hidden = false) {
     previousHidden.current = hidden;
     // Project panels cover the portfolio rather than starting a nav transition.
     // Reset an in-flight nav transition while hidden so it returns cleanly.
-    if (hidden || wasHidden) {
+    if (hidden) {
       if (initialDone.current) {
         clearTimers();
         routeBusy.current = false;
@@ -77,7 +77,32 @@ export default function useA24NavMotion(loading, routeKey, hidden = false) {
       }
       return;
     }
-    if (previous === routeKey || !initialDone.current) return;
+    if (wasHidden) {
+      // A closing project panel hands the navigation back: replay the site's own
+      // reveal from the top - the compact intro (logo + loading word, dock slides
+      // up), then the word leaves and the bar expands into its full idle state as
+      // the items and the active dot arrive. Same phases and same 0.4s beats as
+      // the boot tail in the effect above; nothing here is a separate animation.
+      if (!initialDone.current) return;
+      clearTimers();
+      if (isReduced()) {
+        routeBusy.current = false;
+        setPhase('idle');
+        return;
+      }
+      wordIndex.current = (wordIndex.current + 1) % WORDS.length;
+      setWord(WORDS[wordIndex.current]);
+      routeBusy.current = true;
+      setPhase('initial-reveal');
+      schedule(() => setPhase('exit-loading'), 400);
+      schedule(() => setPhase('reveal-items'), 800);
+      schedule(() => {
+        routeBusy.current = false;
+        setPhase('idle');
+      }, 800 + (isDock() ? 340 : 50) + 700 + 100);
+      return;
+    }
+    if (previous === routeKey || !initialDone.current || routeBusy.current) return;
 
     clearTimers();
     if (!routeBusy.current) {
