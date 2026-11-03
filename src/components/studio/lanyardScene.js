@@ -205,17 +205,23 @@ function makeWarm(renderer, scene, camera) {
 }
 
 /* ==========================================================================
- * mountLanyard(stage, canvas, copy, { onCleanup, veilActive }) -> dispose
+ * mountLanyard(stage, canvas, copy, { veilActive }) -> dispose | null
+ * Carter's build must never be able to blank the app: any engine-construction
+ * failure is contained here and reported to the console, leaving the classic
+ * fallback tile + navigation intact.
  * ========================================================================== */
-export function mountLanyard(t, o, Se, { onCleanup = () => {}, veilActive = false } = {}) {
+export function mountLanyard(t, o, Se, { veilActive = false } = {}) {
   if (prefersReducedMotion()) return null
-  const engine = buildStage(t, o, Se)
-  if (!engine) return null
-  onCleanup(() => engine.dispose())
-  return engine.dispose
+  try {
+    const engine = buildStage(t, o, Se, veilActive)
+    return engine ? engine.dispose : null
+  } catch (err) {
+    console.warn('[studio] lanyard engine failed to mount; keeping classic tile.', err)
+    return null
+  }
 }
 
-function buildStage(t, o, Se) {
+function buildStage(t, o, Se, veilActive) {
   let renderer
   try {
     renderer = new THREE.WebGLRenderer({ canvas: o, antialias: true, alpha: true })
