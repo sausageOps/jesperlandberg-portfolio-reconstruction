@@ -11,55 +11,6 @@
     <title>Jesper Landberg</title>
   </head>
   <body>
-    <script>
-      /* Installed before any app module so a module-evaluation throw is still reported. */
-      (function () {
-        var sent = 0;
-        function report(kind, err) {
-          try {
-            if (sent++ > 6) return;
-            var payload = {
-              kind: kind,
-              url: location.href,
-              ua: navigator.userAgent,
-              message: err && (err.message || String(err)),
-              stack: (err && err.stack || '').slice(0, 4000),
-              at: new Date().toISOString(),
-            };
-            var body = JSON.stringify(payload);
-            if (navigator.sendBeacon) navigator.sendBeacon('/__client-error', new Blob([body], { type: 'application/json' }));
-            else fetch('/__client-error', { method: 'POST', body: body, keepalive: true });
-          } catch (e) { /* reporting must never throw */ }
-        }
-        window.addEventListener('error', function (e) {
-          if (e && e.error) report('error', e.error);
-          else report('error', { message: (e && e.message) || 'unknown', stack: (e && (e.filename + ':' + e.lineno + ':' + e.colno)) || '' });
-        }, true);
-        window.addEventListener('unhandledrejection', function (e) { report('rejection', e && e.reason); });
-        /* Boot receipt: proves the preview actually executed the app, not just fetched it. */
-        setTimeout(function () {
-          try {
-            var root = document.getElementById('root');
-            var body = JSON.stringify({
-              kind: 'boot',
-              url: location.href,
-              mounted: !!(root && root.children.length),
-              childTags: root ? Array.prototype.map.call(root.children, function (c) { return c.tagName + '.' + (c.className || ''); }).join(' ') : '',
-              nav: !!document.querySelector('nav'),
-              webgl: !!document.createElement('canvas').getContext('webgl2'),
-            });
-            if (navigator.sendBeacon) navigator.sendBeacon('/__client-error', new Blob([body], { type: 'application/json' }));
-          } catch (e) {}
-        }, 3000);
-        var ce = console.error;
-        console.error = function () {
-          try { ce.apply(console, arguments); } catch (x) {}
-          var first = arguments[0];
-          if (first && typeof first === 'object' && first.stack) report('console.error', first);
-          else report('console.error', { message: Array.prototype.join.call(arguments, ' '), stack: '' });
-        };
-      })();
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

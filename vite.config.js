@@ -1,31 +1,27 @@
-import fs from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-/* Dev-only crash beacon. There is no browser in the build sandbox, so the preview
-   itself reports the first runtime exception back to this process. Serve-only: it is
-   not part of the production build and never runs for a built app. */
-const crashBeacon = () => ({
-  name: 'crash-beacon',
-  apply: 'serve',
-  configureServer(server) {
-    server.middlewares.use('/__client-error', (req, res, next) => {
-      if (req.method !== 'POST') return next();
-      let body = '';
-      req.on('data', (chunk) => { body += chunk; });
-      req.on('end', () => {
-        const stamp = new Date().toISOString();
-        fs.appendFileSync('/tmp/client-errors.log', `\n===== ${stamp} =====\n${body}\n`);
-        server.config.logger.warn(`[client-error] ${body.slice(0, 4000)}`);
-        res.statusCode = 204;
-        res.end();
-      });
-    });
-  },
-});
-
 export default defineConfig({
-  plugins: [react(), crashBeacon()],
+  plugins: [react()],
+  /* Pre-declare every bare import the app uses. Without this the dev server discovers
+     `react-dom/client` mid-session, re-optimizes dependencies and can serve two
+     pre-bundle generations at once — which looks like two copies of React and breaks
+     every hook ("Cannot read properties of null (reading 'useState')"). */
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'gsap',
+      'gsap/Flip',
+      'three',
+      'three/addons/loaders/GLTFLoader.js',
+      'three/addons/utils/BufferGeometryUtils.js',
+      'three/examples/jsm/utils/BufferGeometryUtils.js',
+    ],
+  },
   server: {
     host: '0.0.0.0',
     allowedHosts: true,
