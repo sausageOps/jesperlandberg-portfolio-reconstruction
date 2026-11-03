@@ -228,11 +228,20 @@ export default function Contact({ appReady = true }) {
                 <a data-letter-mailto data-base="mailto:hello@carterogunsola.com" href="mailto:hello@carterogunsola.com">Send it by email instead</a>
                 <button type="button" className="sheet__retry" data-letter-retry>or try again</button>
               </p>
+              {/* Carter's noscript fallback (verbatim): hides Send it and offers
+                  mailto when scripting is unavailable. In this SPA the whole
+                  route needs JS, so this is kept strictly for 1:1 markup parity. */}
+              <noscript>
+                <style>{'.letterpage [data-letter-send] { display: none; }'}</style>
+                <p className="sheet__note sheet__note--no-script">
+                  The counter is closed right now. <a href="mailto:hello@carterogunsola.com">Send it by email instead</a>.
+                </p>
+              </noscript>
               <div className="stamp" data-letter-stamp hidden aria-hidden="true" />
             </div>
           </form>
 
-          <dialog className="slip" data-letter-slip aria-label="Sign your name">
+          <dialog className="slip" data-lenis-prevent data-letter-slip aria-label="Sign your name">
             <div className="slip__in">
               <p className="slip__head">
                 <span>SIGN HERE</span>

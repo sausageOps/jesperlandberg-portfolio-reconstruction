@@ -51,6 +51,29 @@ endpoint; we have no credentials for it and must not spray their inbox.**
 6. **Analytics** — the `generate_lead` event (with regex-classified referral source)
    is logged to the console instead of being dispatched.
 
+## Fidelity audit tightening (live Carter CSS/DOM/JS diff, no browser needed)
+
+Post-review audit against the served :4321 CSS chunk, `contact.astro` markup
+and `letter.js` engine. `Contact.css` now differs from Carter's contact.css
+only by three `border-radius: 0` extras on text inputs (a no-op in every
+rendering engine; kept as mobile-Safari insurance). Closed gaps:
+- reveal-compensation rules `.sheet__kind .y`, `.sheet__kind.y_`,
+  `.sheet__send.y_` restored verbatim — without them the character reveal
+  wrapper shifted radio rows and shrank their hit areas;
+- paragraph/heading margins now follow Carter exactly (Carter has no global
+  margin reset; UA `p` margins are part of the measured design);
+- `.slip` no longer gets `letter-spacing: var(--track)` (Carter's dialog is
+  untracked); focus rings are Carter's ink 2px/2px (not 4px); the label roll
+  also plays on `:focus-visible`, and `Send it`/`Done` keep `will-change`
+  hints on hover/focus;
+- Logo hover fills the circle (Carter Base.css) and is motion-off under
+  `prefers-reduced-motion`;
+- Carter's `<noscript>` fallback (inline hide of `[data-letter-send]` + mailto
+  note) and the dialog's inert-here `data-lenis-prevent` are back in the JSX.
+Markup, attribute values, copy strings, state machine, payload contract,
+receipt painter, stamp filter, desk geometry/layout math and the entrance
+timeline diff **verbatim-equal** to Carter's served build at this point.
+
 ## Viewport stacking fix (black-screen root cause, post-review fix)
 
 The route initially rendered as a blank black page because Jesper's WebGL
