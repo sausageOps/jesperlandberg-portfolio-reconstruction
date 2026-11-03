@@ -1,0 +1,319 @@
+/* ============================================================================
+   Carter Writing — index route (`/routes/writing`), scoped port.
+
+   Carter's own sheet (app/styles/writing.css, recovered from
+   src/writing.C1dRexZC.css) is reproduced rule for rule further down; only its
+   route scoping (`.writing …`) is kept. Everything above it supplies what Jesper's
+   stylesheet does not: Carter's token layer, the shared UI primitives this page
+   renders, and the shelf layers (canvas stage, pose layer, tooltip).
+
+   UNITS: Jesper's root font-size is viewport-fluid (html{font-size:calc(100vw/1500*10)}),
+   so every Carter rem is converted to the px it would resolve to on Carter's 16px
+   root. Media queries were converted the same way (rem in a media query already
+   resolves against 16px), so the breakpoints are byte-identical in effect.
+
+   THEME: Carter's live default is dark (no stored choice → `data-theme="dark"`), so
+   the dark token set is declared unconditionally here.
+   ========================================================================== */
+
+.writing,
+.wpost {
+  /* --- Carter tokens, px-converted (Carter rem × 16) --- */
+  --s-0: 0px; --s-2: 2px; --s-4: 4px; --s-6: 6px; --s-8: 8px; --s-10: 10px;
+  --s-12: 12px; --s-14: 14px; --s-16: 16px; --s-18: 18px; --s-20: 20px;
+  --s-24: 24px; --s-30: 30px; --s-32: 32px; --s-36: 36px; --s-38: 38px;
+  --s-40: 40px; --s-48: 48px; --s-56: 56px; --s-64: 64px; --s-80: 80px;
+  --s-88: 88px; --s-92: 92px; --s-96: 96px; --s-100: 100px; --s-112: 112px;
+  --s-120: 120px; --s-128: 128px; --s-144: 144px; --s-160: 160px;
+
+  --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-2xl: 16px;
+  --r-pill: 999px; --r-full: 50%;
+
+  --ease-out-quad: cubic-bezier(.5, 1, .89, 1);
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  --ease-out-quart: cubic-bezier(.25, 1, .5, 1);
+
+  --font-sans: "Oracle", "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "PP Neue Montreal Mono", "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --fw-regular: 400; --fw-medium: 580; --fw-body: 360; --fw-mono-medium: 500;
+
+  --fs-label: 12px; --fs-caption: 14px; --fs-mono-sm: 10px;
+  --fs-body-sm: 16px; --fs-tag: 14px; --fs-meta: 12px;
+  --fs-body: clamp(16px, 15.296px + .1878vw, 18px);
+  --fs-lead: clamp(18px, 17.296px + .1878vw, 20px);
+  --fs-h2: clamp(30px, 23.662px + 1.6901vw, 48px);
+
+  --lh-tight: 1.1; --lh-body: 1.4; --lh-heading: 1.06;
+  --track: -.02em; --track-heading: -.028em;
+
+  --measure: 672px;
+  --container-max: 1920px;
+  --margin: clamp(16px, 11.07px + 1.3146vw, 30px);
+
+  --mono-100: #f7f7f7; --mono-500: #484848; --mono-900: #1e1e1e;
+  --paper: #1e1e1e;
+  --surface: #262626;
+  --ink: #f7f7f7;
+  --ink-muted: #f7f7f780;
+  --fill: #f7f7f714;
+  --fill-strong: #f7f7f733;
+  --line: #f7f7f70f;
+  --divider: #f7f7f733;
+  --code-bg: #333;
+  --code-ink: #f7f7f7;
+  --code-card: #262626;
+  --scrim: #0009;
+  --popover: #262626;
+  --spot: #e06a4a;
+  --spot-rgb: 224, 106, 74;
+  --spot-wash: rgba(var(--spot-rgb), .24);
+  --shadow-card: 0 12px 30px -18px #0000008c;
+  --shadow-control: 0 2px 6px -2px #0003;
+  --shadow-modal: 0 24px 70px -20px #000000b3;
+  --sheet-tex: var(--grain-dots), var(--grain-carton), var(--grain-tooth);
+  --grain-dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cg fill='%23808080' fill-opacity='0.055'%3E%3Ccircle cx='4' cy='4' r='1.05'/%3E%3Ccircle cx='0' cy='0' r='1.05'/%3E%3Ccircle cx='8' cy='0' r='1.05'/%3E%3Ccircle cx='0' cy='8' r='1.05'/%3E%3Ccircle cx='8' cy='8' r='1.05'/%3E%3C/g%3E%3C/svg%3E");
+  --grain-carton: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --grain-tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.14'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  font-family: var(--font-sans);
+  color: var(--ink);
+  color-scheme: dark;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Page surface: Carter's body paint (paper + fibre grain), owned by the route
+   so Jesper's black WebGL background is covered only while Writing is showing. --- */
+.writing-route {
+  background-color: var(--paper);
+  background-image: var(--sheet-tex);
+}
+
+/* --- Layout primitives (global.scss) --- */
+.writing .container,
+.wpost .container {
+  grid-template-columns: [full-start] minmax(var(--margin), 1fr) [content-start] min(100% - var(--margin) * 2, var(--container-max)) [content-end] minmax(var(--margin), 1fr) [full-end];
+  display: grid;
+}
+.writing .container > *,
+.wpost .container > * { grid-column: content; }
+
+.u-sr-only {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  position: absolute;
+  overflow: hidden;
+}
+
+/* --- Type utilities --- */
+.writing .text-lead,
+.wpost .text-lead {
+  font-family: var(--font-sans);
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track);
+}
+.writing .text-tag,
+.wpost .text-tag { font-family: var(--font-sans); font-size: var(--fs-tag); font-weight: var(--fw-regular); line-height: var(--lh-tight); letter-spacing: var(--track); }
+.writing .text-label,
+.wpost .text-label { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: var(--fw-regular); line-height: var(--lh-tight); letter-spacing: var(--track); text-transform: uppercase; }
+.writing .text-meta,
+.wpost .text-meta { font-family: var(--font-sans); font-size: var(--fs-meta); font-weight: var(--fw-regular); line-height: var(--lh-tight); letter-spacing: var(--track); font-variant-numeric: tabular-nums; }
+.text-caption { font-family: var(--font-sans); font-size: var(--fs-caption); font-weight: var(--fw-regular); line-height: var(--lh-tight); letter-spacing: var(--track); }
+.text-mono-sm { font-family: var(--font-mono); font-size: var(--fs-mono-sm); font-weight: var(--fw-mono-medium); line-height: 1; letter-spacing: .04em; text-transform: uppercase; }
+
+/* --- SectionLabel --- */
+.section-label { font-family: var(--font-sans); font-weight: var(--fw-regular); line-height: var(--lh-tight); letter-spacing: var(--track); }
+.section-label--lg { font-size: var(--fs-lead); color: var(--ink-muted); }
+.section-label--sm { font-size: var(--fs-body-sm); color: var(--ink); }
+.section-label__mark { color: var(--ink-muted); }
+
+/* --- Chip --- */
+.chip { padding: var(--s-4) var(--s-8); border-radius: var(--r-sm); background: var(--fill); color: color-mix(in srgb, var(--ink) 60%, transparent); white-space: nowrap; text-transform: uppercase; }
+.chip--pill { border-radius: var(--r-pill); }
+
+/* --- ArrowRoll / LinkCircle --- */
+.arrow-roll { --roll-out: 100% 0; --roll-in: -100% 0; flex: none; width: 1em; height: 1em; display: inline-block; position: relative; overflow: clip; }
+.arrow-roll--diagonal { --roll-out: 100% -100%; --roll-in: -100% 100%; }
+.arrow-roll__icon { width: 100%; height: 100%; transition: translate .5s var(--ease-out-expo); display: block; }
+.arrow-roll__icon svg { width: 100%; height: 100%; display: block; }
+.arrow-roll__next { translate: var(--roll-in); position: absolute; inset: 0; }
+.linkcircle { width: var(--s-20); height: var(--s-20); border-radius: var(--r-pill); background: var(--mono-500); color: var(--mono-100); transition: width .4s var(--ease-out-expo), opacity .3s var(--ease-out-quad); flex: none; place-items: center; display: grid; overflow: hidden; }
+.linkcircle .arrow-roll { width: var(--s-10); height: var(--s-10); }
+
+/* --- Row (index archive) --- */
+.row { align-items: center; gap: var(--s-12); width: 100%; padding-block: var(--s-8); color: inherit; transition: opacity .3s var(--ease-out-quad); text-decoration: none; display: flex; }
+.row__label { white-space: nowrap; text-overflow: ellipsis; min-width: 0; color: var(--ink); flex: 0 auto; overflow: hidden; }
+.row__note { color: var(--ink-muted); margin-inline-start: var(--s-4); }
+.row__line { min-width: var(--s-16); background: color-mix(in srgb, var(--ink) 14%, transparent); flex: auto; height: 1px; position: relative; }
+.row__line:after { content: ""; background: color-mix(in srgb, var(--ink) 45%, transparent); transform-origin: 0; transition: transform .5s var(--ease-out-expo); position: absolute; inset: 0; transform: scaleX(0); }
+.row__tags { flex: none; align-items: center; display: flex; gap: var(--s-4); }
+.row .row__tag { z-index: 0; transition: color .3s var(--ease-out-quad); position: relative; overflow: hidden; }
+.row .row__tag:before { content: ""; z-index: -1; background: var(--ink); transform-origin: 0; transition: transform .45s var(--ease-out-expo); position: absolute; inset: 0; transform: scaleX(0); }
+@media (hover: hover) and (pointer: fine) {
+  .row--link:hover .row__line:after,
+  a.row:focus-visible .row__line:after { transform: scaleX(1); }
+  .row--link:hover .row__tag:before,
+  a.row:focus-visible .row__tag:before { transform: scaleX(1); }
+  .row--link:hover .row__tag,
+  a.row:focus-visible .row__tag { color: var(--mono-900); }
+  .row--link:hover .linkcircle { width: var(--s-36); }
+  .row--link:hover .arrow-roll__icon { translate: var(--roll-out); }
+  .row--link:hover .arrow-roll__next { translate: var(--roll-out); }
+}
+
+/* --- CloseBox --- */
+.closebox { --cb: 44px; --cb-icon: 17.6px; inline-size: var(--cb); block-size: var(--cb); border-radius: var(--r-md); background: var(--fill); color: var(--ink); cursor: pointer; transition: background-color .25s var(--ease-out-quad), transform .14s var(--ease-out-quad); border: 0; place-items: center; padding: 0; text-decoration: none; display: grid; }
+.closebox:active { transform: scale(.96); }
+.closebox:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.closebox svg { inline-size: var(--cb-icon); block-size: var(--cb-icon); }
+.closebox--sm { --cb: 36px; --cb-icon: 16px; }
+.closebox--lg { --cb: 52px; --cb-icon: 20px; }
+.closebox--surface { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-control); }
+.closebox--ghost { background: 0 0; }
+@media (hover: hover) and (pointer: fine) { .closebox:hover { background: var(--fill-strong); } }
+
+/* --- RefRow (credits) --- */
+.refrow { align-items: stretch; gap: var(--s-2); max-inline-size: 100%; color: color-mix(in srgb, var(--ink) 58%, transparent); text-decoration: none; display: inline-flex; }
+.refrow__ext, .refrow__label, .refrow__badge { background: var(--fill); transition: background-color .25s var(--ease-out-quad); align-items: center; display: inline-flex; }
+.refrow__badge { padding-inline: var(--s-8); border-radius: var(--r-sm); flex: none; justify-content: center; }
+.refrow__icon { width: var(--s-18); height: var(--s-18); color: var(--ink); }
+.refrow__wordmark { color: var(--ink); line-height: 1; }
+.refrow__label { min-inline-size: 0; padding: var(--s-4) var(--s-10); border-radius: var(--r-pill); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.refrow__ext { padding-inline: var(--s-8); border-radius: var(--r-sm); color: var(--ink); flex: none; justify-content: center; }
+.refrow__ext .arrow-roll { width: var(--s-16); height: var(--s-16); }
+.refrow--link { transition: scale .15s var(--ease-out-quad); }
+.refrow--link:active { scale: .97; }
+.refrow--link:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: var(--r-sm); }
+.refrow--stretch { width: 100%; display: flex; }
+.refrow--stretch .refrow__label { flex: auto; }
+.refrow--stretch.refrow--link:active { scale: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .refrow--link:hover .refrow__label,
+  .refrow--link:hover .refrow__ext,
+  .refrow--link:hover .refrow__badge { background: var(--fill-strong); }
+  .refrow--link:hover .arrow-roll__icon,
+  .refrow--link:hover .arrow-roll__next { translate: var(--roll-out); }
+}
+
+/* --- Signature --- */
+.signature { color: var(--ink); display: inline-block; position: relative; }
+.signature__svg { width: 200px; height: auto; display: block; }
+.wpost .wpost__sig .signature__svg { width: 200px; }
+
+/* --- Shelf layers (the WebGL stage Carter's BaseLayout paints into) --- */
+.writing .shelf-gl,
+.writing .shelf-still {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+.writing .shelf-gl { transition: opacity .6s ease, filter .7s ease; }
+.writing .shelf-still { transition: opacity .6s ease; }
+
+/* The flight canvas is shared by both Writing routes; it sits above the shelf and
+   below the chrome while the folder is in the air. */
+.writing-flight {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Scroll container: Jesper's html/body are overflow:hidden, so each route scrolls
+   inside its own fixed layer (same convention as Contact). */
+.writing-scroll {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.writing-scroll::-webkit-scrollbar { display: none; }
+
+.writing-page {
+  position: relative;
+  min-height: 100%;
+  background: transparent;
+}
+.writing-page__main { display: block; }
+
+/* Carter paints the paper on <body>; Jesper's body is the black WebGL shell, so the
+   route owns a fixed paper sheet *under* the shelf canvas (z-index 0 < 1) that the
+   scrolled content above both (z-index 20) never occludes. */
+.writing-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: var(--paper);
+  background-image: var(--sheet-tex);
+  pointer-events: none;
+}
+
+/* The stage fills the viewport (Carter: .wstage{height:100svh}) and is `hidden`
+   until the engine binds, so the classic index is the no-JS view. */
+.writing .wstage { background: transparent; }
+
+/* Engine state hooks Carter styles inline; these cover the static cases. */
+.writing .wstage:is(.is-dragging, .is-hover) { cursor: pointer; }
+.writing .wstage.is-dragging { cursor: grabbing; }
+
+@media (prefers-reduced-motion: reduce) {
+  .writing .shelf-gl { transition: none; }
+}
+
+
+/* ============================================================================
+   Carter app/styles/writing.css — verbatim (rem → px, scoping preserved)
+   ========================================================================== */
+.writing .wstage[hidden],.writing .writing__classic[hidden]{display:none}
+.writing .wstage{touch-action:pinch-zoom;overscroll-behavior:none;outline:none;height:100svh;position:relative}
+.writing .wstage:focus-visible{outline:2px solid var(--ink);outline-offset:-6px}
+.writing .wstage__ui{z-index:2;pointer-events:none;padding-block:clamp(104px, 12svh, 144px) var(--s-32);flex-direction:column;justify-content:space-between;display:flex;position:absolute;inset:0}
+.writing .wstage__info{position:absolute;inset-block-start:calc(50% + var(--wfill,.58) * 1.15 * 50svh + 11.2px);inset-inline-start:50%;translate:-50%}
+.writing .wstage__info-btn{pointer-events:auto;block-size:40px;inline-size:40px;color:var(--ink-muted);transition:color .25s var(--ease-out-quad), transform .16s var(--ease-out-quad);place-items:center;display:grid}
+.writing .wstage__info-btn svg{block-size:16px;inline-size:16px}
+.writing .wstage__info-btn:active{transform:scale(.96)}
+@media (hover:hover) and (pointer:fine){.writing .wstage__info-btn:hover{color:var(--ink)}}
+.writing .wstage__info-btn:focus-visible{outline:2px solid var(--ink);outline-offset:-4px;border-radius:var(--r-sm);color:var(--ink)}
+.writing .wstage__tip{transform-origin:top;align-items:center;gap:var(--s-8);width:max-content;padding:var(--s-10) var(--s-12);border-radius:var(--r-md);background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow-card);text-align:center;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-out-expo), translate .15s var(--ease-out-expo), scale .15s var(--ease-out-expo);flex-direction:column;display:flex;position:absolute;inset-block-start:calc(100% - 6.4px);inset-inline-start:50%;translate:-50% -3px;scale:.97}
+@media (hover:hover) and (pointer:fine){.writing .wstage__info-btn:hover+.wstage__tip{opacity:1;transition-delay:.12s;translate:-50%;scale:1}}
+.writing .wstage__info-btn:focus-visible+.wstage__tip{opacity:1;transition-delay:0s;translate:-50%;scale:1}
+@media (prefers-reduced-motion:reduce){.writing .wstage__tip{transition:opacity .15s var(--ease-out-expo);translate:-50%;scale:1}}
+.writing .wstage__tip-title{font-family:var(--font-sans);font-size:var(--fs-meta);font-weight:var(--fw-regular);line-height:var(--lh-tight);letter-spacing:var(--track);font-variant-numeric:tabular-nums;text-transform:uppercase;color:var(--ink);white-space:nowrap;text-overflow:ellipsis;max-width:min(48ch,86vw);overflow:hidden}
+.writing .wstage__tip-tags{justify-content:center;align-items:center;display:flex}
+.writing .writing__classic{padding-block:clamp(144px, 16svh, 192px) var(--s-96)}
+.writing .writing__col{width:min(100%, var(--measure));justify-self:center}
+.writing .writing__intro{gap:var(--s-24);flex-direction:column;display:flex}
+.writing .writing__prose{gap:var(--s-24);color:var(--ink);flex-direction:column;display:flex}
+.writing .writing__prose p{text-wrap:pretty}
+.writing .writing__archive{gap:var(--s-14);flex-direction:column;margin-block-start:var(--s-96);display:flex}
+.writing .writing__empty{padding:var(--s-24) 0;text-align:center;color:var(--ink-muted);text-transform:uppercase}
+.writing .writing__filters{flex-wrap:wrap;align-items:center;display:flex}
+.writing .writing__filter{padding:var(--s-4) var(--s-8);background:var(--fill);color:color-mix(in srgb, var(--ink) 60%, transparent);cursor:pointer;text-transform:uppercase;transition:background-color .25s var(--ease-out-quad), color .25s var(--ease-out-quad), border-radius .3s var(--ease-out-expo);border:0;border-radius:10.56px}
+@media (hover:hover) and (pointer:fine){.writing .writing__filter:hover{color:var(--ink)}}
+.writing .writing__filter:active{background:var(--fill-strong)}
+.writing .writing__filter:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.writing .writing__filter[aria-selected=true]{background:var(--fill-strong);border-radius:var(--r-xs);color:var(--ink)}
+.writing .writing__card{gap:var(--s-4);padding:var(--s-24) var(--s-12);border-radius:var(--r-lg);background:var(--paper);flex-direction:column;display:flex;overflow:hidden}
+@media (width<=543.84px){.writing .writing__card .row__tags>:nth-child(-n+2){display:none}.writing .writing__archive{margin-block-start:var(--s-64)}}

@@ -62,7 +62,16 @@ class FoldersFlightImpl {
     this.onArrive = null, this.stop(), e?.()
   }
   init() {
-    this.canvas = document.querySelector('[data-flight]')
+    const next = document.querySelector('[data-flight]')
+    /* Carter's flight chunk re-ran on every astro page-load against the persisted
+       canvas. React remounts that canvas when Writing unmounts, so a renderer bound
+       to the previous element (or a disposed one) has to be dropped here. */
+    if (this.renderer && (next !== this.canvas || this.renderer.getContext?.()?.isContextLost?.())) {
+      this.renderer.dispose?.()
+      this.renderer = null
+      this.stop()
+    }
+    this.canvas = next
     /* Carter re-runs onPage on astro:page-load; the React router drives it via onPage()
      * calls from WritingSystem.jsx after each route commit instead. */
   }

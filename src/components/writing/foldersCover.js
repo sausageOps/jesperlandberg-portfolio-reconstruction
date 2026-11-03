@@ -93,7 +93,7 @@ class TessellationModifier {
   }
 }
 
-function tessellateGroups(e) {
+export function tessellateGroups(e) {
   let t = new TessellationModifier(0.065, 8),
     n = e.groups.map(({ start, count }) => {
       let i = new THREE.BufferGeometry()
@@ -483,7 +483,7 @@ export function firstSentence(e) {
 }
 
 /* Je: peek-preview sheet (verbatim) */
-function paintPreview(e, t, n) {
+export function paintPreview(e, t, n) {
   e.width = 704
   let r = e.getContext('2d')
   r.font = `400 40px ${FONT}`, ls(r, -0.4)
@@ -753,6 +753,14 @@ export function makeFolder(e, t, tokens, coverGeo, cardGeo, sheetsGeo, flagPlane
     typeset: false,
     disposables: m,
   }
+}
+
+/* le: the tessellated cover geometry the world builds once (verbatim) */
+export function makeCoverGeometry() {
+  const base = extrudeCover(coverOutline())
+  const fine = tessellateGroups(base)
+  base.dispose()
+  return fine
 }
 
 /* shared geometry bundle — built once per world (verbatim) */

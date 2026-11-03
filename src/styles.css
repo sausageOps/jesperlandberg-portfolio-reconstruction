@@ -217,6 +217,12 @@ input:focus-visible {
   z-index: 20;
 }
 
+/* The Writing shelf owns its own WebGL canvases and a light-theme document
+   surface inside this layer, so it needs the same lift. */
+.route-writing #main-content {
+  z-index: 20;
+}
+
 /* Boot progress is tied to real local texture requests, not elapsed time. */
 .loader {
   position: fixed;

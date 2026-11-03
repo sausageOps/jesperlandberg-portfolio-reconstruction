@@ -8,6 +8,8 @@ import Project from './components/Project.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
+import Writing from './components/writing/Writing.jsx';
+import { POST as WRITING_POST } from './data/writing.js';
 import { activeTopLevel, resolveSection } from './data/navigation.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
@@ -26,7 +28,14 @@ export default function App() {
   const [navReturning, setNavReturning] = useState(false);
 
   const section = useMemo(() => resolveSection(path), [path]);
-  const route = path.startsWith('/projects/') ? 'project' : section ? section.menu.key : path === '/' ? 'home' : 'not-found';
+  // `/routes/writing` and its one post are the only Writing routes; anything else under
+  // that prefix falls through to not-found, as the original's dynamic route would.
+  const writingMatch = useMemo(() => /^\/routes\/writing(?:\/([^/]+))?$/.exec(path), [path]);
+  const writingSlug = writingMatch ? writingMatch[1] ?? null : null;
+  const isWriting = Boolean(writingMatch) && (!writingSlug || writingSlug === WRITING_POST.slug);
+  const route = isWriting
+    ? 'writing'
+    : path.startsWith('/projects/') ? 'project' : section ? section.menu.key : path === '/' ? 'home' : 'not-found';
   const slug = route === 'project' ? path.split('/')[2] : null;
   const project = featured.find((item) => item.slug === slug) || null;
   const activeNav = activeTopLevel(path);
@@ -64,10 +73,12 @@ export default function App() {
   useEffect(() => {
     document.title = route === 'project' && project
       ? project.title
-      : section
-        ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-        : site.name;
-  }, [route, project, section]);
+      : route === 'writing'
+        ? writingSlug ? WRITING_POST.pageTitle : 'Writing'
+        : section
+          ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
+          : site.name;
+  }, [route, project, section, writingSlug]);
 
   const navigate = useCallback((to, { replace = false } = {}) => {
     const nextPath = cleanPath(to);
@@ -159,6 +170,9 @@ export default function App() {
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
     // Studio lives in the Routes menu group: /routes/studio (nav source of truth).
     if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
+    // Writing keeps its own shelf engine mounted across index ↔ post, so the folder
+    // the reader opens is the same object that lands on the paper.
+    if (route === 'writing') return <Writing slug={writingSlug} appReady={!loading} onNavigate={navigate} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     if (route === 'project' && project) {
       return (
@@ -175,16 +189,18 @@ export default function App() {
       );
     }
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
-  }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading]);
+  }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading, writingSlug, navigate]);
 
   // The letter desk and the lanyard stage are their own opaque surfaces: these
   // route classes lift the DOM above the WebGL canvas with the same pattern
   // project routes already use. Studio is reached via /routes/studio.
   const routeClass =
-    (route === 'myself' && section?.item?.slug === 'contact') ||
-    (route === 'routes' && section?.item?.slug === 'studio')
-      ? ` route-${section.item.slug}`
-      : '';
+    route === 'writing'
+      ? ''
+      : (route === 'myself' && section?.item?.slug === 'contact') ||
+          (route === 'routes' && section?.item?.slug === 'studio')
+        ? ` route-${section.item.slug}`
+        : '';
 
   return (
     <div className={`app route-${route}${routeClass}`}>
@@ -202,7 +218,7 @@ export default function App() {
           onNavigate={navigate}
           onHome={goHome}
         />
-        <div className="sr-only" aria-live="polite">{route === 'project' && project ? `${project.title} project` : 'Featured projects'}</div>
+        <div className="sr-only" aria-live="polite">{route === 'project' && project ? `${project.title} project` : route === 'writing' ? (writingSlug ? WRITING_POST.title : 'Writing') : 'Featured projects'}</div>
       </div>
       {loaderMounted && <Loader progress={progress} leaving={!loading} />}
     </div>
