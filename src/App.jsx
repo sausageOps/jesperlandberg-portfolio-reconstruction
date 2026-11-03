@@ -8,6 +8,7 @@ import Project from './components/Project.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
+import RouteBoundary from './components/RouteBoundary.jsx';
 import Writing from './components/writing/Writing.jsx';
 import { POST as WRITING_POST } from './data/writing.js';
 import { activeTopLevel, resolveSection } from './data/navigation.js';
@@ -207,7 +208,8 @@ export default function App() {
       <div inert={loaderMounted || undefined} style={{ opacity: loading ? 0 : 1 }}>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />
-        <div id="main-content">{routeContent}</div>
+        {/* keyed by path so a failed route recovers as soon as you navigate away */}
+        <div id="main-content"><RouteBoundary key={path}>{routeContent}</RouteBoundary></div>
         <Hud
           route={route}
           navReturning={navReturning}

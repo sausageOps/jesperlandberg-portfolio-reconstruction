@@ -109,6 +109,59 @@ and DOM (see *Verification*).
 7. **`data-theme` restore** when WebGL or the world is unavailable (the `dark` stamp is
    only needed while the shelf engine reads tokens).
 
+
+## Black-screen root cause (post-review fix)
+
+The first "verified" pass was wrong, and the reason is worth writing down: **every
+check ran in jsdom, where `canvas.getContext('webgl2')` returns `null`.** The whole
+WebGL path — and the geometry/paint code that only runs once a renderer exists — never
+executed. With a real GPU the engine threw during the mount phase, React unmounted the
+root, and the page went black with the navigation gone.
+
+Reproduced by giving jsdom a mocked WebGL2 + 2D context (`/tmp/jt/fakegl.js`) so
+three.js can initialise a renderer and the engine code actually runs. Two fatal
+port regressions in `src/components/writing/foldersCover.js`:
+
+1. **Wrong type for the normal temporaries** — `TessellationModifier.modify()` declared
+   its four normal vectors as `THREE.Color` (Carter's `T` alias) instead of
+   `THREE.Vector3` (his `b` alias). `lerpVectors` does not exist on `Color`, so
+   `makeCoverGeometry()` threw `TypeError: d.lerpVectors is not a function` from
+   `createShelfWorld()` inside a layout effect.
+2. **`makeFolder()` parameter names** — the shared shadow *geometry* arrived as
+   `shadowPlane` while the body referenced an undeclared `shadowPlaneGeo`, and the
+   shadow-blob texture / loose-page texture were swapped. Fixed by matching Carter's
+   call signature `(folder, idx, tokens, coverGeoFine, cardGeo, sheetsGeo, flagPlane,
+   shadowPlaneGeo, shadowBlob, loosePageTex)` and mapping `map: shadowBlob` onto the
+   shadow material.
+
+Both are invisible to `npm run build`, to static analysis and to any non-GPU DOM test,
+which is exactly why they survived the first pass.
+
+### Fail-safe behaviour added with the fix
+
+- **`RouteBoundary`** (`src/components/RouteBoundary.jsx`, wraps the route body in
+  `App.jsx`, keyed by path) — a crash inside any route now swaps only the route body for
+  a small fallback; the nav, canvas, loader and live region stay mounted.
+- **Writing engine supervision** (`Writing.jsx`) — world creation and every per-commit
+  engine call run inside `try/catch`. On failure the engine is disposed, `data-theme` is
+  restored, the `wstage` stays hidden, the classic list is re-shown and the engine is
+  not retried: the page degrades to Carter's own no-WebGL layout instead of blanking.
+- **Click routing** — in-app Writing links now go through `WritingBridge.navigate` so
+  `beforeNav` runs when the engine is up (previously the router shortcut skipped it and
+  the folder stayed on the shelf).
+
+### Engine-level verification (the part that was missing)
+
+- `fakegl.js` harness boots the real `Writing` component with a working (mocked) GL
+  context: shelf binds (`wstage` unhidden, classic hidden), mount → post → index → post
+  → index cycles clean, unmount restores `data-theme`, zero exceptions.
+- Pointer/wheel/arrow-key/Home/End events on the stage and the pointer-capture paths run
+  without throwing; the gsap tick loop renders for seconds against the mocked context.
+- With the GL context made to throw (`BROKEN_GL=1`), the page keeps the classic list and
+  the app stays mounted — the black screen is no longer reachable from an engine failure.
+- `RouteBoundary` verified directly: a throwing child leaves the surrounding chrome in
+  place and shows the fallback.
+
 ## Known deviations
 
 1. **Fonts** — deferred for this task, as agreed. The stacks keep Carter's family names
@@ -132,8 +185,8 @@ and DOM (see *Verification*).
 
 ## Verification
 
-- `npm run build` — 78 modules, `index` JS 1,253.95 kB (gzip 361.04 kB), CSS 85.23 kB,
-  no errors. (The >1,200 kB chunk warning is pre-existing and covers the whole app.)
+- `npm run build` — 79 modules, no errors. (The >1,200 kB chunk warning is pre-existing
+  and covers the whole app.)
 - **jsdom harness against the real bundle** (route → DOM facts), no console or jsdom
   errors on either route at 1440 / 768 / 375:
   - index — 1 `wstage` (`hidden`, engine off in jsdom → classic fallback), 1
@@ -154,13 +207,19 @@ and DOM (see *Verification*).
 
 ### What still needs a human eye
 
-There is no GPU and no browser in this environment, so the following are reviewed by
-code and DOM only and should be confirmed in the live preview:
+There is no GPU and no browser in this environment. The engine now executes against a
+mocked GL context, which catches JS-level exceptions, but it cannot judge *appearance*:
 
 - the WebGL shelf itself (covers, lighting, drag/wheel/keyboard feel),
 - the index → post folder flight and the settle onto the paper column,
 - the post entrance (column relay) at 1440 / 768 / 375,
 - type rendering, which depends on the still-deferred fonts.
+
+A temporary dev-only crash beacon (inline script in `index.html` +
+`crashBeacon()` in `vite.config.js`, serve-only) reports the first client exception and
+a boot receipt to the Vite process, so a residual runtime failure is visible from the
+server log instead of a black screen. It is scaffolding and will be removed once the
+preview is confirmed.
 
 **Preview routes:** `http://localhost:5173/routes/writing` and
 `http://localhost:5173/routes/writing/the-personal-starter`.

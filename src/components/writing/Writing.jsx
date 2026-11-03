@@ -12,7 +12,7 @@
  *   astro:page-load          → toShelf()/bindStage() or toBackdrop(slug)
  *   astro:navigate            → WritingBridge.navigate
  */
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './Writing.css'
 import './WritingPost.css'
 import { FOLDERS } from '../../data/writing.js'
@@ -32,6 +32,10 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
   const classicRef = useRef(null)
   const worldRef = useRef(null)
   const boundElRef = useRef(null)
+  /* Set when the shelf engine throws: the page then renders its classic list
+     permanently instead of retrying the engine on every commit. */
+  const [, setEngineDown] = useState(false)
+  const engineDownRef = useRef(false)
   const navigateRef = useRef(onNavigate)
   navigateRef.current = onNavigate
 
@@ -49,7 +53,14 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
     const root = document.documentElement
     const previousTheme = root.dataset.theme
     root.dataset.theme = 'dark'
-    const world = createShelfWorld(FOLDERS, shelfRef.current)
+    let world = null
+    try {
+      world = createShelfWorld(FOLDERS, shelfRef.current)
+    } catch (error) {
+      /* Carter's engine assumes its own markup and assets. If any of it throws, the
+         page must degrade to the classic list rather than unmount the app. */
+      console.error('[writing] shelf engine failed to start — using the classic list', error)
+    }
     if (!world) {
       if (previousTheme === undefined) delete root.dataset.theme
       else root.dataset.theme = previousTheme
@@ -63,8 +74,8 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
     return () => {
       if (previousTheme === undefined) delete root.dataset.theme
       else root.dataset.theme = previousTheme
-      world.dispose()
-      FoldersFlight.stop()
+      try { world.dispose() } catch { /* already disposed by failEngine */ }
+      try { FoldersFlight.stop() } catch { /* idem */ }
       worldRef.current = null
       WritingBridge.navigate = null
       boundElRef.current = null
@@ -73,15 +84,37 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
 
   /* Per-route commit, in Carter's order: the flight resolves into the claim, then the
      after-swap handler positions the paper, then the route mode is set. */
+  const failEngine = (error) => {
+    console.error('[writing] shelf engine failed — falling back to the classic list', error)
+    engineDownRef.current = true
+    const world = worldRef.current
+    worldRef.current = null
+    WritingBridge.navigate = null
+    try { world?.dispose?.() } catch { /* nothing left to save */ }
+    try { FoldersFlight.stop() } catch { /* idem */ }
+    if (stageRef.current) stageRef.current.hidden = true
+    if (classicRef.current) classicRef.current.hidden = false
+    boundElRef.current = null
+    setEngineDown(true)
+  }
+
   useLayoutEffect(() => {
+    if (engineDownRef.current) return
     const world = worldRef.current
     if (!world) return
+    try {
+      applyRoute(world)
+    } catch (error) {
+      failEngine(error)
+    }
+
+    function applyRoute(w) {
     FoldersFlight.onPage()
-    world.onPage()
+    w.onPage()
     if (isPost) {
-      world.toBackdrop(slug)
+      w.toBackdrop(slug)
     } else {
-      world.toShelf()
+      w.toShelf()
       /* The index subtree unmounts while the post is open, so returning to the
          shelf hands back a brand-new stage element. Carter's stage was persisted;
          ours has to be re-bound, or the wheel/drag/keyboard handlers stay on a
@@ -89,9 +122,10 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
          bindStage() attaches its listeners each call. */
       const stage = stageRef.current
       if (stage && boundElRef.current !== stage) {
-        world.bindStage(stage, classicRef.current)
+        w.bindStage(stage, classicRef.current)
         boundElRef.current = stage
       }
+    }
     }
   }, [isPost, slug, appReady])
 
@@ -110,7 +144,11 @@ export default function Writing({ slug, appReady = true, onNavigate }) {
       if (anchor.target && anchor.target !== '_self') return
       event.preventDefault()
       if (href === window.location.pathname) return
-      navigateRef.current?.(href)
+      /* Route through the bridge when the engine is up so the world can pose the
+         sheet for the flight (Carter's astro:before-preparation). Without it the
+         page would swap with the folder still sitting on the shelf. */
+      if (typeof WritingBridge.navigate === 'function') WritingBridge.navigate(href)
+      else navigateRef.current?.(href)
     }
     document.addEventListener('click', onClick)
     return () => document.removeEventListener('click', onClick)

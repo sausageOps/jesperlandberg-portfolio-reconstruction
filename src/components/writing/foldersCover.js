@@ -19,8 +19,10 @@ class TessellationModifier {
       n = this.maxEdgeLength * this.maxEdgeLength,
       r = new THREE.Vector3(), i = new THREE.Vector3(), a = new THREE.Vector3(), o = new THREE.Vector3(),
       s = [r, i, a, o],
-      c = new THREE.Color(), lColor = new THREE.Color(), u = new THREE.Color(), d = new THREE.Color(),
-      f = [c, lColor, u, d],
+      /* the normal family: Carter's `T` is the vector type, not `b` (Color) — these
+         feed `de` (normal attribute) and are lerped with lerpVectors(). */
+      c = new THREE.Vector3(), lNormal = new THREE.Vector3(), u = new THREE.Vector3(), d = new THREE.Vector3(),
+      f = [c, lNormal, u, d],
       h = new THREE.Color(), g = new THREE.Color(), _ = new THREE.Color(), v = new THREE.Color(),
       y = [h, g, _, v],
       x = new THREE.Vector2(), S = new THREE.Vector2(), C = new THREE.Vector2(), te = new THREE.Vector2(),
@@ -68,7 +70,7 @@ class TessellationModifier {
       A && (ue = N, N = [])
       for (let e2 = 0, t2 = 0, s2 = j.length; e2 < s2; e2 += 9, t2 += 6) {
         r.fromArray(j, e2 + 0), i.fromArray(j, e2 + 3), a.fromArray(j, e2 + 6)
-        D && (c.fromArray(se, e2 + 0), lColor.fromArray(se, e2 + 3), u.fromArray(se, e2 + 6))
+        D && (c.fromArray(se, e2 + 0), lNormal.fromArray(se, e2 + 3), u.fromArray(se, e2 + 6))
         O && (h.fromArray(ce, e2 + 0), g.fromArray(ce, e2 + 3), _.fromArray(ce, e2 + 6))
         k && (x.fromArray(le, t2 + 0), S.fromArray(le, t2 + 2), C.fromArray(le, t2 + 4))
         A && (re.fromArray(ue, t2 + 0), ie.fromArray(ue, t2 + 2), w.fromArray(ue, t2 + 4))
@@ -76,9 +78,9 @@ class TessellationModifier {
         s3 > n || f2 > n || p2 > n
           ? (busy = true,
             s3 >= f2 && s3 >= p2
-              ? (o.lerpVectors(r, i, 0.5), D && d.lerpVectors(c, lColor, 0.5), O && v.lerpColors(h, g, 0.5), k && te.lerpVectors(x, S, 0.5), A && ae.lerpVectors(re, ie, 0.5), ge(0, 3, 2), ge(3, 1, 2))
+              ? (o.lerpVectors(r, i, 0.5), D && d.lerpVectors(c, lNormal, 0.5), O && v.lerpColors(h, g, 0.5), k && te.lerpVectors(x, S, 0.5), A && ae.lerpVectors(re, ie, 0.5), ge(0, 3, 2), ge(3, 1, 2))
               : f2 >= s3 && f2 >= p2
-                ? (o.lerpVectors(i, a, 0.5), D && d.lerpVectors(lColor, u, 0.5), O && v.lerpColors(g, _, 0.5), k && te.lerpVectors(S, C, 0.5), A && ae.lerpVectors(ie, w, 0.5), ge(0, 1, 3), ge(3, 2, 0))
+                ? (o.lerpVectors(i, a, 0.5), D && d.lerpVectors(lNormal, u, 0.5), O && v.lerpColors(g, _, 0.5), k && te.lerpVectors(S, C, 0.5), A && ae.lerpVectors(ie, w, 0.5), ge(0, 1, 3), ge(3, 2, 0))
                 : (o.lerpVectors(r, a, 0.5), D && d.lerpVectors(c, u, 0.5), O && v.lerpColors(h, _, 0.5), k && te.lerpVectors(x, C, 0.5), A && ae.lerpVectors(re, w, 0.5), ge(0, 1, 3), ge(3, 1, 2)))
           : ge(0, 1, 2)
       }
@@ -617,7 +619,9 @@ const fitCoverUV = (e, t) => {
 }
 
 /* et: one folder (verbatim structure) */
-export function makeFolder(e, t, tokens, coverGeo, cardGeo, sheetsGeo, flagPlane, shadowPlane, loosePageTex, loosePageCanvas) {
+/* arg order mirrors Carter's `et(folder, idx, tokens, coverGeoFine, cardGeo,
+   sheetsGeo, flagPlane, shadowPlaneGeo, shadowBlob, loosePageTex)` */
+export function makeFolder(e, t, tokens, coverGeo, cardGeo, sheetsGeo, flagPlane, shadowPlaneGeo, shadowBlob, loosePageTex) {
   let m = [],
     g = new THREE.Group(),
     bumpTex = fibreTexture(t + 1)
@@ -732,7 +736,7 @@ export function makeFolder(e, t, tokens, coverGeo, cardGeo, sheetsGeo, flagPlane
   g.add(previewMesh), m.push(previewTex, previewMat, previewFlex)
 
   let shadowMat = new THREE.MeshBasicMaterial({
-    map: shadowPlane, transparent: true, opacity: 0, depthWrite: false, toneMapped: false,
+    map: shadowBlob, transparent: true, opacity: 0, depthWrite: false, toneMapped: false,
   })
   m.push(shadowMat)
   let shadowMesh = new THREE.Mesh(shadowPlaneGeo, shadowMat)
