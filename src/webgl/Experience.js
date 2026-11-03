@@ -188,6 +188,15 @@ export default class Experience {
     }
     this.bindEvents();
     this.resize();
+    if (!this.webgl) {
+      // The DOM experience needs no textures, no models and no render loop: reveal it
+      // now instead of waiting on a WebGL boot that is not going to happen.
+      this.callbacks.onProgress?.(1);
+      this.ready = true;
+      this.interactive = true;
+      this.callbacks.onReady?.();
+      return this;
+    }
     this.tick(performance.now());
     this.loadModels();
 
@@ -208,8 +217,14 @@ export default class Experience {
         });
       }
     };
-    const loading = Promise.all(Array.from({ length: Math.min(6, assets.length) }, worker));
-    const failsafe = new Promise((resolve) => setTimeout(resolve, 12000));
+    const loading = this.webgl
+      ? Promise.all(Array.from({ length: Math.min(6, assets.length) }, worker))
+      : Promise.resolve([]);
+    // The reveal must not wait on every texture: on software WebGL (and on any slow
+    // or throttled connection) the whole set takes 6-16s, and a loading screen that
+    // long reads as a black page. Cap the wait; the remaining textures stream in and
+    // the cards they back fill as they arrive.
+    const failsafe = new Promise((resolve) => setTimeout(resolve, 4000));
     const started = performance.now();
     await Promise.race([Promise.all([loading, document.fonts.ready]), failsafe]);
     if (this.progressTween) await this.progressTween;
@@ -239,6 +254,15 @@ export default class Experience {
       powerPreference: 'high-performance',
     });
     if (!context) throw new Error('WebGL 2 is unavailable.');
+    // A software rasterizer (SwiftShader/llvmpipe, or a browser with the GPU blocked)
+    // draws this scene at a few frames per second and stalls the main thread for tens
+    // of seconds during boot, which the user just sees as a black page. The DOM
+    // experience is the design's own fallback and paints instantly, so prefer it there.
+    const debugInfo = context.getExtension('WEBGL_debug_renderer_info');
+    const rendererName = debugInfo ? String(context.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)) : '';
+    if (/swiftshader|llvmpipe|softpipe|software|swangle/i.test(rendererName)) {
+      throw new Error('software WebGL renderer (' + rendererName + '); using the DOM experience');
+    }
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       context,

@@ -41,18 +41,47 @@ export default function App() {
   const project = featured.find((item) => item.slug === slug) || null;
   const activeNav = activeTopLevel(path);
 
-  useEffect(() => {
-    const instance = new Experience(canvas.current, {
-      onProgress: setProgress,
-      onReady: () => {
-        setLoading(false);
-        window.setTimeout(() => setLoaderMounted(false), 650);
-      },
-    });
-    setExperience(instance);
-    instance.init({ projects, featured });
-    return () => instance.destroy();
+  const bootTimeoutRef = useRef(null);
+  const bootFrameRef = useRef(null);
+  const reveal = useCallback(() => {
+    setLoading(false);
+    if (bootTimeoutRef.current) {
+      window.clearTimeout(bootTimeoutRef.current);
+      bootTimeoutRef.current = null;
+    }
+    window.setTimeout(() => setLoaderMounted(false), 650);
   }, []);
+
+  useEffect(() => {
+    let instance = null;
+    try {
+      instance = new Experience(canvas.current, { onProgress: setProgress, onReady: reveal });
+      setExperience(instance);
+      // Boot after the first paint so the loader is on screen before the heavy work
+      // starts, and so a stalled boot can never leave an unpainted black page.
+      bootFrameRef.current = window.requestAnimationFrame(() => {
+        // init() is async: a failure there used to leave the shell at opacity 0 forever,
+        // which reads as a black page with no nav.
+        Promise.resolve(instance.init({ projects, featured })).catch((error) => {
+          console.error('[boot] Experience failed to start; showing the shell anyway', error);
+          reveal();
+        });
+      });
+    } catch (error) {
+      console.error('[boot] Experience could not be constructed; showing the shell anyway', error);
+      reveal();
+    }
+    // Backstop: never keep the shell hidden waiting for a signal that may never come.
+    bootTimeoutRef.current = window.setTimeout(() => {
+      console.warn('[boot] assets did not report ready in 8s; revealing the shell');
+      reveal();
+    }, 8000);
+    return () => {
+      if (bootTimeoutRef.current) window.clearTimeout(bootTimeoutRef.current);
+      if (bootFrameRef.current) window.cancelAnimationFrame(bootFrameRef.current);
+      instance?.destroy?.();
+    };
+  }, [reveal]);
 
   useEffect(() => {
     const pop = () => {
@@ -205,7 +234,10 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}`}>
-      <div inert={loaderMounted || undefined} style={{ opacity: loading ? 0 : 1 }}>
+      {/* `inert` follows the reveal, not the loader element: the loader is a transparent
+          overlay that can linger while the main thread is busy, and tying interaction to
+          it left the visible site unclickable for seconds. */}
+      <div inert={loading || undefined} style={{ opacity: loading ? 0 : 1 }}>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />
         {/* keyed by path so a failed route recovers as soon as you navigate away */}

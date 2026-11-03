@@ -138,6 +138,10 @@ html.webgl .a24-nav :is(a, button, .a24-nav__scrollbar) * { cursor: pointer; }
 .a24-nav__scroll::-webkit-scrollbar { display: none; }
 .a24-nav .a24-nav__items { width: 100%; padding: 0 6em 5em; }
 .a24-nav__item { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: .25em; overflow: hidden; text-align: left; transition: color .14s var(--a24-ease); }
+/* Dropdown items are real links, but they live under .a24-nav, which disables pointer
+   events so the bar itself never blocks the page. Re-enable them here or a real mouse
+   click passes straight through to the route layer underneath. */
+.a24-nav__items .a24-nav__item { pointer-events: auto; }
 .a24-nav__item-bg { position: absolute; inset: 0; background: #000; transform: scaleY(0); transform-origin: center bottom; transition: transform .34s var(--a24-ease); }
 .a24-nav__item-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; width: 100%; min-width: 0; font-size: 1.125em; line-height: 1.4; }
 .a24-nav__item-title { overflow: hidden; min-width: 0; padding-right: .5em; text-overflow: ellipsis; white-space: nowrap; }

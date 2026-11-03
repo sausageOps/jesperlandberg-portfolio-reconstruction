@@ -50,6 +50,15 @@ export default function useA24NavMotion(loading, routeKey, hidden = false) {
     return () => { media.removeEventListener('change', onMotionChange); clearTimers(); };
   }, []);
 
+  // Watchdog: the beats below are chained timers, and a busy main thread can stretch
+  // them into tens of seconds - during which the nav is inert and its links are dead.
+  // Whenever a phase overstays its welcome, settle to idle so the bar is usable.
+  useEffect(() => {
+    if (phase === 'idle') return;
+    const guard = window.setTimeout(() => setPhase('idle'), 6000);
+    return () => window.clearTimeout(guard);
+  }, [phase]);
+
   useEffect(() => {
     if (initialDone.current || initialFinishing.current || loading || !minimumElapsed) return;
     initialFinishing.current = true;

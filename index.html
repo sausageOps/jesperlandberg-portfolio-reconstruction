@@ -4,14 +4,127 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
-    <style>html,body{margin:0;background:#000}</style>
+    <style>
+      html,body{margin:0;background:#000}
+      /* Boot mark: the loader's own three bars, painted by the document itself so the
+         very first frame is never a featureless black page while the bundle loads.
+         React replaces #root on mount, so this only ever shows before the app runs. */
+      /* lives outside #root so React mounting cannot clear it */
+      #boot-mark{position:fixed;inset:0;display:flex;gap:8px;align-items:center;justify-content:center}
+      #boot-mark[hidden]{display:none}
+      #boot-mark > span{display:block;width:50px;height:5px;border-radius:2rem;background:#2c2c2c}
+    </style>
     <meta name="description" content="Jesper Landberg, Swedish design engineer, building visually rich, motion-driven websites." />
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
     <link rel="preload" href="/assets/fonts/ABCDiatypePlusVariable.woff2" as="font" type="font/woff2" crossorigin />
     <title>Jesper Landberg</title>
   </head>
   <body>
+    <script>
+      /* TEMPORARY preview diagnostic (dev only, remove after verification).
+         It stays invisible while the app is healthy; if #root is empty or the app shell
+         is still hidden after 5s it renders what the browser knows onto the page:
+         console errors, failed requests, the loaded react/react-dom module URLs and the
+         computed state of the shell. Nothing is sent anywhere. */
+      (function () {
+        // Only real script failures count. A blocked image, font or video (very common:
+        // ad-blockers, offline CDNs) must never be mistaken for a broken page.
+        var errs = [];
+        var resourceFailures = [];
+        var isResourceNoise = function (text) { return /Failed to load resource|net::ERR|ERR_/i.test(String(text)); };
+        var origError = console.error;
+        console.error = function () {
+          try {
+            var text = Array.prototype.join.call(arguments, ' ');
+            if (isResourceNoise(text)) resourceFailures.push(text); else errs.push(text);
+          } catch (e) {}
+          return origError.apply(console, arguments);
+        };
+        window.addEventListener('error', function (e) {
+          if (e && e.message) {
+            errs.push(e.message + ' :: ' + ((e.filename) || '') + ':' + ((e.lineno) || '') + ':' + ((e.colno) || ''));
+          } else if (e && e.target && e.target.src) {
+            resourceFailures.push('resource failed: ' + e.target.src);
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) { errs.push('unhandledrejection :: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason)); });
+
+        function box(lines) {
+          var d = document.createElement('div');
+          d.id = 'preview-diagnostic';
+          d.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;background:#fff;color:#111;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;padding:18px;overflow:auto;white-space:pre-wrap;word-break:break-word');
+          d.textContent = lines.join('\n');
+          document.body.appendChild(d);
+        }
+
+        function check(waited) {
+          try {
+            var root = document.getElementById('root');
+            var shell = document.querySelector('.app > div');
+            var nav = document.querySelector('.a24-nav');
+            var loader = document.querySelector('.loader');
+            var shellStyle = shell ? getComputedStyle(shell) : null;
+            var navStyle = nav ? getComputedStyle(nav) : null;
+            var mounted = !!document.querySelector('.app');
+            var hidden = shellStyle && (shellStyle.opacity === '0' || shell.hasAttribute('inert'));
+            // Past the loader's own 12s failsafe the shell must be up; before that a
+            // hidden shell is just the normal loading state.
+            var broken = !mounted || errs.length > 0 || (hidden && waited >= 16000);
+            if (!broken || document.getElementById('preview-diagnostic')) return;
+
+            var deps = performance.getEntriesByType('resource')
+              .map(function (r) { return r.name; })
+              .filter(function (n) { return /deps\/(react|chunk)/.test(n); });
+            var failed = performance.getEntriesByType('resource')
+              .filter(function (r) { return r.responseStatus >= 400 || (r.transferSize === 0 && r.duration > 0); })
+              .map(function (r) { return (r.responseStatus || '?') + ' ' + r.name; });
+
+            box([
+              'JESPER PREVIEW DIAGNOSTIC  ' + new Date().toISOString(),
+              'url: ' + location.href,
+              'ua: ' + navigator.userAgent,
+              '',
+              '#root exists: ' + !!root + '   children: ' + (root ? root.children.length : 'n/a'),
+              'root innerHTML length: ' + (root ? root.innerHTML.length : 'n/a'),
+              '.app mounted: ' + !!document.querySelector('.app'),
+              'shell wrapper: opacity=' + (shellStyle ? shellStyle.opacity : 'n/a') + ' inert=' + (shell ? shell.hasAttribute('inert') : 'n/a'),
+              '.a24-nav: ' + (navStyle ? navStyle.display + '/' + navStyle.visibility + '/' + navStyle.opacity + ' z=' + navStyle.zIndex : 'MISSING'),
+              '.loader: ' + (loader ? getComputedStyle(loader).display + '/' + getComputedStyle(loader).opacity : 'absent'),
+              'canvas: ' + (function () { var c = document.querySelector('.webgl-canvas'); return c ? c.width + 'x' + c.height : 'none'; })(),
+              '',
+              'react/react-dom modules loaded:',
+              deps.length ? deps.join('\n') : '  (none recorded)',
+              '',
+              'blocked/failed resources (' + resourceFailures.length + ', not treated as fatal):',
+              resourceFailures.slice(0, 6).join('\n') || '  (none)',
+              '',
+              'failed requests:',
+              failed.length ? failed.slice(0, 10).join('\n') : '  (none)',
+              '',
+              'console errors (' + errs.length + '):',
+              errs.slice(0, 6).map(function (e) { return '  ' + String(e).slice(0, 700); }).join('\n') || '  (none)'
+            ].join('\n'));
+          } catch (e) { /* never let the diagnostic break the page */ }
+        }
+        // Drop the boot mark only once the app shell is really revealed, so the page is
+        // never an empty black rectangle during a slow or stalled boot.
+        var tick = setInterval(function () {
+          var shell = document.querySelector('.app > div');
+          var mark = document.getElementById('boot-mark');
+          if (shell && getComputedStyle(shell).opacity === '1' && mark) {
+            mark.hidden = true;
+            clearInterval(tick);
+          }
+        }, 250);
+        setTimeout(function () { clearInterval(tick); }, 60000);
+
+        setTimeout(function () { check(6000); }, 6000);
+        setTimeout(function () { check(8000); }, 8000);
+        setTimeout(function () { check(17000); }, 17000);
+      })();
+    </script>
     <div id="root"></div>
+    <div id="boot-mark" aria-hidden="true"><span></span><span></span><span></span></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -232,6 +232,9 @@ input:focus-visible {
   place-items: center;
   background: transparent;
   opacity: 1;
+  /* Decorative only: a transparent full-screen overlay must never swallow clicks,
+     even if it is still mounted while the main thread is busy. */
+  pointer-events: none;
   transition: opacity 0.55s ease, visibility 0.55s;
 }
 
