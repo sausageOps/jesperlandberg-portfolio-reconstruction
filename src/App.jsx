@@ -6,6 +6,7 @@ import Loader from './components/Loader.jsx';
 import Home from './components/Home.jsx';
 import Project from './components/Project.jsx';
 import Section from './components/Section.jsx';
+import Contact from './components/contact/Contact.jsx';
 import { activeTopLevel, resolveSection } from './data/navigation.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
@@ -154,6 +155,7 @@ export default function App() {
 
   const routeContent = useMemo(() => {
     if (route === 'home') return <Home experience={experience} onOpen={openProject} />;
+    if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     if (route === 'project' && project) {
       return (
@@ -170,7 +172,7 @@ export default function App() {
       );
     }
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
-  }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose]);
+  }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading]);
 
   return (
     <div className={`app route-${route}`}>

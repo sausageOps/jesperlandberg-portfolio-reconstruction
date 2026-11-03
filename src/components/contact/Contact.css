@@ -1,0 +1,280 @@
+/* ============================================================================
+   Carter Contact page — scoped port for the Jesper project (React/Vite).
+   Nearly all rules below are taken verbatim from Carter's
+   app/styles/contact.css (route-scoped to .letterpage) plus the small set of
+   shared Carter primitives the page depends on (.btn/.roll/.logo/u-sr-only),
+   adapted from app/styles/global.scss.
+
+   SCOPING: Jesper's global stylesheet sets a viewport-fluid root font-size
+   (html { font-size: calc(100vw/1500*10) }), so all rem-based Carter tokens
+   are re-declared here in px (Carter's html root is 16px) — exclusively under
+   .letterpage — leaving the rest of the Jesper project untouched. Media-query
+   rem breakpoints are unaffected by the root font-size and stay exact.
+
+   FONTS: Carter's commercial faces (Oracle, PP Neue Montreal Mono, Untitled
+   Sans, Geist Pixel) are license-restricted and not redistributed. The same
+   family names + fallback stacks are referenced so typography snaps to exact
+   if the licensed files are ever dropped in — see CONTACT_RECREATION.md.
+   ========================================================================== */
+
+/* To enable exact typography later, place the licensed woff2 files under
+   public/assets/fonts/carter/ and uncomment:
+
+   @font-face {
+     font-family: 'Oracle';
+     src: url('/assets/fonts/carter/Oracle-Variable.woff2') format('woff2');
+     font-weight: 200 1000;
+     font-style: oblique 0deg 13deg;
+     font-display: swap;
+   }
+   @font-face {
+     font-family: 'PP Neue Montreal Mono';
+     src: url('/assets/fonts/carter/PPNeueMontrealMono-Book.woff2') format('woff2');
+     font-weight: 300 450;
+     font-style: normal;
+     font-display: swap;
+   }
+   (+ Thin 100-299, Medium 451-650, Bold 651-900, italics — same pattern)
+*/
+
+/* --- Page scroller: fixed-body convention (Jesper html/body are overflow
+   hidden); the letter canvas scrolls inside its own layer, below the shared
+   navigation (z-index 45) and above the WebGL background. --- */
+.cletter-scroll {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.cletter-scroll::-webkit-scrollbar { display: none; }
+
+.letterpage {
+  /* Carter body surface: paper + fiber grain (light scheme only here). */
+  background-color: #d6d6d5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.055'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  color-scheme: light;
+  color: #1e1e1e;
+  min-height: 100%;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  text-align: left;
+
+  /* --- Carter design tokens, px-converted (Carter rem × 16) --- */
+  --s-0: 0rem; --s-2: 2px; --s-4: 4px; --s-6: 6px; --s-8: 8px; --s-10: 10px;
+  --s-12: 12px; --s-14: 14px; --s-16: 16px; --s-18: 18px; --s-20: 20px;
+  --s-24: 24px; --s-30: 30px; --s-32: 32px; --s-36: 36px; --s-38: 38px;
+  --s-40: 40px; --s-48: 48px; --s-56: 56px; --s-64: 64px; --s-80: 80px;
+  --s-88: 88px; --s-92: 92px; --s-96: 96px; --s-100: 100px; --s-112: 112px;
+  --s-120: 120px; --s-128: 128px; --s-144: 144px; --s-160: 160px;
+  --r-xs: 2px; --r-sm: 4px; --r-lg: 8px; --r-2xl: 16px; --r-pill: 999px; --r-full: 50%;
+  --ease-out-quad: cubic-bezier(.5, 1, .89, 1);
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  --font-sans: "Oracle", "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "PP Neue Montreal Mono", "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fw-regular: 400; --fw-medium: 580; --fw-mono-medium: 500;
+  --fs-tag: 14px; --lh-tight: 1.6; --track: -0.02em;
+  --mono-100: #f7f7f7; --mono-900: #1e1e1e;
+  --ink: #1e1e1e; --ink-muted: #1e1e1eb3; --paper: #d6d6d5;
+  --spot: #b03a1e; --spot-rgb: 176, 58, 30; --spot-wash: rgba(var(--spot-rgb), .14);
+  --sheet-tex:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cg fill='%23808080' fill-opacity='0.055'%3E%3Ccircle cx='4' cy='4' r='1.05'/%3E%3Ccircle cx='0' cy='0' r='1.05'/%3E%3Ccircle cx='8' cy='0' r='1.05'/%3E%3Ccircle cx='0' cy='8' r='1.05'/%3E%3Ccircle cx='8' cy='8' r='1.05'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.14'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* --- Shared Carter primitives the Contact markup uses (from global.scss) --- */
+.letterpage .u-sr-only,
+.letterpage .sr-only {
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+  width: 1px; height: 1px; margin: -1px; padding: 0; position: absolute; overflow: hidden;
+}
+.letterpage :is(button, a, input, [tabindex]):focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.letterpage ::selection { background: var(--spot-wash); color: var(--mono-900); }
+
+.letterpage .btn {
+  isolation: isolate; padding: 4px 8px; border-radius: 4px; cursor: pointer;
+  white-space: nowrap; transition: scale .2s var(--ease-out-quad);
+  background: 0 0; border: 0; justify-content: center; align-items: center;
+  gap: .55em; text-decoration: none; display: inline-flex; position: relative;
+  color: var(--ink);
+}
+.letterpage .btn:active { scale: .96; }
+.letterpage .btn--solid { color: var(--btn-on, var(--mono-100)); }
+.letterpage .btn--solid:before {
+  content: ""; z-index: -1; background: var(--btn-fill, #1e1e1eeb);
+  border-radius: 4px; transition: scale .4s var(--ease-out-expo);
+  position: absolute; inset: 0;
+}
+.letterpage .btn--solid:hover:before { scale: .95; }
+.letterpage .text-tag {
+  font-family: var(--font-sans); font-size: 14px; font-weight: 400;
+  line-height: 1.1; letter-spacing: -0.02em;
+}
+.letterpage .roll {
+  --roll: 1.2em; clip-path: inset(-15% 0%); display: inline-block;
+}
+.letterpage .roll span {
+  white-space: nowrap; text-shadow: 0 var(--roll) currentColor;
+  transition: translate .5s calc(var(--index, 0) * 12.5ms) var(--ease-out-expo);
+  display: inline-block; translate: 0;
+}
+@media (hover: hover) {
+  .letterpage .btn:hover .roll span { translate: 0 calc(var(--roll) * -1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .letterpage .roll span { transition: none; }
+}
+
+.letterpage .logo {
+  color: inherit; font-family: var(--font-sans); font-weight: 500;
+  font-size: 20px; letter-spacing: -.08em; user-select: none;
+  align-items: center; line-height: 1; display: inline-flex;
+}
+.letterpage .logo__shape { height: 30px; border: 1.5px solid; place-items: center; display: grid; }
+.letterpage .logo__circle {
+  width: 30px; border-radius: 50%; letter-spacing: -.02em;
+  transition: background-color .25s var(--ease-out-expo), border-color .25s var(--ease-out-expo), color .25s var(--ease-out-expo);
+  background: 0 0;
+}
+.letterpage .logo__capsule {
+  min-width: 30px; border-radius: 4px; justify-items: start;
+  padding-inline: 4.4px 6px; overflow: clip;
+}
+.letterpage .logo__capsule--single { letter-spacing: .05em; justify-items: center; padding-inline: 4.4px; }
+.letterpage .logo__word {
+  white-space: nowrap; font-kerning: none;
+  font-feature-settings: "kern" 0, "liga" 0, "calt" 0;
+  align-items: center; display: inline-flex;
+}
+
+/* Entrance reveal wrappers (matches Carter runtime: .y_ clips, .y slides) */
+.letterpage .y_ {
+  margin-block-start: -1px; margin-inline: -1px; padding-block-start: 1px;
+  padding-inline: 1px; display: block; overflow: hidden;
+}
+.letterpage .y { display: block; }
+
+/* ============================================================================
+   contact.css — from Carter app/styles/contact.css (verbatim, scoped source)
+   ========================================================================== */
+.letterpage .desk{--bond:#efeeeb;--thermal:#f7f7f4;--pink:#1e1e1e;--pink-muted:#1e1e1e94;--prule:#1e1e1e38;--pen:#1b2440;--spot:#b03a1e;--spot-rgb:176, 58, 30;--spot-wash:rgba(var(--spot-rgb), .14);padding-block:var(--s-64) var(--s-96);position:relative;container:desk/inline-size}
+.letterpage .desk__canvas{pointer-events:none;width:100%;height:100%;display:none;position:absolute;inset:0}
+.letterpage .desk[data-letter-posed]{padding-block:0}
+.letterpage .desk[data-letter-posed] .desk__canvas{display:block}
+.letterpage .desk[data-letter-posed] .sheet,.letterpage .desk[data-letter-posed] .stub{box-shadow:none;background:0 0;margin:0;position:absolute}
+@media (scripting:enabled) and (prefers-reduced-motion:no-preference){.letterpage .desk:not([data-letter-posed]){padding-block-start:116px}@container desk (width>=760px){.letterpage .desk:not([data-letter-posed]) .sheet,.letterpage .desk:not([data-letter-posed]) .stub{--sw:clamp(560px, 56cqw, 800px)}.letterpage .desk:not([data-letter-posed]) .sheet{width:var(--sw);margin-block-end:calc(132px - var(--s-96));margin-inline-start:calc((100cqw - var(--sw) * 1.153) / 2)}.letterpage .desk:not([data-letter-posed]) .stub{inline-size:calc(var(--sw) * .34);block-size:calc(var(--sw) * .34 * 1.04);margin:0;position:absolute;inset-block-start:94px;inset-inline-start:calc((100cqw - var(--sw) * 1.153) / 2 + var(--sw) * .813)}}}
+.letterpage .sheet input:-webkit-autofill,.letterpage .sheet input:-webkit-autofill:hover,.letterpage .sheet input:-webkit-autofill:focus{-webkit-text-fill-color:var(--pink);caret-color:var(--pink);-webkit-background-clip:text;background-clip:text;transition:background-color 9999s ease-out}
+.letterpage .sheet{background:var(--bond);width:min(100% - 2rem,800px);color:var(--pink);font-family:var(--font-mono);letter-spacing:var(--track);margin-inline:auto;font-size:14px;line-height:30px;position:relative;box-shadow:0 2px 24px #0000001f;container-type:inline-size}
+.letterpage .sheet ::selection,.letterpage .sheet :is(input,textarea)::selection{background:var(--spot-wash);color:var(--pink)}
+.letterpage .sheet__in{padding:8cqi 9cqi 7cqi}
+.letterpage .sheet__head{align-items:center;gap:var(--s-20);padding-block-end:var(--s-20);display:flex;position:relative}
+.letterpage .sheet__rule{background:var(--prule);pointer-events:none;block-size:1px;transition:background-color .2s var(--ease-out-quad);position:absolute;inset-block-end:0;inset-inline:0}
+.letterpage .sheet__mark{inline-size:clamp(56px,9cqi,72px);color:var(--pink);display:block}
+.letterpage .desk[data-letter-posed] .sheet__mark .logo{visibility:hidden}
+.letterpage .sheet__mark .logo{transform-origin:0 0;scale:calc(clamp(56px, 9cqi, 72px) / 64)}
+.letterpage .sheet__lh{line-height:1.5}
+.letterpage .sheet__name{font-family:var(--font-sans);font-size:17px;font-weight:var(--fw-medium);letter-spacing:var(--track);margin-block-end:4px;line-height:1.25;margin-inline:0}
+.letterpage .sheet__line{text-transform:uppercase;letter-spacing:.06em;color:var(--pink-muted);font-size:11px;margin-block:0}
+.letterpage .sheet__line a{color:inherit;text-decoration:none}
+.letterpage .sheet__line a:hover,.letterpage .sheet__line a:focus-visible{text-underline-offset:.2em;text-decoration:underline}
+.letterpage .sheet__date{color:var(--pink-muted);margin-block-start:var(--s-32);font-size:12px;margin-block-end:0}
+.letterpage .sheet__salut{margin-block-start:var(--s-8);font-size:15px;margin-block-end:0}
+.letterpage .sheet__label{letter-spacing:.06em;color:var(--pink-muted);font-size:11px}
+.letterpage .sheet__re{align-items:baseline;gap:0 var(--s-20);border:0;flex-wrap:wrap;min-inline-size:0;margin-block:var(--s-16) 0;padding:0 0 0 8ch;display:flex;position:relative}
+.letterpage .sheet__re legend{padding:0;position:absolute;inset-inline-start:0}
+.letterpage .sheet__kind{cursor:pointer;align-items:center;gap:.5ch;font-size:13px;display:inline-flex}
+.letterpage .sheet__kind input{opacity:0;pointer-events:none;position:absolute}
+.letterpage .sheet__kind .sheet__box:before{content:"[ ]";letter-spacing:0}
+.letterpage .sheet__kind input:checked~.sheet__box:before{content:"[X]"}
+.letterpage .sheet__kind input:focus-visible~.sheet__box{outline:2px solid var(--pink);outline-offset:2px}
+.letterpage .sheet__field{align-items:baseline;gap:var(--s-12);margin-block-start:var(--s-8);padding-block-end:1px;display:flex;position:relative}
+.letterpage .sheet__field:focus-within .sheet__rule{background-color:var(--pink)}
+.letterpage .sheet__field .sheet__label{flex:none;min-inline-size:4.85em}
+.letterpage .sheet__field input{min-inline-size:0;color:inherit;font:inherit;letter-spacing:inherit;background:0 0;border:0;outline:none;flex:1;padding:0;border-radius:0}
+.letterpage .sheet__field input::placeholder{color:var(--pink-muted);opacity:.7}
+.letterpage .sheet__body{background:repeating-linear-gradient(transparent 0 29px, var(--prule) 29px 30px);margin-block-start:var(--s-20);display:block}
+.letterpage .sheet__body:focus-within{background-image:repeating-linear-gradient(#0000 0 29px,#1e1e1e6b 29px 30px)}
+.letterpage .sheet__body textarea{resize:none;min-block-size:180px;inline-size:100%;color:inherit;font:inherit;letter-spacing:inherit;background:0 0;border:0;outline:none;padding:0;line-height:30px;display:block;overflow:hidden;border-radius:0}
+.letterpage .sheet__body textarea::placeholder{color:var(--pink-muted);opacity:.7}
+.letterpage .sheet__close{margin-block:var(--s-24) 0;font-size:15px}
+.letterpage .sig{block-size:120px;cursor:pointer;outline:none;margin-block-start:var(--s-4);position:relative}
+.letterpage .sig:focus-visible .sheet__rule{background-color:var(--pink)}
+.letterpage .desk[data-letter-sent] .sig{cursor:default}
+.letterpage .sig__ink{pointer-events:none;width:100%;height:100%;display:block;position:absolute;inset:0}
+.letterpage .sig__ghost{color:var(--pink-muted);opacity:.7;pointer-events:none;transition:opacity .3s var(--ease-out-quad);font-size:12px;position:absolute;inset-block-end:var(--s-8);inset-inline-start:0}
+.letterpage .desk[data-letter-signed] .sig__ghost{opacity:0}
+.letterpage .sig__clear{color:var(--pink-muted);font:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;background:0 0;border:0;padding:0;font-size:11px}
+.letterpage .sig__clear:hover,.letterpage .sig__clear:focus-visible{color:var(--pink)}
+.letterpage .sheet__typed{justify-content:space-between;align-items:baseline;gap:var(--s-16);margin-block-start:var(--s-8);display:flex}
+.letterpage .sheet__typed .sheet__typed-in{flex:1;min-inline-size:0}
+.letterpage .sheet__typed input{inline-size:100%;min-inline-size:0;color:inherit;font:inherit;letter-spacing:inherit;background:0 0;border:0;outline:none;padding:0;font-size:13px;border-radius:0}
+.letterpage .sheet__typed input::placeholder{color:var(--pink-muted);opacity:.6}
+.letterpage .sheet__typed input:focus{box-shadow:0 1px 0 var(--pink)}
+.letterpage .slip{background:var(--bond);inline-size:min(92vw,640px);color:var(--pink);font-family:var(--font-mono);border:0;border-radius:2px;margin:auto;padding:0;position:fixed;inset:0;box-shadow:inset 0 1px #fff6,0 30px 80px #00000059;letter-spacing:var(--track)}
+.letterpage .slip::backdrop{background:#0a0a0a80}
+.letterpage .slip__in{padding:22px 26px 20px}
+.letterpage .slip__head{justify-content:space-between;gap:var(--s-16);letter-spacing:.06em;font-size:11px;line-height:1.5;display:flex;margin:0}
+.letterpage .slip__hint{color:var(--pink-muted)}
+.letterpage .slip__pad{block-size:clamp(170px,32vw,240px);border-block-end:1px solid var(--prule);touch-action:none;cursor:crosshair;margin-block-start:var(--s-12);position:relative}
+.letterpage .slip__canvas{width:100%;height:100%;display:block;position:absolute;inset:0}
+.letterpage .slip__x{color:var(--pink-muted);pointer-events:none;font-size:13px;position:absolute;inset-block-end:6px;inset-inline-start:2px}
+.letterpage .slip__foot{justify-content:flex-end;align-items:center;gap:var(--s-20);margin-block-start:var(--s-16);display:flex}
+.letterpage .slip__clear{color:var(--pink-muted);font:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;background:0 0;border:0;padding:0;font-size:11px}
+.letterpage .slip__clear:hover,.letterpage .slip__clear:focus-visible{color:var(--pink)}
+.letterpage .slip__foot .btn{--btn-fill:var(--pink);--btn-on:var(--bond)}
+@media (width<=47.99rem){.letterpage .slip__head{flex-direction:column;gap:2px}}
+.letterpage .sheet__foot{justify-content:space-between;align-items:center;gap:var(--s-24);margin-block-start:var(--s-40);display:flex}
+.letterpage .sheet__status{letter-spacing:.06em;color:var(--pink-muted);font-size:11px;line-height:1.6;margin:0}
+.letterpage .sheet__foot .btn{--btn-fill:var(--pink);--btn-on:var(--bond)}
+.letterpage .sheet__note{letter-spacing:.02em;color:var(--spot);margin:6px 0 0;font-size:11px;line-height:1.6}
+.letterpage .sheet__note[hidden]{display:none}
+.letterpage .sheet__note--send{gap:0 var(--s-12);flex-wrap:wrap;margin-block-start:var(--s-16);display:flex}
+.letterpage .sheet__note--send a{color:var(--spot);text-underline-offset:.2em;text-decoration:underline}
+.letterpage .sheet__retry{color:var(--pink-muted);font:inherit;letter-spacing:inherit;cursor:pointer;background:0 0;border:0;padding:0}
+.letterpage .sheet__retry:hover,.letterpage .sheet__retry:focus-visible{color:var(--pink);text-underline-offset:.2em;text-decoration:underline}
+.letterpage .desk[data-letter-error=email] .sheet__field--email .sheet__rule,.letterpage .desk[data-letter-error=sign] .sig .sheet__rule{background-color:var(--spot)}
+.letterpage .desk[data-letter-error=body] .sheet__body{background-image:repeating-linear-gradient(transparent 0 29px, var(--spot) 29px 30px)}
+.letterpage .desk[data-letter-state=sending] .sheet__in{opacity:.72;transition:opacity .3s var(--ease-out-quad)}
+.letterpage .desk[data-letter-state=received] .sheet__status{color:var(--pink)}
+.letterpage .sheet__copy{color:var(--pink);font:inherit;letter-spacing:.06em;text-transform:uppercase;text-underline-offset:.25em;cursor:pointer;background:0 0;border:0;padding:0;font-size:11px;text-decoration:underline}
+.letterpage .sheet__copy[hidden]{display:none}
+.letterpage .sheet__copy:hover,.letterpage .sheet__copy:focus-visible{text-decoration-thickness:2px}
+.letterpage .desk[data-letter-state=received] .sheet__foot .btn{display:none}
+.letterpage .desk[data-letter-state=sending] .sheet__foot .btn{opacity:.5;pointer-events:none}
+.letterpage .stamp{pointer-events:none;mix-blend-mode:multiply;inline-size:clamp(150px,30cqi,230px);position:absolute;inset-block-end:22cqi;inset-inline-end:6cqi;rotate:-9deg}
+.letterpage .stamp svg{width:100%;height:auto;display:block}
+.letterpage .desk[data-letter-sent] input,.letterpage .desk[data-letter-sent] textarea{color:var(--pink-muted)}
+.letterpage .desk[data-letter-sent] .sig__clear{display:none}
+.letterpage .stub{inline-size:min(100% - 2rem,300px);margin:var(--s-40) auto 0;background:var(--thermal);color:var(--pink);font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;padding:26px 22px 22px;font-size:11px;line-height:1.5;position:relative;box-shadow:0 2px 16px #0000001a;container-type:inline-size}
+.letterpage .stub__head{font-weight:var(--fw-mono-medium);font-size:clamp(9px,4.4cqi,12px);margin:0}
+.letterpage .stub__sub{color:var(--pink-muted);border-block-end:1px dashed var(--prule);padding-block-end:10px;font-size:clamp(8px,3.8cqi,10px);margin:0}
+.letterpage .stub__rows{margin:12px 0 0;font-size:clamp(8px,3.9cqi,11px)}
+.letterpage .stub__rows>div{justify-content:space-between;gap:var(--s-8);border-block-end:1px dotted var(--prule);padding-block:5px;display:flex}
+.letterpage .stub__rows dt{color:var(--pink-muted)}
+.letterpage .stub__rows dd{text-align:right;margin:0}
+.letterpage .stub__rows dd[data-filled=no]{color:var(--pink-muted)}
+.letterpage .stub__bars{background:repeating-linear-gradient(90deg, var(--pink) 0 2px, transparent 2px 4px, var(--pink) 4px 5px, transparent 5px 9px, var(--pink) 9px 12px, transparent 12px 14px);block-size:26px;margin-block-start:16px;display:block}
+.letterpage .stub__foot{color:var(--pink-muted);margin-block-start:8px;font-size:clamp(8px,3.6cqi,10px)}
+@media (width<=47.99rem){.letterpage .sheet,.letterpage .sheet__typed input{font-size:16px}.letterpage .sheet__in{padding:7cqi 6cqi 6cqi}.letterpage .sheet__foot{flex-direction:column;align-items:flex-start}}
+
+/* Contact-only keyboard and no-script affordances. */
+.letterpage .sig:focus-visible,
+.letterpage .sig__clear:focus-visible,
+.letterpage .slip__clear:focus-visible,
+.letterpage .sheet__retry:focus-visible,
+.letterpage .sheet__copy:focus-visible {
+  outline: 2px solid var(--pink);
+  outline-offset: 4px;
+}
+.letterpage .sheet__note--no-script { margin-block-start: var(--s-16); }
+.letterpage .sheet__note--no-script a { color: inherit; text-decoration: underline; text-underline-offset: .2em; }
+
+/* Tablet receipt fit (Carter's fix for 760–1270px stub spacing). */
+@property --rs{syntax:"<length>";inherits:true;initial-value:560px}
+@container desk (width>=760px){.letterpage .stub{--rs:clamp(560px,56cqw,720px);padding:calc(var(--rs)*.0875 - 37px) 22px calc(var(--rs)*.075 - 32px)}.letterpage .stub__sub{padding-block-end:calc(var(--rs)*.03125 - 12.5px)}.letterpage .stub__rows{margin-block-start:calc(var(--rs)*.0375 - 15px)}.letterpage .stub__rows>div{padding-block:calc(var(--rs)*.01875 - 8.5px)}.letterpage .stub__bars{margin-block-start:calc(var(--rs)*.04375 - 15.5px)}.letterpage .stub__foot{margin-block-start:calc(var(--rs)*.025 - 10px)}}
