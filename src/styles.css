@@ -205,6 +205,18 @@ input:focus-visible {
   z-index: 20;
 }
 
+/* The letter-desk route paints its own opaque paper surface, so its DOM must
+   sit above the WebGL canvas (which clears to opaque black on myself routes). */
+.route-contact #main-content {
+  z-index: 20;
+}
+
+/* The lanyard stage paints into its own canvas that must receive all pointer
+   input, so it needs the same lift above the ambient WebGL canvas. */
+.route-studio #main-content {
+  z-index: 20;
+}
+
 /* Boot progress is tied to real local texture requests, not elapsed time. */
 .loader {
   position: fixed;
