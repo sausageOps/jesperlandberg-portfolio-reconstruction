@@ -211,6 +211,12 @@ input:focus-visible {
   z-index: 20;
 }
 
+/* The lanyard stage paints into its own canvas that must receive all pointer
+   input, so it needs the same lift above the ambient WebGL canvas. */
+.route-studio #main-content {
+  z-index: 20;
+}
+
 /* Boot progress is tied to real local texture requests, not elapsed time. */
 .loader {
   position: fixed;

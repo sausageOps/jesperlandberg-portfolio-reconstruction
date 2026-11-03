@@ -7,6 +7,7 @@ import Home from './components/Home.jsx';
 import Project from './components/Project.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
+import Studio from './components/studio/Studio.jsx';
 import { activeTopLevel, resolveSection } from './data/navigation.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
@@ -156,6 +157,7 @@ export default function App() {
   const routeContent = useMemo(() => {
     if (route === 'home') return <Home experience={experience} onOpen={openProject} />;
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
+    if (route === 'myself' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     if (route === 'project' && project) {
       return (
@@ -174,9 +176,13 @@ export default function App() {
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
   }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading]);
 
-  // The letter desk is its own opaque surface: this route class lifts the DOM
-  // above the WebGL canvas with the same pattern project routes already use.
-  const routeClass = route === 'myself' && section?.item?.slug === 'contact' ? ' route-contact' : '';
+  // The letter desk and the lanyard stage are their own opaque surfaces: these
+  // route classes lift the DOM above the WebGL canvas with the same pattern
+  // project routes already use.
+  const routeClass =
+    route === 'myself' && (section?.item?.slug === 'contact' || section?.item?.slug === 'studio')
+      ? ` route-${section.item.slug}`
+      : '';
 
   return (
     <div className={`app route-${route}${routeClass}`}>

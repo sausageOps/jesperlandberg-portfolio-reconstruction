@@ -1,0 +1,250 @@
+/* ============================================
+   Studio — Carter /studio fidelity port
+   Rules ported 1:1 from the Carter reference (app/styles/studio.css +
+   the shared atoms it consumes: .stage-ibtn, .infotip, .linkcircle,
+   .arrow-roll, .text-h6/.text-label/.text-meta, .container, .u-sr-only),
+   scoped under .studio. Carter rem values become px under this project's
+   fluid root-size convention (16px Carter root = px literals below).
+   ============================================ */
+
+/* --- scoped token overlay (Carter dark theme defaults: the Carter document has
+   no data-theme attribute, so its :root dark values apply) --- */
+main.studio {
+  /* spacing scale (Carter --s-* @16px root) */
+  --s-4: 4px; --s-6: 6px; --s-8: 8px; --s-10: 10px; --s-12: 12px; --s-14: 14px;
+  --s-16: 16px; --s-18: 18px; --s-20: 20px; --s-24: 24px; --s-28: 28px;
+  --s-30: 30px; --s-32: 32px; --s-48: 48px;
+  /* radii */
+  --r-sm: var(--s-4); --r-md: 6px; --r-lg: var(--s-8); --r-pill: 999px;
+  /* ink/paper (Carter dark defaults) */
+  --ink: #f7f7f7; --ink-muted: rgba(247, 247, 247, 0.5);
+  --paper: #1e1e1e; --popover: #262626;
+  --mono-100: #f7f7f7; --mono-500: #545251; --mono-900: #1e1e1e;
+  --line: rgba(247, 247, 247, 0.06);
+  --img-outline: rgba(255, 255, 255, 0.1);
+  --shadow-card: 0 12px 30px -18px rgba(0, 0, 0, 0.55);
+  /* motion */
+  --ease-out-quad: cubic-bezier(0.5, 1, 0.89, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* typography stacks (custom faces deferred — Carter's stacks' fallbacks apply;
+     16px Carter root => px literals) */
+  --font-sans: "Oracle", "Geist Variable", system-ui, sans-serif;
+  --font-mono: "PP Neue Montreal Mono", "Geist Mono Variable", ui-monospace, monospace;
+  --fw-regular: 400; --fw-medium: 500;
+}
+
+/* --- physics layer --- */
+
+/* viewport-height page; no scroll surface of its own (Carter: 100svh grid) —
+   the Jesper route layer already fixes the scene in place. */
+
+.studio .stage-ibtn {
+  pointer-events: auto;
+  block-size: 40px;   /* 2.5rem */
+  inline-size: 40px;  /* 2.5rem */
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 0.25s var(--ease-out-quad), transform 0.16s var(--ease-out-quad);
+  background: none;
+  border: 0;
+  place-items: center;
+  padding: 0;
+  display: grid;
+}
+.studio .stage-ibtn svg { block-size: 16px;  /* 1rem */ inline-size: 16px;  /* 1rem */ }
+.studio .stage-ibtn:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) {
+  .studio .stage-ibtn:hover { color: var(--ink); }
+}
+.studio .stage-ibtn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -4px;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+
+/* The lanyard stage: full viewport, drag surface, hidden until the engine mounts. */
+.studio .lstage[hidden], .studio .studio__classic[hidden] { display: none; }
+.studio .lstage {
+  touch-action: none;
+  overscroll-behavior: none;
+  outline: none;
+  height: 100svh;
+  position: relative;
+}
+.studio .lstage:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+.studio .lstage__canvas { width: 100%; height: 100%; display: block; position: absolute; inset: 0; }
+.studio .lstage__info { z-index: 2; position: absolute; inset-block-end: var(--s-32); inset-inline-start: 50%; translate: -50%; }
+
+/* No-JS / reduced-motion fallback tile (verbatim studio.css) */
+.studio .studio__classic { place-items: center; min-height: 100svh; display: grid; }
+.studio .studio__unit { align-items: center; gap: var(--s-16); flex-direction: column; display: flex; }
+.studio .studio__link {
+  align-items: center;
+  gap: var(--s-24);
+  color: var(--ink);
+  flex-direction: column;
+  text-decoration: none;
+  display: flex;
+}
+.studio .studio__link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 6px;
+  border-radius: var(--r-lg);
+}
+.studio .studio__tile {
+  aspect-ratio: 1;
+  background: var(--mono-900);
+  border: 1px solid var(--img-outline);
+  width: clamp(144px, 20vw, 180px); /* clamp(9rem,20vw,11.25rem) */
+  transition: translate 0.4s var(--ease-out-expo), scale 0.2s var(--ease-out-quad), box-shadow 0.4s var(--ease-out-expo);
+  border-radius: 22.4%;
+  place-items: center;
+  display: grid;
+}
+.studio .studio__flag { width: 42%; display: block; }
+.studio .studio__name { align-items: center; gap: var(--s-12); display: inline-flex; }
+.studio .studio__meta { color: var(--ink-muted); text-transform: uppercase; text-align: center; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .studio .studio__link:hover .studio__tile { box-shadow: var(--shadow-card); translate: 0 -4px; }
+}
+.studio .studio__link:active .studio__tile { scale: 0.97; }
+
+/* --- shared atoms consumed by the page (Carter global.scss, scoped + rem→px) --- */
+
+/* stage-ibtn base variant is re-declared above (studio's own variant replaces it;
+   Carter re-declares the atom inline on this page — kept verbatim). */
+
+/* infotip (Carter global.scss block, verbatim) */
+.studio .infotip { inline-size: 40px; /* 2.5rem */ position: relative; }
+.studio .infotip__tip {
+  transform-origin: top;
+  align-items: center;
+  gap: var(--s-8);
+  width: max-content;
+  max-width: min(320px, 80vw); /* min(20rem,80vw) */
+  padding: var(--s-10) var(--s-12);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s var(--ease-out-expo), translate 0.15s var(--ease-out-expo), scale 0.15s var(--ease-out-expo);
+  flex-direction: column;
+  display: flex;
+  position: absolute;
+  inset-block-start: calc(100% - 6.4px); /* calc(100% - 0.4rem) */
+  inset-inline-start: 50%;
+  translate: -50% -3px;
+  scale: 0.97;
+}
+.studio .infotip__title { color: var(--ink-muted); white-space: nowrap; align-items: center; gap: 0.35em; display: inline-flex; }
+.studio .infotip__title svg { block-size: 0.85em; inline-size: 0.85em; }
+.studio .infotip[data-place=top] .infotip__tip {
+  transform-origin: bottom;
+  inset-block: auto calc(100% - 6.4px); /* 0.4rem */
+  translate: -50% 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .studio .infotip__btn:hover + .infotip__tip {
+    opacity: 1;
+    transition-delay: 0.12s;
+    translate: -50%;
+    scale: 1;
+  }
+}
+.studio .infotip__btn:focus-visible + .infotip__tip {
+  opacity: 1;
+  transition-delay: 0s;
+  translate: -50%;
+  scale: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio .infotip__tip {
+    transition: opacity 0.15s var(--ease-out-expo);
+    translate: -50%;
+    scale: 1;
+  }
+}
+
+/* linkcircle (Carter global.scss, verbatim) */
+.studio .linkcircle {
+  width: var(--s-20);
+  height: var(--s-20);
+  border-radius: var(--r-pill);
+  background: var(--mono-500);
+  color: var(--mono-100);
+  transition: width 0.4s var(--ease-out-expo), opacity 0.3s var(--ease-out-quad);
+  flex: none;
+  place-items: center;
+  display: grid;
+  overflow: hidden;
+}
+.studio .linkcircle .arrow-roll { width: var(--s-10); height: var(--s-10); }
+
+/* arrow-roll (Carter global.scss, verbatim) */
+.studio .arrow-roll {
+  --roll-out: 100% 0;
+  --roll-in: -100% 0;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  position: relative;
+  overflow: clip;
+}
+.studio .arrow-roll--diagonal { --roll-out: 100% -100%; --roll-in: -100% 100%; }
+.studio .arrow-roll__icon { width: 100%; height: 100%; transition: translate 0.5s var(--ease-out-expo); display: block; }
+.studio .arrow-roll__icon svg { width: 100%; height: 100%; display: block; }
+.studio .arrow-roll__next { translate: var(--roll-in); position: absolute; inset: 0; }
+.studio [data-selected] .arrow-roll__current { translate: var(--roll-out); }
+.studio [data-selected] .arrow-roll__next { translate: 0; }
+.studio [data-hover]:hover .arrow-roll__current { translate: var(--roll-out); }
+.studio [data-hover]:hover .arrow-roll__next { translate: 0; }
+
+/* text utilities consumed by the page (Carter global.scss, scoped) */
+.studio .text-h6 {
+  font-family: var(--font-sans);
+  font-size: clamp(18px, 17.296px + 0.1878vw, 20px); /* Carter --fs-h6 clamp(1.125rem,1.081rem+.1878vw,1.25rem) */
+  font-weight: var(--fw-medium);
+  line-height: 1.28; /* --lh-tight */
+  letter-spacing: -0.01em; /* --track */
+}
+.studio .text-label {
+  font-family: var(--font-sans);
+  font-size: 12px; /* --fs-label */
+  font-weight: var(--fw-regular);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.studio .text-meta {
+  font-family: var(--font-sans);
+  font-size: 12px; /* --fs-meta */
+  font-weight: var(--fw-regular);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* container grid (Carter global.scss) */
+.studio .container {
+  grid-template-columns: [full-start] minmax(var(--margin, clamp(16px, 11.07px + 1.3146vw, 30px)), 1fr) [content-start] min(100% - var(--margin, clamp(16px, 11.07px + 1.3146vw, 30px)) * 2, 1920px) [content-end] minmax(var(--margin, clamp(16px, 11.07px + 1.3146vw, 30px)), 1fr) [full-end];
+  display: grid;
+}
+.studio .container > * { grid-column: content; } /* Carter same-named rule */
+
+/* visually-hidden (Carter global .u-sr-only, scoped to the page) */
+.studio .u-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
