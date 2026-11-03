@@ -157,7 +157,8 @@ export default function App() {
   const routeContent = useMemo(() => {
     if (route === 'home') return <Home experience={experience} onOpen={openProject} />;
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
-    if (route === 'myself' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
+    // Studio lives in the Routes menu group: /routes/studio (nav source of truth).
+    if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     if (route === 'project' && project) {
       return (
@@ -178,9 +179,10 @@ export default function App() {
 
   // The letter desk and the lanyard stage are their own opaque surfaces: these
   // route classes lift the DOM above the WebGL canvas with the same pattern
-  // project routes already use.
+  // project routes already use. Studio is reached via /routes/studio.
   const routeClass =
-    route === 'myself' && (section?.item?.slug === 'contact' || section?.item?.slug === 'studio')
+    (route === 'myself' && section?.item?.slug === 'contact') ||
+    (route === 'routes' && section?.item?.slug === 'studio')
       ? ` route-${section.item.slug}`
       : '';
 
