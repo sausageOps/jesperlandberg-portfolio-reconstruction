@@ -115,6 +115,10 @@ export default class Experience {
   constructor(canvas, callbacks = {}) {
     this.canvas = canvas;
     this.callbacks = callbacks;
+    // Set when the hardware probe could not confirm an accelerated GPU: skip WebGL
+    // entirely, because creating the context is synchronous and can block the main
+    // thread for tens of seconds on a software renderer.
+    this.forceDom = Boolean(callbacks.forceDom);
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.route = 'home';
     this.overlay = null;
@@ -175,6 +179,18 @@ export default class Experience {
     gsap.ticker.lagSmoothing(0);
     this.projects = projects;
     this.featured = featured;
+    if (this.forceDom) {
+      console.info('[boot] no accelerated GPU confirmed; using the DOM experience');
+      this.webgl = false;
+      document.documentElement.classList.add('no-webgl');
+      this.bindEvents();
+      this.resize();
+      this.callbacks.onProgress?.(1);
+      this.ready = true;
+      this.interactive = true;
+      this.callbacks.onReady?.();
+      return this;
+    }
     try {
       this.setupRenderer();
       this.setupScene();

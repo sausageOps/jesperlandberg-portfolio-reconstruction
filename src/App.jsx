@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Experience from './webgl/Experience.js';
+import probeHardwareWebGL from './webgl/hardwareProbe.js';
 import { featured, projects, site } from './data/projects.js';
 import Hud from './components/Hud.jsx';
 import Loader from './components/Loader.jsx';
@@ -60,11 +61,17 @@ export default function App() {
       // Boot after the first paint so the loader is on screen before the heavy work
       // starts, and so a stalled boot can never leave an unpainted black page.
       bootFrameRef.current = window.requestAnimationFrame(() => {
-        // init() is async: a failure there used to leave the shell at opacity 0 forever,
-        // which reads as a black page with no nav.
-        Promise.resolve(instance.init({ projects, featured })).catch((error) => {
-          console.error('[boot] Experience failed to start; showing the shell anyway', error);
-          reveal();
+        // Ask the worker first: a software renderer would block this thread inside
+        // getContext, and the page would look dead until it returned.
+        probeHardwareWebGL().then((hardware) => {
+          if (instance.destroyed) return;
+          instance.forceDom = !hardware;
+          // init() is async: a failure there used to leave the shell at opacity 0 forever,
+          // which reads as a black page with no nav.
+          Promise.resolve(instance.init({ projects, featured })).catch((error) => {
+            console.error('[boot] Experience failed to start; showing the shell anyway', error);
+            reveal();
+          });
         });
       });
     } catch (error) {
@@ -73,9 +80,12 @@ export default function App() {
     }
     // Backstop: never keep the shell hidden waiting for a signal that may never come.
     bootTimeoutRef.current = window.setTimeout(() => {
-      console.warn('[boot] assets did not report ready in 8s; revealing the shell');
+      // Hard deadline. Whatever the 3D boot is doing - a software rasterizer, a
+      // stalled texture, a slow GPU - the page must not stay hidden. The DOM content is
+      // complete on its own; the canvas catches up if and when it can.
+      console.warn('[boot] assets did not report ready in 4s; revealing the shell');
       reveal();
-    }, 8000);
+    }, 4000);
     return () => {
       if (bootTimeoutRef.current) window.clearTimeout(bootTimeoutRef.current);
       if (bootFrameRef.current) window.cancelAnimationFrame(bootFrameRef.current);
