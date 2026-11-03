@@ -51,6 +51,30 @@ endpoint; we have no credentials for it and must not spray their inbox.**
 6. **Analytics** — the `generate_lead` event (with regex-classified referral source)
    is logged to the console instead of being dispatched.
 
+## Viewport stacking fix (black-screen root cause, post-review fix)
+
+The route initially rendered as a blank black page because Jesper's WebGL
+canvas (`position: fixed; z-index: 10`) paints above `#main-content`
+(`position: fixed`, z-index auto — a fixed element forms its own stacking
+context, trapping its children below any z-indexed sibling), and
+`Experience.tick()` clears the canvas to opaque black on every non-home,
+non-project route. Only `.route-project #main-content { z-index: 20 }` opted
+out; `myself` routes never did (Home survives because its cards are
+WebGL-drawn meshes, not DOM).
+
+Fix (additive, mirrors the existing project-route pattern):
+- `src/App.jsx` — appends a `route-contact` class to `.app` when rendering
+  `/myself/contact` only; other routes unchanged.
+- `src/styles.css` — `.route-contact #main-content { z-index: 20 }` lifts the
+  letter desk's DOM above the canvas on this route only. Nav (z-45), loader
+  (z-100) and skip link (z-200) stay on top; the canvas and desk WebGL keep
+  rendering; no-WebGL/reduced-motion fallbacks unaffected (`.no-webgl` hides
+  `.webgl-canvas` already).
+
+Pre-existing note: the same black-canvas condition affects the older `myself`
+Section pages (e.g. `/myself/about`) exactly as before this work — untouched
+here intentionally; the same two-line pattern can lift them too, on request.
+
 ## Verification path
 
 - Jesper preview: `http://localhost:5173/myself/contact` · Carter reference:

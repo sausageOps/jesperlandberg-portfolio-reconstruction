@@ -174,8 +174,12 @@ export default function App() {
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
   }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading]);
 
+  // The letter desk is its own opaque surface: this route class lifts the DOM
+  // above the WebGL canvas with the same pattern project routes already use.
+  const routeClass = route === 'myself' && section?.item?.slug === 'contact' ? ' route-contact' : '';
+
   return (
-    <div className={`app route-${route}`}>
+    <div className={`app route-${route}${routeClass}`}>
       <div inert={loaderMounted || undefined} style={{ opacity: loading ? 0 : 1 }}>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />

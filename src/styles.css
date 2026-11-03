@@ -205,6 +205,12 @@ input:focus-visible {
   z-index: 20;
 }
 
+/* The letter-desk route paints its own opaque paper surface, so its DOM must
+   sit above the WebGL canvas (which clears to opaque black on myself routes). */
+.route-contact #main-content {
+  z-index: 20;
+}
+
 /* Boot progress is tied to real local texture requests, not elapsed time. */
 .loader {
   position: fixed;
