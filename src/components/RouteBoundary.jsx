@@ -5,8 +5,24 @@ import { Component } from 'react';
    The writing shelf is a WebGL engine mounted from a layout effect; anything it throws
    during commit used to take the whole root down with it (black page, nav gone). The
    engine itself now fails soft, but this boundary makes sure no route can ever unmount
-   Jesper's chrome again: the nav, the canvas and the live region live outside it, so a
-   crash keeps the app shell and only replaces the route body. */
+   Jesper's chrome: the nav, the canvas and the live region live outside it, so a crash
+   replaces only the route body.
+
+   The fallback is deliberately styled inline: it must not depend on a stylesheet that
+   may be the thing that failed. */
+const shell = {
+  position: 'fixed',
+  inset: 0,
+  display: 'grid',
+  placeContent: 'center',
+  gap: '1rem',
+  padding: '2rem',
+  textAlign: 'center',
+  color: '#f2f2f2',
+  background: '#000',
+  font: '400 1rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif',
+};
+
 export default class RouteBoundary extends Component {
   constructor(props) {
     super(props);
@@ -26,13 +42,11 @@ export default class RouteBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <main className="not-found" role="alert">
-        <h1 className="section-label section-label--lg">Something broke here</h1>
-        <p className="text-lead">
-          This page hit an error while loading. The rest of the site still works.
-        </p>
-        <p>
-          <a className="text-label" href="/">Back to the home page</a>
+      <main role="alert" style={shell}>
+        <h1 style={{ font: '400 1.5rem/1.2 inherit', margin: 0 }}>This page hit an error</h1>
+        <p style={{ margin: 0, opacity: 0.7 }}>The rest of the site is still working.</p>
+        <p style={{ margin: 0 }}>
+          <a href="/" style={{ color: 'inherit', textDecoration: 'underline' }}>Back to the home page</a>
         </p>
       </main>
     );
