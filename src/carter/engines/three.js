@@ -1,0 +1,31 @@
+// The Carter engines were recovered from a minified Three.js bundle. These
+// aliases map only the constructors they use to Jesper's existing Three.js
+// dependency; no second copy of Three.js is bundled.
+export {
+  MeshStandardMaterial as $,
+  Group as C,
+  Mesh as J,
+  TubeGeometry as Lt,
+  MeshPhysicalMaterial as Q,
+  Vector2 as Rt,
+  MeshBasicMaterial as Y,
+  Object3D as at,
+  ExtrudeGeometry as b,
+  SRGBColorSpace as bt,
+  PerspectiveCamera as ct,
+  CanvasTexture as d,
+  Color as h,
+  WebGLRenderer as n,
+  CatmullRomCurve3 as p,
+  Shape as st,
+  PlaneGeometry as ut,
+  CylinderGeometry as v,
+  HemisphereLight as w,
+  Scene as xt,
+  DirectionalLight as y,
+  Vector3 as zt,
+  Matrix4 as q,
+  RepeatWrapping as yt,
+  ShaderMaterial as St,
+  OrthographicCamera as ot,
+} from "three";

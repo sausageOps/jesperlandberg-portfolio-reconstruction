@@ -1,10 +1,21 @@
 import './about.css';
+import { About } from '../../engines/about.js';
+import { Canvas } from '../../engines/canvas.js';
+import { Console as AboutConsole } from '../../engines/console.js';
+import { Deck } from '../../engines/deck.js';
+import { FrankCard } from '../../engines/frank-card.js';
+import { Marks } from '../../engines/marks.js';
+import { NavRoll } from '../../engines/nav-roll.js';
+import { Record } from '../../engines/record.js';
+import { SignatureFx } from '../../engines/signature-fx.js';
+import { Tilt } from '../../engines/tilt.js';
+import { useCarterEngine } from '../../useCarterEngine.js';
 
 /*
- * Carter About (`/about`) as a static page inside Jesper's Carter frame
- * (route `/myself/about`). Phase 3A: static DOM + CSS only — no engines, no
- * event handlers, no behaviour. See README.md in this folder for the full
- * port map and the deferred-engine inventory.
+ * Carter About (`/about`) inside Jesper's Carter frame (route `/myself/about`).
+ * Phase 3A's static DOM and CSS remain intact; Phase 3B mounts Carter's
+ * source-confirmed About engines through the Phase 2 lifecycle boundary.
+ * See README.md for engine ownership, responsive behavior and verification.
  *
  * Source: `app/pages/about.astro` in sausageOps/carterogunsola-reconstruction
  * (itself recovered from the captured original `pages/about.html`), rendered
@@ -17,19 +28,16 @@ import './about.css';
  * Attribute values for Carter's bare attributes are presence-only ("" here;
  * Carter's captured HTML serializes some as "true").
  *
- * Deferred placeholders (structure kept, behaviour owned by later phases):
- * - [data-frank-gl] / [data-deck-gl]: empty WebGL hosts (FrankCard / Deck).
- *   CSS keeps them display:none until the engine adds .is-stage/.is-deck, so
- *   the DOM card and flat radio strip render, as in Carter without WebGL.
- * - [data-marks] field: empty; the Marks mount stamps .mark nodes into it.
- * - Dialogs (letter/record/onfile) and their [data-dialog-open] triggers:
- *   native <dialog> markup, always closed here. FrankCard owns open/close.
- * - [data-canvas] board: CSS composes the board (desktop absolute, mobile
- *   stacked). Canvas owns drag/activate; until then Carter's own CSS keeps
- *   desktop board controls pointer-events:none (mobile overrides to auto).
- * - Telemetry/radio values are Carter's initial "boot" copy (--:--, Tuning
- *   in…, …). The About mount (clock/presence/GitHub) and Console (/api/radio)
- *   fill them at runtime; SignatureFx replaces the SVG path with ink canvas.
+ * Engine-owned structures (markup and styles remain the Phase 3A port):
+ * - [data-frank-gl] / [data-deck-gl]: empty WebGL hosts; FrankCard / Deck add
+ *   their canvases only at Carter's desktop breakpoint, retaining the DOM card
+ *   and flat radio fallback when those renderers are unavailable.
+ * - [data-marks] field is filled by Marks; Tilt owns the stamp's pointer
+ *   parallax/shine; SignatureFx paints the stored SVG path into an ink canvas.
+ * - FrankCard owns the three native dialogs; Canvas owns desktop board drag,
+ *   hover, activation, keyboard focus, scrim and the "Put it back" exit.
+ * - About telemetry and Console fill Carter's boot-time labels from the Denver
+ *   clock, local/live presence, GitHub contributions and radio endpoint.
  *
  * Asset gap: the stamp portrait WebPs exist in neither repo. The <img> keeps
  * Carter's filenames and attributes under the Phase 2 asset convention
@@ -37,6 +45,17 @@ import './about.css';
  * Drawer links keep Carter hrefs (/writing, /lab); the frame maps them.
  */
 export default function AboutPage() {
+  useCarterEngine('about-canvas', () => Canvas.init());
+  useCarterEngine('about-frank-card', () => FrankCard.init());
+  useCarterEngine('about-deck', () => Deck.init());
+  useCarterEngine('about-console', () => AboutConsole.init());
+  useCarterEngine('about-telemetry', () => About.init());
+  useCarterEngine('about-nav-roll', () => NavRoll.init());
+  useCarterEngine('about-signature', () => SignatureFx.init());
+  useCarterEngine('about-record', () => Record.init());
+  useCarterEngine('about-marks', () => Marks.init());
+  useCarterEngine('about-tilt', () => Tilt.init());
+
   return (
     <>
       <main id="main" className="ov3" data-canvas="" data-astro-cid-ta2fbyqs="">
@@ -207,8 +226,8 @@ export default function AboutPage() {
         </span>
         </div>
         <div className="ov3__commits" data-commits="" aria-hidden="true" data-astro-cid-ta2fbyqs="">
-        {/* 154 empty commit cells, as in Carter's source. The About (telemetry) mount
-            sets --heat/--gh/--d per cell from the GitHub contributions API; deferred. */}
+        {/* Carter's 154 commit cells; the About telemetry engine sets their
+            --heat/--gh/--d values from the GitHub contributions response. */}
         {Array.from({ length: 154 }, (_, i) => (
           <span key={i} data-astro-cid-ta2fbyqs="" />
         ))}
