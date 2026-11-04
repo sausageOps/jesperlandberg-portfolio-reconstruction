@@ -1,0 +1,399 @@
+/*
+ * Carter base layer: scope root, reset, type system, layout and the utilities
+ * that more than one target page uses. Sources are named per section, from
+ * Carter's app/styles/global.scss.
+ *
+ * Scoping:
+ * - Rules Carter writes for html/body are applied to the .carter root.
+ * - Every other rule is prefixed with :where(.carter), which adds no
+ *   specificity. Carter's own cascade between these rules and page CSS is
+ *   unchanged, and nothing matches outside the frame.
+ * - A few rules counter Jesper globals (styles.css) that would otherwise cascade
+ *   into the frame: font-synthesis, the focus ring, ::selection and the tap
+ *   highlight. Each one restores what Carter's pages get from the browser or
+ *   from Carter itself.
+ */
+
+/* --------------------------------------------------- scope root (html/body) */
+
+.carter {
+  /* html */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+  -webkit-tap-highlight-color: rgba(var(--spot-rgb), 0.08);
+  accent-color: var(--spot);
+  /* Jesper's :root sets font-synthesis: none. Carter keeps the browser default. */
+  font-synthesis: initial;
+
+  /* body */
+  line-height: 1.4;
+  font-family: var(--font-sans);
+  font-size: var(--fs-300);
+  font-weight: 400;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: var(--grain-fiber);
+  isolation: isolate;
+}
+
+/* body::before: the animated paper tooth over the fibre ground. */
+.carter::before {
+  content: '';
+  z-index: -1;
+  background-image: var(--grain-tooth);
+  pointer-events: none;
+  will-change: transform;
+  animation: 0.8s step-end infinite grain-jump;
+  position: fixed;
+  inset: -160px;
+}
+
+@keyframes grain-jump {
+  0% {
+    transform: translate(0);
+  }
+  12.5% {
+    transform: translate(-70px, 45px);
+  }
+  25% {
+    transform: translate(35px, -110px);
+  }
+  37.5% {
+    transform: translate(-120px, -30px);
+  }
+  50% {
+    transform: translate(90px, 80px);
+  }
+  62.5% {
+    transform: translate(-25px, 125px);
+  }
+  75% {
+    transform: translate(115px, -65px);
+  }
+  87.5% {
+    transform: translate(-95px, -140px);
+  }
+  to {
+    transform: translate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carter::before {
+    will-change: auto;
+    animation: none;
+  }
+}
+
+/* Carter swaps the CSS grain for its WebGL paper (canvas.paper-gl) when that is
+   live (html[data-paper-gl]). The WebGL paper is not ported yet; this is the
+   scoped hook for it. */
+.carter[data-paper-gl] {
+  background-image: none;
+}
+
+.carter[data-paper-gl]::before {
+  display: none;
+}
+
+/* ------------------------------------------------------------------- reset */
+
+:where(.carter) *,
+:where(.carter) ::before,
+:where(.carter) ::after {
+  box-sizing: border-box;
+}
+
+:where(.carter) * {
+  margin: 0;
+  padding: 0;
+}
+
+:where(.carter) :is(img, picture, video, canvas, svg) {
+  max-width: 100%;
+  display: block;
+}
+
+:where(.carter) :is(input, button, textarea, select) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(.carter) button {
+  cursor: pointer;
+  background: 0 0;
+  border: none;
+}
+
+:where(.carter) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.carter) :is(ul, ol) {
+  list-style: none;
+}
+
+:where(.carter) :is(h1, h2, h3, h4) {
+  font-weight: inherit;
+  text-wrap: balance;
+}
+
+:where(.carter) p {
+  text-wrap: pretty;
+}
+
+:where(.carter) :is(input, textarea) {
+  caret-color: var(--ink);
+}
+
+/* Carter's ::selection, which also replaces Jesper's black-on-white selection. */
+.carter ::selection {
+  background: var(--spot-wash);
+  color: var(--ink);
+}
+
+/* Jesper's global ring (2px currentColor, 4px offset) would otherwise reach
+   Carter's links and buttons. Carter has no global focus style; it relies on
+   the browser's ring plus the atom and page rules that set their own. Those
+   come later in the cascade at equal or higher specificity, so they still win. */
+.carter :where(a, button, input):focus-visible {
+  outline: revert;
+  outline-offset: revert;
+}
+
+/* ------------------------------------------------------------- type system */
+/* Carter's typography classes, which bundle the type tokens. They are kept as
+   one set: About, Lab and Writing all draw from it, and splitting it per page
+   would fragment one design system. */
+
+:where(.carter) .text-mega {
+  font-family: var(--font-sans);
+  font-size: var(--fs-mega);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-display);
+  letter-spacing: var(--track-display);
+}
+
+:where(.carter) .text-display {
+  font-family: var(--font-sans);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-display);
+  letter-spacing: var(--track-display);
+}
+
+:where(.carter) .text-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-display);
+  letter-spacing: var(--track-display);
+}
+
+:where(.carter) .text-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-heading);
+}
+
+:where(.carter) .text-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-heading);
+}
+
+:where(.carter) .text-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-heading);
+}
+
+:where(.carter) .text-h5 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h5);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-h6 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h6);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-lead {
+  font-family: var(--font-sans);
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-body-sm {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-nav {
+  font-family: var(--font-sans);
+  font-size: var(--fs-nav);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-tag {
+  font-family: var(--font-sans);
+  font-size: var(--fs-tag);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+:where(.carter) .text-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+:where(.carter) .text-meta {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  font-variant-numeric: tabular-nums;
+}
+
+:where(.carter) .text-mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-label);
+  font-weight: var(--fw-mono-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+:where(.carter) .text-mono-tag {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-tag);
+  font-weight: var(--fw-mono-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+:where(.carter) .text-mono-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-meta);
+  font-weight: var(--fw-mono-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+}
+
+:where(.carter) .text-mono-sm {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-sm);
+  font-weight: var(--fw-mono-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+:where(.carter) .text-hud {
+  font-family: var(--font-mono);
+  font-size: var(--fs-hud);
+  font-weight: var(--fw-mono-semibold);
+  line-height: var(--lh-auto);
+  letter-spacing: var(--track-hud);
+}
+
+/* ------------------------------------------------------------------ layout */
+/* .container: Lab (main) and Writing (index stage and classic list, post). */
+
+:where(.carter) .container {
+  grid-template-columns:
+    [full-start] minmax(var(--margin), 1fr)
+    [content-start] min(100% - var(--margin) * 2, var(--container-max))
+    [content-end] minmax(var(--margin), 1fr)
+    [full-end];
+  display: grid;
+}
+
+:where(.carter) .container > * {
+  grid-column: content;
+}
+
+/* --------------------------------------------------------------- utilities */
+/* .u-sr-only: About, Lab, Writing. .u-cover: About, Lab. */
+
+:where(.carter) .u-sr-only {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  position: absolute;
+  overflow: hidden;
+}
+
+:where(.carter) .u-cover {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Row-list dim: About (dialog rows) and the Writing index (card rows). Carter's
+   rule also has a .rec__row selector for About's record dialog, which is
+   page-specific and lands with the About page. */
+@media (hover: hover) and (pointer: fine) {
+  :where(.carter) [data-row-list]:has(.row:hover) .row:not(:hover) {
+    opacity: 0.4;
+  }
+}

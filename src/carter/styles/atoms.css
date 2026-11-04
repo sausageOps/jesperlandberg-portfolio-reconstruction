@@ -1,0 +1,328 @@
+/*
+ * Carter's shared UI atoms, verbatim from app/styles/global.scss, each prefixed
+ * with :where(.carter) (no added specificity). Only atoms that two or more
+ * target pages use are included:
+ *
+ *   arrow-roll   About, Lab, Writing (--diagonal: Lab, Writing)
+ *   chip         About, Lab, Writing (--pill: all three)
+ *   linkcircle   About, Lab, Writing
+ *   closebox     About, Writing
+ *   row          About, Writing
+ *   signature    About, Writing post (the ink engine lands with its page)
+ *
+ * Single-page atoms (btn/roll and socials on About, refrow on Writing, ...)
+ * land with their page.
+ */
+
+/* ----------------------------------------------------------- arrow-roll */
+
+:where(.carter) .arrow-roll {
+  --roll-out: 100% 0;
+  --roll-in: -100% 0;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  position: relative;
+  overflow: clip;
+}
+
+:where(.carter) .arrow-roll--diagonal {
+  --roll-out: 100% -100%;
+  --roll-in: -100% 100%;
+}
+
+:where(.carter) .arrow-roll__icon {
+  width: 100%;
+  height: 100%;
+  transition: translate 0.5s var(--ease-out-expo);
+  display: block;
+}
+
+:where(.carter) .arrow-roll__icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+:where(.carter) .arrow-roll__next {
+  translate: var(--roll-in);
+  position: absolute;
+  inset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.carter) [data-selected] .arrow-roll__current {
+    translate: var(--roll-out);
+  }
+
+  :where(.carter) [data-selected] .arrow-roll__next {
+    translate: 0;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :where(.carter) [data-hover]:hover .arrow-roll__current {
+    translate: var(--roll-out);
+  }
+
+  :where(.carter) [data-hover]:hover .arrow-roll__next {
+    translate: 0;
+  }
+}
+
+/* ----------------------------------------------------------------- chip */
+
+:where(.carter) .chip {
+  padding: var(--s-4) var(--s-8);
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+:where(.carter) .chip--pill {
+  border-radius: var(--r-pill);
+}
+
+/* ----------------------------------------------------------- linkcircle */
+
+:where(.carter) .linkcircle {
+  width: var(--s-20);
+  height: var(--s-20);
+  border-radius: var(--r-pill);
+  background: var(--mono-500);
+  color: var(--mono-100);
+  transition:
+    width 0.4s var(--ease-out-expo),
+    opacity 0.3s var(--ease-out-quad);
+  flex: none;
+  place-items: center;
+  display: grid;
+  overflow: hidden;
+}
+
+:where(.carter) .linkcircle .arrow-roll {
+  width: var(--s-10);
+  height: var(--s-10);
+}
+
+/* ------------------------------------------------------------ signature */
+
+:where(.carter) .signature {
+  color: var(--ink);
+  display: inline-block;
+  position: relative;
+}
+
+:where(.carter) .signature__svg {
+  width: 12.5rem;
+  height: auto;
+  display: block;
+}
+
+:where(.carter) .signature .signature__ink {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+:where(.carter) .signature.is-ink .signature__path {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------- closebox */
+
+:where(.carter) .closebox {
+  --cb: 2.75rem;
+  --cb-icon: 1.1rem;
+  inline-size: var(--cb);
+  block-size: var(--cb);
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease-out-quad),
+    transform 0.14s var(--ease-out-quad);
+  border: 0;
+  place-items: center;
+  padding: 0;
+  text-decoration: none;
+  display: grid;
+}
+
+:where(.carter) .closebox:active {
+  transform: scale(0.96);
+}
+
+:where(.carter) .closebox:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+:where(.carter) .closebox svg {
+  inline-size: var(--cb-icon);
+  block-size: var(--cb-icon);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(.carter) .closebox:hover {
+    background: var(--fill-strong);
+  }
+}
+
+:where(.carter) .closebox--sm {
+  --cb: var(--s-36);
+  --cb-icon: var(--s-16);
+}
+
+:where(.carter) .closebox--lg {
+  --cb: 3.25rem;
+  --cb-icon: 1.25rem;
+}
+
+:where(.carter) .closebox--surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-control);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(.carter) .closebox--surface:hover {
+    background: var(--fill-strong);
+  }
+}
+
+:where(.carter) .closebox--ghost {
+  background: 0 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(.carter) .closebox--ghost:hover {
+    background: var(--fill);
+  }
+}
+
+/* ------------------------------------------------------------------ row */
+
+:where(.carter) .row {
+  align-items: center;
+  gap: var(--s-12);
+  width: 100%;
+  padding-block: var(--s-8);
+  color: inherit;
+  transition: opacity 0.3s var(--ease-out-quad);
+  text-decoration: none;
+  display: flex;
+}
+
+:where(.carter) .row__label {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  color: var(--ink);
+  flex: 0 auto;
+  overflow: hidden;
+}
+
+:where(.carter) .row__note {
+  color: var(--ink-muted);
+  margin-inline-start: var(--s-4);
+}
+
+@media (width <= 48rem) {
+  :where(.carter) .row__note {
+    display: none;
+  }
+}
+
+@media (width <= 34rem) {
+  :where(.carter) .row__line {
+    display: none;
+  }
+
+  :where(.carter) .row__tags {
+    margin-inline-start: auto;
+  }
+}
+
+:where(.carter) .row__line {
+  min-width: var(--s-16);
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+  flex: auto;
+  height: 1px;
+  position: relative;
+}
+
+:where(.carter) .row__line::after {
+  content: '';
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  transform-origin: 0;
+  transition: transform 0.5s var(--ease-out-expo);
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+}
+
+:where(.carter) .row__tags {
+  flex: none;
+  align-items: center;
+  display: flex;
+  gap: var(--s-4);
+}
+
+:where(.carter) .row .row__tag {
+  z-index: 0;
+  transition: color 0.3s var(--ease-out-quad);
+  position: relative;
+  overflow: hidden;
+}
+
+:where(.carter) .row .row__tag::before {
+  content: '';
+  z-index: -1;
+  background: var(--ink);
+  transform-origin: 0;
+  transition: transform 0.45s var(--ease-out-expo);
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :where(.carter) .row:hover .row__line::after {
+    transition-delay: 60ms;
+    transform: scaleX(1);
+  }
+
+  :where(.carter) .row:hover .row__tag {
+    color: var(--paper);
+  }
+
+  :where(.carter) .row:hover .row__tag::before {
+    transform: scaleX(1);
+  }
+
+  :where(.carter) .row:hover .row__tag:first-child,
+  :where(.carter) .row:hover .row__tag:first-child::before {
+    transition-delay: 0.12s;
+  }
+
+  :where(.carter) .row:hover .row__tag:nth-child(2),
+  :where(.carter) .row:hover .row__tag:nth-child(2)::before {
+    transition-delay: 0.18s;
+  }
+
+  :where(.carter) .row--link .row__link {
+    opacity: 0;
+    width: 0;
+  }
+
+  :where(.carter) .row--link:hover .row__link {
+    width: var(--s-20);
+    opacity: 1;
+    transition-delay: 0.16s;
+  }
+}
