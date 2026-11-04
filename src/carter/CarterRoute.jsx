@@ -23,6 +23,8 @@ import './styles/frame.css';
 const PAGES = {
   about: lazy(() => import('./pages/about/AboutPage.jsx')),
   lab: lazy(() => import('./pages/lab/LabPage.jsx')),
+  // Phase 4B: one shared document shell for the nine `/routes/lab/<slug>` pages.
+  'lab-detail': lazy(() => import('./pages/lab/LabDetailPage.jsx')),
 };
 
 /**
@@ -113,10 +115,11 @@ export default function CarterRoute({ page, appReady = false, onNavigate, placeh
       data-carter-page={page.key}
       onClick={interceptLinkClick}
     >
-      <CarterPageBoundary key={page.key} rootRef={rootRef} fallback={placeholder}>
+      <CarterPageBoundary key={`${page.key}:${page.slug ?? ''}`} rootRef={rootRef} fallback={placeholder}>
         {Page ? (
           <Suspense fallback={null}>
-            <Page appReady={appReady} />
+            {/* The Lab documents take their slug from the route registry. */}
+            <Page appReady={appReady} slug={page.slug} />
           </Suspense>
         ) : (
           placeholder

@@ -1,0 +1,70 @@
+<p class="labd__summary text-lead" data-astro-cid-f3pbbn5j>A small black hole that listens. Talk and it moves with your voice, writes back what you said, picks up the mood of it, and can play your own voice back through a few effects. All of it runs on your device.</p><section class="labd__refs" data-astro-cid-f3pbbn5j><p class="labd__refs-label text-label" data-astro-cid-f3pbbn5j>Dependencies</p><div class="labd__refs-rule" aria-hidden="true" data-astro-cid-f3pbbn5j></div><div class="labd__refs-list" data-astro-cid-f3pbbn5j><a data-hover="true" href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><span class="refrow__wordmark text-label" data-astro-cid-mgnwo4tu>Transformers.js</span></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>Speech, mood + voice models</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a><span data-hover="true" data-astro-cid-mgnwo4tu="true" class="refrow"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="lightbulb"><symbol id="lab-doc:ai:local:lightbulb" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.748 15.484v1.766a1 1 0 0 0 1 1h4.502a1 1 0 0 0 1-1v-1.766m-6.502 0a7.3 7.3 0 0 1-1.165-.732 7.25 7.25 0 1 1 7.668.732m-6.503 0h6.502m-5.5 5.766h4.5"/></symbol><use href="#lab-doc:ai:local:lightbulb"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>WebGL2 :: one shader, no library</span></span><span data-hover="true" data-astro-cid-mgnwo4tu="true" class="refrow"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" viewBox="0 0 24 24" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="lightbulb"><use href="#lab-doc:ai:local:lightbulb"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>Web Audio + Web Speech :: on-device only</span></span></div></section><div class="labd__article" data-astro-cid-f3pbbn5j><h2 id="a-black-hole-that-listens">A black hole that listens</h2>
+<p>Siri’s orb moves while you talk to it. I wanted that, just stranger: a small
+black hole on the stage, with a dull silver orb at the center that turns to
+glass when you hit the mic. Talk and it ripples with your voice. Keep talking and it writes back
+what you said, picks up the mood of it, and if you want, plays your own voice
+back to you like a karaoke mic.</p>
+<p>All of it happens on your device. Your audio never goes anywhere, and nothing
+here costs anything to run.</p>
+<h2 id="theres-no-picture-of-it">There’s no picture of it</h2>
+<p>There’s no image or 3D model behind the black hole, just one shader. Every pixel
+traces a ray of light and lets the hole’s gravity bend it on the way. The arc over
+the top, the faint ring underneath and the thin bright edge around the dark middle
+all come out of that bending, I didn’t draw any of them.</p>
+<p>The disk is meant to read like glass. Each color sees its edges a hair apart, so
+the solid parts stay white and every edge splits into a little rainbow.</p>
+<p>Move your mouse over it and the camera drifts after you, up to 4° above it and 6°
+to the side, a beat behind. Since nothing is painted, the arcs bend again for the
+new angle on every frame.</p>
+<h2 id="listening">Listening</h2>
+<p>Asleep, it should feel close to dead: the orbit drifts at a quarter of its speed,
+the light cools to a warm gray and the orb goes dull. Hit the mic and it wakes
+with a surge. A spring that overshoots by about 12% makes the light flare and the
+orbit spin up past its pace before it settles, while glass pours across the orb
+from the middle out. Stop and it drains back to embers in about a second and a
+half, with no bounce.</p>
+<p>Then the browser measures your voice every frame: how loud you are,
+plus the lows, mids and highs. Loudness swells the orb’s wave and makes the disk
+pour harder, the lows lift the wave and the highs brighten its edge. Each one is
+judged against how loud you’ve been lately, so a quiet laptop mic and a loud room
+both get a real reaction.</p>
+<p>Captions come from the browser’s own speech recognition when it can promise to
+stay on your device. When it can’t, a small model called Moonshine runs in a
+background thread instead. That one is a 150 MB download the first time, so the
+page asks before it grabs it.</p>
+<p>Once a sentence lands, an even smaller model (4.5 MB) reads the mood of it and the
+disk tints toward it: gold when you’re happy, deep blue when you’re sad, red when
+you’re annoyed. It reads your words, not your tone, so a sarcastic “great” still
+comes out gold. It’s English only for now too.</p>
+<h2 id="hearing-yourself">Hearing yourself</h2>
+<p>The speaker button has two modes. Live plays your voice straight back as you talk,
+through a room, hall, delay, radio or robot effect. Wear headphones, and if it
+starts to howl it’ll switch itself off. Read back waits for you to finish a
+sentence and says it back in a voice you pick. That one uses Kokoro, which sounds a
+lot better than the voices built into your browser but is a bigger download, so
+the browser’s voice covers you until it’s in.</p>
+<h2 id="make-it-yours">Make it yours</h2>
+<ul>
+<li><strong><code>rest</code></strong> is how dead it is asleep, from 0 (as lively as awake) to 1 (embers).
+It’s 0.8 here.</li>
+<li><strong><code>orbShade()</code></strong> in the shader paints the orb’s face: the silver, the glass and
+the wave. Change it and the black hole around it never notices.</li>
+<li><strong><code>CAPTION_HOST</code></strong> left empty loads the models from Hugging Face and jsDelivr.
+Point it at your own copy (the repo has a tiny Cloudflare Worker for that) and
+they come from you instead.</li>
+<li><strong><code>MOODS</code></strong> is the color and pace each feeling gets. Change the palette and keep
+the idea.</li>
+<li><strong><code>EFFECTS</code> and <code>VOICES</code></strong> are the live effects and read back voices on offer.</li>
+</ul></div><section class="labd__refs" data-astro-cid-f3pbbn5j><p class="labd__refs-label text-label" data-astro-cid-f3pbbn5j>Credits</p><div class="labd__refs-rule" aria-hidden="true" data-astro-cid-f3pbbn5j></div><div class="labd__refs-list" data-astro-cid-f3pbbn5j><a data-hover="true" href="https://github.com/usefulsensors/moonshine" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="globe"><symbol id="lab-doc:ai:local:globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-width="1.5"><path d="M21.25 12a9.25 9.25 0 1 1-18.5 0 9.25 9.25 0 0 1 18.5 0Z"/><path d="M12 21c-2.21 0-4-4.03-4-9s1.79-9 4-9 4 4.03 4 9-1.79 9-4 9Zm9-9H3"/></g></symbol><use href="#lab-doc:ai:local:globe"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>Useful Sensors :: Moonshine</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a><a data-hover="true" href="https://huggingface.co/hexgrad/Kokoro-82M" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" viewBox="0 0 24 24" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="globe"><use href="#lab-doc:ai:local:globe"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>hexgrad :: Kokoro-82M</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a><a data-hover="true" href="https://github.com/xenova" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="user-zap"><symbol id="lab-doc:ai:local:user-zap" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M15 21a6 6 0 0 0-12 0M19 9l-2.6 3.6H20L17.4 16"/><circle cx="9" cy="8" r="4"/></g></symbol><use href="#lab-doc:ai:local:user-zap"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>Xenova :: Moonshine Web + kokoro-js</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a><a data-hover="true" href="https://github.com/snakers4/silero-vad" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" viewBox="0 0 24 24" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="globe"><use href="#lab-doc:ai:local:globe"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>Silero :: voice activity detection</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a><a data-hover="true" href="https://huggingface.co/AdamCodd/tinybert-emotion-balanced" target="_blank" rel="noopener noreferrer" data-astro-cid-mgnwo4tu="true" class="refrow refrow--link"><span class="refrow__badge" data-astro-cid-mgnwo4tu><svg width="1em" height="1em" viewBox="0 0 24 24" class="refrow__icon" aria-hidden="true" data-astro-cid-mgnwo4tu="true" data-icon="globe"><use href="#lab-doc:ai:local:globe"></use></svg></span><span class="refrow__label text-tag" data-astro-cid-mgnwo4tu>AdamCodd :: TinyBERT emotion model</span><span class="refrow__ext" aria-hidden="true" data-astro-cid-mgnwo4tu><span class="arrow-roll arrow-roll--diagonal" aria-hidden="true"><span class="arrow-roll__icon arrow-roll__current"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span><span class="arrow-roll__icon arrow-roll__next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M18.25 15.25V5.75M18.25 5.75H8.75M18.25 5.75L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</span></span></span></a></div></section>

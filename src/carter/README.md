@@ -10,6 +10,7 @@ shell, as faithfully as possible:
 | `lab`          | `/routes/lab`                          | `/lab`                          |
 | `writing`      | `/routes/writing`                      | `/writing`                      |
 | `writing-post` | `/routes/writing/the-personal-starter` | `/writing/the-personal-starter` |
+| `lab-detail`   | `/routes/lab/<slug>` (nine)            | `/lab/<slug>`                   |
 
 Jesper's shell stays Jesper's: the WebGL Experience, navigation, HUD, Loader and
 every other route are untouched. Carter code runs inside one isolated frame.
@@ -27,6 +28,8 @@ every other route are untouched. Carter code runs inside one isolated frame.
 | `styles/base.css`     | Scope root (Carter's `html`/`body`), reset, `.text-*`, `.container`, shared utilities.                                         |
 | `styles/atoms.css`    | Atoms used by two or more pages: arrow-roll, chip, linkcircle, closebox, row, signature.                                       |
 | `styles/frame.css`    | The only rules that touch Jesper's shell: `.route-carter #main-content` lift, plus the frame's scroller.                      |
+| `data/lab-slugs.js`   | The nine Lab slugs, names and descriptions (tiny; `routes.js` and `App.jsx` import it for routing and document metadata).     |
+| `data/lab.js`         | Carter's `LAB_ITEMS` metadata, `labImage()`, `labHref()`, prev/next ring and the captured Notes panes (`data/lab-notes/`).     |
 
 ## Mounting
 
@@ -48,6 +51,16 @@ App.jsx ─ resolveCarterPage(path) ─► <CarterRoute page appReady onNavigate
 - The Loader is Carter's boot veil. While it is up, `veil.active` is true. When
   the app is ready, the frame fires `veil:reveal` once, with
   `{ mode: 'boot', wipeDur: 0 }`. In-app navigation has no veil.
+
+### Phase 4B: the Lab documents
+
+`routes.js` registers the nine `/routes/lab/<slug>` paths with key `lab-detail`
+from `data/lab-slugs.js`; `CarterRoute.jsx` renders `pages/lab/LabDetailPage.jsx`
+for them and passes `page.slug`. The frame's boundary is keyed by `key:slug`, so
+prev/next remounts the page. `App.jsx` sets Carter's per-experiment `<title>` and
+`<meta name="description">` for those routes only. See
+`pages/lab/README.md` for the source map, what is static vs engine-owned, and
+what is deferred.
 
 ### Adding a page (Phases 3–5)
 
