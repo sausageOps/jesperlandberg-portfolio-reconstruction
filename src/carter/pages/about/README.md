@@ -1,123 +1,125 @@
-# Carter About in Jesper — Phase 3A (static DOM + CSS)
+# Carter About in Jesper — Phase 3B
 
 Route: `/myself/about` ← Carter `/about`
-(`sausageOps/carterogunsola-reconstruction`, an Astro build, read-only source).
 
-This folder is a static port: Carter's actual source DOM, content, layout,
-typography and page CSS, rendered through the Phase 2 Carter frame
-(`src/carter/CarterRoute.jsx`). No behaviour ships in this phase — no engines,
-no event handlers, no `useCarterEngine`. The page renders Carter's exact
-pre-JavaScript state.
+Source: `sausageOps/carterogunsola-reconstruction` at `3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249` (read-only checkout).
+
+Phase 3A's About DOM and `about.css` are preserved. Phase 3B adds Carter's
+source-confirmed page engines and binds them through the existing Phase 2
+`useCarterEngine` / `onDestroy` boundary. All new behavior stays inside
+`src/carter/`; no shell, shared runtime, route, or dependency change is needed.
 
 ## Files
 
 | File | Role |
 | --- | --- |
-| `AboutPage.jsx` | The page. Renders `<main id="main" class="ov3" data-canvas>` plus the three sibling `<dialog>`s, matching Carter's `BaseLayout` (`main` + `afterMain` slot). Imports `about.css`, so code + styles land in the About lazy chunk only. |
-| `about.css` | About-only atoms from Carter's `global.scss`, then Carter's `app/styles/about.css` verbatim (Frank sheet → About/console sheet), every selector scoped with `:where(.carter)`. |
+| `AboutPage.jsx` | Keeps the Phase 3A markup and mounts the About engines after React commits the page. |
+| `about.css` | Unchanged Phase 3A About stylesheet; its engine-owned states and generated-node styles were already present. |
+| `engines/canvas.js` | Carter's board interaction, drag/hover/activation, keyboard focus, scrim, and exit control. |
+| `engines/frank-card.js` | Three native-dialog interactions plus the desktop Frank envelope renderer. |
+| `engines/deck.js` | Desktop radio-deck renderer and the Canvas-to-deck scale hand-off. |
+| `engines/console.js` | Carter's radio polling, now-playing subscription, status/track/progress updates, and optional waveform path. `data-con-plain` deliberately keeps the About console on its source-authored flat path. |
+| `engines/about.js` | About telemetry: local clock, online count, GitHub contribution grid/total, and ink/green tape flip. |
+| `engines/nav-roll.js` | Character spans for the About-me trigger label. |
+| `engines/signature-fx.js` | Responsive signature ink canvas, theme redraw, reveal timing, and pointer sweep. |
+| `engines/record.js` | Experience-row reader line. |
+| `engines/marks.js` | Carter's stamp templates, placement/avoidance, and field pointer trail. |
+| `engines/tilt.js` | Stamp tilt and shine. |
+| `engines/about-services.js` | About-scoped clock, presence/NowPlaying stores, site values, and Carter text-roll helper. Realtime sockets are lazy and only open for `?realtime=live`. |
+| `engines/three.js`, `css3d.js`, `studio-env.js`, `mesh-wire.js`, `wheels-gl-warm.js` | The source-confirmed Three.js and scene helpers used by the two desktop renderers, adapted to Jesper's existing dependencies. |
 
-Registration is the one-line `about: lazy(...)` entry in `PAGES` in
-`src/carter/CarterRoute.jsx` (the spot Phase 2 reserved for it). Nothing in
-Jesper's shell, shared Carter styles, runtime, routes or build config changes.
+## Source and DOM map
 
-## Sources and DOM map
+Ported from `app/pages/about.astro` and the relevant Carter modules:
+`app/lib/canvas.js`, `frank-card.js`, `deck.js`, `console.js`, and the About,
+NavRoll, SignatureFx, Record, Marks and Tilt mounts in `app/lib/runtime.ts`.
+Their helpers are limited to `css3d.js`, `studio-env.js`, `mesh-wire.js` and
+`wheels-gl-warm.js`. The exact Three.js alias mapping was checked against
+Carter's bundled module; the port imports Jesper's existing `three` and GSAP
+packages instead of adding or upgrading dependencies.
 
-Ported from `app/pages/about.astro` (recovered from the captured original
-`pages/about.html`; spot-checked against it), with Carter's `Socials`,
-`Button`, `CloseBox` and `Signature` components expanded to their rendered
-HTML. Classes, `data-astro-cid-*` scope attributes, `data-*` engine hooks,
-ARIA attributes and inline custom properties are Carter's verbatim.
-
-```
+```text
 main.ov3[data-canvas]
-  h1.u-sr-only
-  header.ov3__ticket[hidden]            "The Front Office" file strip
-  .ov3__board
-    section.ov3__hero[data-frank-stage]  stamp portrait card, imprint buttons,
-                                         socials, "About me" letter trigger
-    article.ov3__tele[data-about]        telemetry: LOCAL/POS/ONLINE/COMMITS
-                                         + 154 commit cells
-    article.ov3__radio[data-deck-stage]  radio console [data-console]
-    article.ov3__tag[hidden]             LOS → SGU luggage tag + barcode
-  .ov3__exit[data-canvas-exit][hidden]   "Put it back"
-  nav.ov3__drawer                        File:: Writing / File:: Lab tabs
-dialog.ov3__letter[data-dialog=letter]   letter prose + Signature
-dialog.ov3__rec[data-dialog=record]      8-row experience record + LinkedIn
-dialog[data-dialog=onfile]               Awards (9) + Featured in (9) rows
+  section.ov3__hero[data-frank-stage]
+    [data-frank-gl] / [data-frank-layer] / [data-frank-card]
+    [data-marks] / [data-tilt] / data-dialog-open triggers
+  article.ov3__tele[data-about]
+    [data-about-time] / [data-online] / [data-commits] / [data-about-scope]
+  article.ov3__radio[data-deck-stage]
+    [data-deck-gl] / [data-deck-layer] / [data-console][data-con-plain]
+  .ov3__exit[data-canvas-exit]
+  nav.ov3__drawer (ordinary Writing and Lab anchors)
+dialog[data-dialog=letter]   letter prose and [data-signature]
+dialog[data-dialog=record]   record rows and [data-record-reader]
+dialog[data-dialog=onfile]   awards and featured-in rows
 ```
 
-Desktop (≥64rem contexts): the board is a 100svh absolute composition —
-items are placed by Carter's own `--fx`/`--fy` custom properties, so CSS
-alone composes it. At ≤63.99rem Carter's media query stacks the board in a
-padded column inside the frame scroller. Drawer tabs appear at ≥82rem.
-Row/header collapses happen at ≤48rem/≤40rem/≤34rem (Phase 2 atoms + this
-sheet). The theme is the frame's dark default, as in Carter.
+## Engine ownership and behavior
 
-## Deferred: engines and interactions (placeholders)
+| Engine | Carter-owned behavior preserved |
+| --- | --- |
+| **Canvas** | At desktop widths, hover and drag physics; held/active/dimmed item states; activation and return-to-board transitions; collision shove; item scaling event; keyboard focus activation and Escape; outside click, scrim and “Put it back.” Mobile keeps Carter's stacked layout and direct controls. |
+| **FrankCard** | Opens the matching native `<dialog>`, animates its entry/exit, handles the close button, Escape/cancel and backdrop click, updates `aria-expanded`, and returns focus to the trigger. At `min-width: 64rem` it adds the envelope canvas; a failed/unavailable renderer leaves the DOM card and dialogs usable. |
+| **Deck** | At `min-width: 64rem`, adds the radio turntable canvas and CSS3D panel; listens for Canvas scaling and the Carter frame's theme. Outside that breakpoint or without WebGL, the static console remains. |
+| **Console** | Polls Carter's radio endpoint, handles live/off/quiet/no-signal states, track art and progress, history labels, and the source debug modes `?radio=mock` / `?radio=fail`. Carter's `[data-con-plain]` hook prevents a separate waveform canvas on this About page. |
+| **About** | Formats the `America/Denver` clock and updates while visible; displays Carter's local presence fallback (1) or the optional live count; fetches the GitHub contribution year for the 154-cell grid and total; flips the tape and updates `aria-pressed`. Unavailable telemetry follows Carter's seven-second timeout/hide behavior. |
+| **SignatureFx** | Converts the stored 522-point signature path to the weighted ink canvas, waits for Carter's veil reveal / visibility where appropriate, redraws for size/theme changes, and runs the hover wipe. |
+| **Marks** | Creates Carter's SVG marks in the existing field, avoids the marked regions, and adds/removes them along the original pointer trail. |
+| **Tilt** | Applies the original fine-pointer tilt and shine response and resets on pointer leave. |
+| **Record** | Moves the existing reader line to hovered experience rows and hides it on leave/window blur. |
+| **NavRoll** | Wraps the existing “About me” label characters using Carter's `--index` hooks. |
 
-Structure and hooks are present; every behaviour below is a later phase.
-Nothing is approximated — Carter's engine-gated CSS states are simply never
-entered, which is exactly Carter's no-JS/initial render.
+The Writing and Lab items in `.ov3__drawer` are ordinary anchors, not an About
+drawer controller. They continue through the existing Carter frame link
+interceptor; no Lab or Writing engine is mounted here.
 
-| Deferred piece | Carter owner | Static state here |
-| --- | --- | --- |
-| Board drag / hover / activate / scrim / exit | `Canvas` (`[data-canvas]`, `app/lib/canvas.js`) | Board composed by CSS. Carter's CSS keeps desktop board links/buttons `pointer-events:none` until an item `.is-active` (≤63.99rem overrides to `auto`, so mobile/tablet controls work). The `.ov3__scrim` node is JS-created and absent; its CSS ships. Exit stays `[hidden]`. |
-| Frank 3D card | `FrankCard` (`[data-frank-stage]`, `frank-card.js`) | `[data-frank-gl]` empty host, `display:none` without `.is-stage`; the DOM envelope card renders (Carter's no-WebGL/mobile form). |
-| Dialog open/close/focus/scrim-lock | `FrankCard` (dialog owner at every viewport) | All three `<dialog>`s present and closed (`.ov3__dialog:not([open]){display:none}`). Triggers (`[data-dialog-open]`, `[data-dialog-close]`) are inert; `aria-expanded` stays `false`. |
-| Radio deck 3D + CSS3D strip | `Deck` (`[data-deck-gl]`, `deck.js`) | `[data-deck-gl]` empty host hidden without `.is-deck`; flat console strip renders in Carter's non-deck geometry. |
-| Radio live state | `Console` (`[data-console]`, `console.js`, polls `/api/radio`) | Carter's boot copy forever: "Radio:: Tuning / SEARCHING / Tuning in… / Stand by", `data-on="false"`, EQ/progress suppressed by CSS, art `<img data-con-img>` src-less + hidden, rotation/tape rows `[hidden]`. The `.con__art` button and strip ticks are JS-created and absent; their CSS ships. |
-| Telemetry live values + tape flip | `About` mount (`[data-about]`, `runtime.ts`) | Boot state: `--:--`, POS static (marked `data-live`), `···`; commit cells unheated (CSS `--heat` fallback). Scope button inert; no clock, presence socket or GitHub fetch. |
-| Record reader line | `Record` mount (`runtime.ts`) | `.rec__reader` sits at rest (`inset-block-start:0`). Row hover dim is pure CSS and ships verbatim (Phase 2 base + `.rec__row` half here). |
-| Field marks | `Marks` mount (`[data-marks]`) | `.ov3__field` empty; `.mark` CSS ships. |
-| Stamp tilt/shine | `Tilt` mount (`[data-tilt]`) | Shine at `opacity:0`. SVG print filter + postmark are pure markup/CSS and render. |
-| Signature ink | `SignatureFx` (`[data-signature]`) | SVG path visible; ink canvas (`.is-ink`) never created. `data-sig-pts` kept verbatim for the engine. |
-| Button label roll | `NavRoll` mount (`[data-roll]`) | Plain "About me" text; the `.roll span` CSS has no spans to match — Carter pre-JS identical. |
+## Lifecycle, responsive behavior, and scope
 
-Also not ported (frame/shell concerns, by phase scope): Carter's Header/
-Footer/Veil/paper-GL/chrome, theme switching, Lenis (`data-lenis-prevent`
-kept as inert markup), head metadata/JSON-LD (Jesper's shell owns the head;
-the tab title stays Jesper's "About — Myself"), and Carter's `html.is-overlay`
-chrome rules.
+Every engine is mounted once through `useCarterEngine`; teardown uses the
+existing `CarterRoute` `destroyAll()` boundary while the outgoing DOM is still
+attached. Page-owned listeners are aborted, observers disconnected, GSAP work
+killed, timers/intervals cancelled, live sockets closed when their last
+subscriber leaves, and generated marks/canvases removed. The Desktop WebGL
+canvases are created only at Carter's `64rem` breakpoint and are removed when
+the breakpoint changes or the About route unmounts. The Phase 3A CSS continues
+to own the mobile/tablet stack, desktop composition, drawer breakpoint (`82rem`),
+reduced-motion rules, and hit-testing states; no CSS or static DOM rewrite was
+needed.
 
-## Assets
+No Carter-wide Nav, SignatureFx/global effects, loader, background, HUD,
+Lenis, theme switcher, or other route engine is mounted. The About-specific
+clock/presence/NowPlaying adapters are local to this integration; the shared
+Jesper runtime and `useCarterEngine` hook are unchanged.
 
-- **Stamp portrait (missing binary, honest gap):** Carter references
-  `carter-stamp.BRpWjIXQ_4vkhB.webp` (1000w) and `…_ZH60A1.webp` (560w).
-  Neither file exists in Carter's repo (checked full git history) or Jesper's,
-  and this environment cannot fetch the origin. The `<img>` keeps Carter's
-  filenames and every attribute (`srcSet`, `sizes="(max-width: 63.99rem)
-  184px, 560px"`, `width/height`, eager/sync/high priority) under the Phase 2
-  convention: **drop the two WebPs into `public/assets/carter/about/`** and
-  the stamp is complete — no code change. Until then the photo area shows the
-  alt text in the fully styled stamp (perforated clip, print filter, caption,
-  postmark all render). No substitute imagery was invented.
-- Everything else on the page is inline SVG/text/CSS. Icon `<symbol>`s
-  (`ai:local:*`) are defined inline exactly as Carter does (suitcase-work,
-  trophy, close in the board; x/instagram/github in Socials), each once.
-- Fonts resolve through Phase 2 `fonts.css`/`tokens.css` (local()-only faces,
-  Carter's system fallbacks) — identical to Carter's reconstruction. Licensed
-  Oracle/PP Neue Montreal/Geist Pixel binaries are absent in both repos, so
-  text metrics fall back the same way Carter's do.
+## Verification performed
 
-## Faithful quirks kept (do not "fix")
+- `npm ci` completed using the existing lockfile; no dependency files changed.
+- `npm run build` passed after the Phase 3B changes.
+- The production Vite preview returned `200 text/html` for direct requests to
+  `/`, `/projects`, `/contact`, `/studio`, `/lab`, `/writing`, and
+  `/myself/about`. This verifies the SPA fallback for refresh/deep links, not
+  client-side rendering or clicking through the route UI.
+- `git diff --check` passed. Static lifecycle review covered the page-owned
+  abort signals, timers, observers, GSAP work, sockets, generated marks, and
+  WebGL canvases. No browser executable is available for live interaction or
+  pixel-level comparison.
 
-- `.ov3__sig[data-astro-cid-ta2fbyqs]` never matches: Carter's `Signature`
-  root carries no About CID, so the rule is dead in Carter too. Preserved.
-- `closebox--fill` and `closebox--md` have no CSS in Carter — dead classes,
-  kept in markup verbatim.
-- `.ov3__letter` has no dedicated rule (the shared `.ov3__dialog` styles it).
-- Carter's manual rows in the on-file dialog deliberately differ from
-  Carter's `Row.astro` component (label `text-tag`, chips `text-meta`,
-  link-circle inside `.row__tags`). The page markup — not the component —
-  is what was ported.
-- Socials carries no `data-astro-cid-iupex2mz` attributes (Carter does not
-  recreate component-only CIDs; no CSS needs them). Its recovered source had
-  a malformed `="true"` attribute there, dropped as unrenderable.
-- The "About me" button carries `type="button"` (Carter's `Button` component
-  adds it; the older captured HTML lacks it — same delta Carter records).
-- Bare `data-*` attributes serialize as `=""` (Carter's captured HTML has
-  `"true"` in places; all selectors/hooks are presence-based).
-- The 154 commit cells render via `Array.from({length: 154})` — identical
-  DOM to Carter's 154 hand-placed `<span>`s, without 308 lines of noise.
-- Drawer links keep Carter hrefs (`/writing`, `/lab`); the frame's click
-  interception maps them to `/routes/writing` and `/routes/lab`.
+## Known fidelity gaps
+
+- **Stamp portrait assets are still absent:** Carter references
+  `carter-stamp.BRpWjIXQ_4vkhB.webp` (1000w) and
+  `carter-stamp.BRpWjIXQ_ZH60A1.webp` (560w). Neither repository contains the
+  binaries. The existing `<img>` keeps Carter's paths and attributes under
+  `/assets/carter/about/`; place those two WebPs in
+  `public/assets/carter/about/` to complete the portrait. No replacement image
+  was invented.
+- The original licensed Oracle / PP Neue Montreal / Geist Pixel font files are
+  absent in both repos. Jesper's existing Carter font declarations therefore
+  use the same system fallback family as Phase 3A.
+- Real radio API/CORS, GitHub API and optional `?realtime=live` socket behavior
+  depend on external services. If the radio cross-origin request is refused,
+  the source failure state (`No signal / RETRYING`) is retained.
+- No browser executable is available in the checked environment. Production
+  build, route responses and static lifecycle/source checks can be verified;
+  pixel-level Carter/Jesper comparison at desktop, tablet and mobile cannot be
+  claimed without a browser.
