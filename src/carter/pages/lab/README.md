@@ -192,3 +192,45 @@ verify SPA fallback responses, and SSR verifies route markup; I could not verify
 hydration, an actual in-browser refresh, loaded remote poster pixels, or visual
 responsiveness with screenshots. The responsive CSS was checked structurally,
 not by viewport screenshots.
+
+## Phase 5C — Heart engine
+
+Source audit selected `heart` from the actual registry: its complete engine
+(`app/lib/experiments/heart.js`, identical to `src/heart.HHFn1w7T.js` apart
+from imports) needs only the already-installed GSAP ticker and no assets or
+external services. Carter source remains read-only at `3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249`.
+Other candidates need missing audio/CDN assets, external presence, or heavier
+model/runtime dependencies. PR #14 was confirmed merged before implementation.
+
+Added `engines/heart.js`, `HeartStage.jsx`, and scoped `heart.css`; the only
+shell edits are an import, the heart-only stage conditional, and updated
+comments in `LabDetailPage.jsx`. Shared runtime, dependencies, data, styles,
+and unrelated experiments are unchanged. Polka Dots stays live; the other
+seven experiments retain their existing placeholder state.
+
+The engine generates `.heart > canvas`, samples the implicit heart surface
+(with the source's linear-y equation, bisection and mirrored normals), and
+retains all source parameters, 24 trailing layers, lighting, perspective,
+coast/drag behavior, mount-time responsive resolution, capped DPR, and
+mount-time reduced-motion behavior. ResizeObserver updates stage dimensions;
+`observeCarterTheme` replaces the source's html theme observer. `onDestroy`
+removes generated DOM, pointer listeners, observers and the GSAP ticker.
+The stage renders null server-side and uses the established Phase 5B
+synchronous loading/live flags (not Carter's lazy-loader minimum 1s delay).
+The Tune UI remains deferred, but the engine's `config` and `set` API remain.
+
+Verification:
+- `npm run build`: passed (existing large-chunk warning remains).
+- All nine detail SSR renders are byte-identical before/after the port.
+- Uncommitted jsdom harness compared original/port canvas command streams
+  exactly at 1440×1100, 768×1024 and 390×844, each with reduced motion on/off.
+  It exercised pointer drag/release, config, resize, theme and teardown,
+  checking removal of DOM/ticker and disconnection of ResizeObserver.
+  Canvas, layout dimensions and ResizeObserver were stubbed: this is numeric
+  and lifecycle verification, **not browser visual verification**.
+- Production preview: HTTP 200 on repeated direct heart requests and sample
+  Lab, Polka Dots, Dial, About and home URLs. This checks SPA fallback only,
+  not browser navigation/hydration or refresh execution.
+- No browser available. Visual fidelity, real desktop/tablet/mobile layout,
+  real touch/capture, browser console, and route-away/return/remount behavior
+  still require browser review. No pixel-fidelity claim is made.

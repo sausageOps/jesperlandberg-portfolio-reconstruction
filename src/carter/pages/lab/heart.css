@@ -1,0 +1,25 @@
+/*
+ * Carter's Heart engine CSS, copied from the inline `#exp-heart-style` block
+ * in app/lib/experiments/heart.js at
+ * sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249.
+ * Selectors are scoped to the Carter frame as required by src/carter/README.md.
+ */
+:where(.carter) .heart {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+:where(.carter) .heart.is-drag {
+  cursor: grabbing;
+}
+
+:where(.carter) .heart canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
