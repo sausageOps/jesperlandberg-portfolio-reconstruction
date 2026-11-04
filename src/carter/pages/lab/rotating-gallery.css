@@ -1,0 +1,230 @@
+/*
+ * Carter's Rotating Gallery engine CSS, copied from the inline `#exp-rg-style`
+ * block in app/lib/experiments/rotating-gallery.js at
+ * sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249.
+ * Selectors are scoped to the Carter frame as required by src/carter/README.md.
+ */
+:where(.carter) .rg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  --rg-card-w: 12rem;
+  --rg-ratio: 1.08;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+}
+
+/* isolate: the cards carry z-index up to ~600; trap that whole range inside the
+   stage's own stacking context so it can never paint over the HUD (which sits
+   outside the stage) or any other lab-window chrome */
+:where(.carter) .rg__stage {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  isolation: isolate;
+}
+
+:where(.carter) .rg.is-dragging .rg__stage {
+  cursor: grabbing;
+}
+
+:where(.carter) .rg[data-view="grid"] .rg__stage {
+  cursor: default;
+}
+
+/* carousel — the perspective context; the ring is centred and sized (in JS) to
+   fit the stage, radius > card so an open hub reads at the middle. NOTE: no
+   preserve-3d — perspective still scales the cards by translateZ, but paint
+   order comes from a STATIC z-index set once at build (see JS). Nothing re-sorts
+   as it rotates, so a card never pops in front of another (the original's trick,
+   which works because the depth is subtle enough that fixed order never reads
+   as wrong). */
+:where(.carter) .rg__carousel {
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  transform: translate(-50%, -50%);
+}
+
+:where(.carter) .rg__item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+:where(.carter) .rg__flip {
+  display: block;
+  width: var(--rg-card-w);
+  height: calc(var(--rg-card-w) * var(--rg-ratio));
+  border-radius: var(--r-xs);
+  overflow: hidden;
+  background: var(--card-solid);
+  text-decoration: none;
+}
+
+:where(.carter) .rg__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1);
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* grid — flat destination for the flip nodes */
+:where(.carter) .rg__grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: clamp(.5rem, 1.4vw, 1.1rem);
+  padding: clamp(1rem, 4vw, 3.5rem);
+  align-content: center;
+  grid-template-columns: repeat(5, 1fr);
+  pointer-events: none;
+  opacity: 0;
+}
+
+:where(.carter) .rg[data-view="grid"] .rg__grid {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+:where(.carter) .rg__slot {
+  position: relative;
+  aspect-ratio: 1 / var(--rg-ratio);
+}
+
+:where(.carter) .rg__grid .rg__flip {
+  width: 100%;
+  height: 100%;
+}
+
+/* HUD — odometer + name + view toggle */
+:where(.carter) .rg__hud {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  gap: 1rem;
+}
+
+:where(.carter) .rg__meta {
+  display: flex;
+  align-items: baseline;
+  gap: .7rem;
+  color: var(--ink);
+}
+
+:where(.carter) .rg__odo {
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
+
+:where(.carter) .rg__odo-col {
+  display: block;
+  height: 1em;
+  overflow: hidden;
+}
+
+:where(.carter) .rg__odo-strip {
+  display: block;
+  will-change: transform;
+}
+
+:where(.carter) .rg__odo-num {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+:where(.carter) .rg__name {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: var(--fs-mono-meta, .75rem);
+  color: var(--ink-muted);
+  overflow: hidden;
+  height: 1.1em;
+}
+
+:where(.carter) .rg__name-strip {
+  display: block;
+  will-change: transform;
+}
+
+:where(.carter) .rg__name-item {
+  display: block;
+  height: 1.1em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+:where(.carter) .rg__views {
+  display: inline-flex;
+  gap: .25rem;
+  pointer-events: auto;
+  padding: .2rem;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+}
+
+:where(.carter) .rg__view-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  padding: 0;
+  border-radius: calc(var(--r-sm) - .15rem);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background-color .25s var(--ease-out-quad), color .25s var(--ease-out-quad), scale .15s var(--ease-out-quad);
+}
+
+:where(.carter) .rg__view-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+:where(.carter) .rg__view-btn:hover {
+  color: var(--ink);
+}
+
+:where(.carter) .rg__view-btn:active {
+  scale: .96;
+}
+
+:where(.carter) .rg__view-btn[data-active="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+
+:where(.carter) .rg__view-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (max-width: 47.99rem) {
+  :where(.carter) .rg__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
