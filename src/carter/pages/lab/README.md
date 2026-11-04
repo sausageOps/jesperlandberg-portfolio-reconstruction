@@ -326,3 +326,119 @@ Verification:
   capture/touch feel, live browser console, and in-browser route transitions
   remain unverified and require human browser review. No pixel-fidelity claim
   is made.
+
+## Phase 5E — Dial engine
+
+Source audit across all six remaining unported experiments (`live-cursors`,
+`dial`, `threejs-test`, `dynamic-scrollbar`, `paste-up`, `vocal-orb`) selected
+`dial` from Carter's actual registry and source files at
+`3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249` (read-only). PR #16 (Phase 5D) was
+confirmed merged into `main` before implementation.
+
+Candidate rationale:
+- `dial` (`app/lib/experiments/dial.js`, body byte-identical to
+  `src/dial._0WTp1k0.js` apart from the `../mesh.ts` specifier; Carter's own
+  fidelity check, `recon/lab/engines.md` §3) is pure DOM + CSS transforms +
+  `gsap.ticker`/tweens — the GSAP core already installed as `gsap@^3.13.0`. It
+  needs **no** image, model, font, WebGL or WebSocket asset, has no external
+  service, and requires no shared-runtime, dependency or CSS-token change: every
+  token it reads (`--ink`, `--ink-muted`, `--surface`, `--paper`,
+  `--font-sans`, `--track`, `--ease-out-quad`, `--ease-out-expo`) already exists
+  in `styles/tokens.css`.
+- `paste-up` (runner-up) is the same DOM layout plus a **WebGL2**
+  (`#version 300 es`) print-plane engine, Carter's procedural grid-texture helper
+  from `mesh.ts` and 6 remote `assets.carterogunsola.com` prints — higher risk.
+- `threejs-test` loads `Lantern.glb` from `cdn.jsdelivr.net` as its default
+  subject, needs an unported OrbitControls/RoomEnvironment, reads an absent
+  `.spin` helper and dereferences `X.find(...).sf` for the first subject.
+- `dynamic-scrollbar` needs three `/lab/music/*.mp3` tracks plus
+  `/lab/covers/*.jpg`; all absent (404 in Carter's own reconstruction).
+- `live-cursors` needs Carter's remote PartyKit presence server and the
+  unported `runtime.ts` socket client. `vocal-orb` needs external ML model
+  hosts, a worker/AudioWorklet, WebGL2 float FBOs and microphone input.
+
+### Added
+
+| File | Role |
+| --- | --- |
+| `src/carter/engines/dial.js` | The engine: `mountDial(host)` returning `{ destroy, set }`, plus `config` and the Carter-shaped default export. |
+| `src/carter/engines/dial-channels.js` | Carter's 26-channel table and inline SVG glyphs, copied verbatim (only the minified bindings renamed `t`→`GLYPHS`, `n`→`CHANNELS`; verified equal after normalisation). |
+| `src/carter/pages/lab/DialStage.jsx` | Route stage: loading → live flags, mounts the engine into `[data-experiment-viewport]`, renders `null` server-side. |
+| `src/carter/pages/lab/dial.css` | Carter's inline `#exp-dial-style` block, every selector prefixed `:where(.carter)`; declarations unchanged. |
+
+The only edit to an existing file is `LabDetailPage.jsx`: one import, one
+`{item.slug === 'dial' && <DialStage />}` conditional, and updated comments.
+Shared runtime, dependencies, data, global styles and the other eight
+experiments are untouched.
+
+### Behavior preserved
+
+Full 26-channel ring on a hub off the left edge with the single
+`conic-gradient` cover painting back everything but an angular window; 130-tick
+ruler spun by one transform; `damp(cur, target, dragging ? 15 : 25, dt)` settle
+with `stepPx: 62`; pointer drag with the `> 4px` move guard that suppresses
+navigation; non-passive wheel scrub (`stepPx * 3`, `150ms` idle handoff);
+`ArrowUp/Left` · `ArrowDown/Right` stepping; detent snaps via
+`elastic.out(2, 0.6)` / `back.out(1.7)` / `power3.out`; the grip hand; the
+active-channel handoff with `1.08` icon scale and `aria-selected`; and the
+opening choreography (`0.6s` fade, knob `scale 0.4 / rotate -160` over `1s`,
+`1.4s` wind-down). Reduced motion is read once at mount, as in the source.
+
+### Adaptations from Carter
+
+1. `import { f as e } from '../mesh.ts'` → `import gsap from 'gsap'` (the only
+   binding the body uses).
+2. The channel table/glyphs moved to `dial-channels.js` (verbatim).
+3. The inline `<style>` is now `dial.css`, scoped to `.carter`.
+4. `<html data-theme>` has no equivalent; the stylesheet reads live tokens, so
+   the dial follows the frame's theme.
+5. `onDestroy` teardown is idempotent and complete: one `AbortController` for
+   every listener, `ResizeObserver` disconnect, `gsap.ticker` removal, detent and
+   opening tween kills (the opening wind-down tween is now held in a variable so
+   it can be killed, which the source leaves unreachable), the wheel-idle timer,
+   the audio pool, and the generated `.dial` DOM.
+6. **Missing click asset — not substituted.** Carter's `/lab/dial-tick.mp3` is
+   absent from its own reconstruction (404, recorded in Carter Phase 8) and is
+   absent here. Nothing is generated in its place. The source already tolerates
+   it (`try`/`catch`, swallowed `play()` rejection, no-op when the pool is
+   empty), so the dial is silent but fully usable. Two constant deviations keep
+   that silent and cheap: `preload` `'none'` instead of `'auto'`, and a 3-object
+   pool instead of 8.
+
+### Verification
+
+Run with `CARTER_REF=<carter-checkout> node verify/dial-verify.mjs`
+(`verify/README.md` documents scope and limits). All checks compare against
+Carter's unmodified source loaded from the read-only checkout at run time.
+
+- `npm run build`: passed (`LabDetailPage-*.js` 173.94 kB / 59.39 kB gzip,
+  `LabDetailPage-*.css` 58.28 kB / 9.87 kB gzip). No runtime `<style>`
+  injection remains; all 20 `dial.css` selectors are `:where(.carter)`-scoped.
+- **Section A, original vs port: exact match, `maxFloatDelta = 0`** on 7 checks
+  × 3 viewports (1440×900, 768×1024, 390×844) × reduced-motion off/on = 42
+  checks, covering all 26 item transforms, the tick ring, grip, knob geometry,
+  cover centre, active channel and `aria-selected` after open, wheel, arrow-key
+  settle, drag + elastic release, `set()`, resize re-measure and teardown.
+- **Section B, real integration path** (`CarterRoute` → `LabDetailPage` →
+  `DialStage` → engine, React in jsdom): 19 checks — single `.dial`, 26 items /
+  130 ticks, loading→live flags, ARIA, external-link safety, opening wind-down,
+  wheel scrub, arrow stepping, drag + release, 12 route changes with zero
+  listener/observer/DOM growth, five unported routes still placeholder-only,
+  each ported route mounting only its own engine, no console errors, and full
+  teardown. Plus 4 audio checks for the absent asset.
+- 65/65 checks passed on 5+ consecutive runs (A exact each time).
+- Production preview: HTTP 200 on repeated direct `/routes/lab/dial` requests
+  and on all eight other Lab detail routes, `/routes/lab/unknown`, `/routes/lab`,
+  `/`, `/projects`, `/myself/about`, `/contact`, `/routes/studio`,
+  `/routes/writing` and `/routes/writing/the-personal-starter`.
+- SSR (`react-dom/server`) across the nine detail routes: only `dial` gained a
+  stage host; the other five unported routes keep the `.labd__empty` placeholder
+  unchanged (their markup byte counts are identical to pre-port).
+
+**Browser limitation:** no Chromium can launch in this sandbox (missing system
+libraries, no root to install them), so rendering is not visually verified.
+jsdom has no layout engine, CSS cascade, canvas or compositing: geometry is
+stubbed from the requested viewport, so the conic cover's painting, real CSS
+transforms/fonts, touch and pointer-capture feel, actual audio playback,
+desktop/tablet/mobile rendering, and pixel fidelity all remain unverified and
+need human browser review. No pixel-fidelity claim is made.

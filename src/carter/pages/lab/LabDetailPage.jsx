@@ -5,6 +5,7 @@ import { labDocument, labHref, labImage } from '../../data/lab.js';
 import PolkaDotsStage from './PolkaDotsStage.jsx';
 import HeartStage from './HeartStage.jsx';
 import RotatingGalleryStage from './RotatingGalleryStage.jsx';
+import DialStage from './DialStage.jsx';
 
 /*
  * Carter's shared Lab document (experiment detail page), static DOM and CSS.
@@ -19,22 +20,23 @@ import RotatingGalleryStage from './RotatingGalleryStage.jsx';
  * translations are HTML -> JSX mechanics (className, SVG camelCase, `set:html`
  * -> dangerouslySetInnerHTML) and the inlining of Carter's ArrowRoll component.
  *
- * What is deliberately inert / deferred (Phases 4B–5D):
+ * What is deliberately inert / deferred (Phases 4B–5E):
  * - [data-experiment-viewport] holds Carter's engine mount point. Its source
  *   empty state ("Experiment coming soon" over the blurred poster) remains for
- *   the six details without a ported engine. Polka Dots mounts its engine
+ *   the five details without a ported engine. Polka Dots mounts its engine
  *   (Phase 5B, adopting the Phase 5A static `.pd > canvas` DOM), Heart mounts
- *   its engine (Phase 5C, engine-generated `div.heart > canvas`), and Rotating
- *   Gallery mounts its engine (Phase 5D, engine-generated `div.rg`);
- *   `data-stage-live` hides the empty state on those three routes.
+ *   its engine (Phase 5C, engine-generated `div.heart > canvas`), Rotating
+ *   Gallery mounts its engine (Phase 5D, engine-generated `div.rg`), and Dial
+ *   mounts its engine (Phase 5E, engine-generated `div.dial`);
+ *   `data-stage-live` hides the empty state on those four routes.
  * - [data-config-toggle] / .labcfg stay `hidden`, exactly as Carter ships them
  *   until an experiment registers a config.
  * - The Code pane keeps its element and layout slot but its content is deferred:
  *   Carter's ~2 MB of captured Expressive Code listings and the ec.*.js enhancer
  *   arrive with the experiments (see README.md).
- * - No experiment engine beyond Polka Dots, Heart, and Rotating Gallery: no
- *   scene, wheel/drag control, timeline or media playback is mounted here for
- *   the other six details, which keep the placeholder state.
+ * - No experiment engine beyond Polka Dots, Heart, Rotating Gallery, and Dial:
+ *   no scene, wheel/drag control, timeline or media playback is mounted here for
+ *   the other five details, which keep the placeholder state.
  *
  * Shell chrome that *is* live, matching Carter's shared lab-doc engine: the docs
  * toggle (.is-docs), the Notes/Code tabs (aria-pressed, tab-bg, pane visibility),
@@ -277,6 +279,7 @@ export default function LabDetailPage({ slug }) {
             {item.slug === 'polka-dots' && <PolkaDotsStage />}
             {item.slug === 'heart' && <HeartStage />}
             {item.slug === 'rotating-gallery' && <RotatingGalleryStage />}
+            {item.slug === 'dial' && <DialStage />}
           </div>
         </section>
 
