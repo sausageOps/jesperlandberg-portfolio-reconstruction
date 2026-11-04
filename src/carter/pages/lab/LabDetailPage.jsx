@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import './lab-detail.css';
 import './lab-detail-ec.css';
 import { labDocument, labHref, labImage } from '../../data/lab.js';
+import PolkaDotsStage from './PolkaDotsStage.jsx';
 
 /*
  * Carter's shared Lab document (experiment detail page), static DOM and CSS.
@@ -16,18 +17,18 @@ import { labDocument, labHref, labImage } from '../../data/lab.js';
  * translations are HTML -> JSX mechanics (className, SVG camelCase, `set:html`
  * -> dangerouslySetInnerHTML) and the inlining of Carter's ArrowRoll component.
  *
- * What is deliberately inert / deferred (Phase 4B scope):
- * - [data-experiment-viewport] holds Carter's engine mount point. With no
- *   experiment registered the source renders its own empty state here ("Experiment
- *   coming soon" over the blurred poster); that is Carter's static DOM, not an
- *   invented placeholder, and it keeps the stage's layout area.
+ * What is deliberately inert / deferred (Phases 4B and 5A):
+ * - [data-experiment-viewport] holds Carter's engine mount point. Its source
+ *   empty state ("Experiment coming soon" over the blurred poster) remains for
+ *   all nine details. Phase 5A adds only Polka Dots' source `.pd > canvas` DOM;
+ *   that canvas remains blank and is explicitly marked as engine-dependent.
  * - [data-config-toggle] / .labcfg stay `hidden`, exactly as Carter ships them
  *   until an experiment registers a config.
  * - The Code pane keeps its element and layout slot but its content is deferred:
  *   Carter's ~2 MB of captured Expressive Code listings and the ec.*.js enhancer
  *   arrive with the experiments (see README.md).
- * - No experiment engine, canvas, scene, wheel/drag interaction or media playback
- *   is mounted here.
+ * - No experiment engine, canvas drawing, scene, wheel/drag interaction or
+ *   media playback is mounted here. PolkaDotsStage has no engine imports.
  *
  * Shell chrome that *is* live, matching Carter's shared lab-doc engine: the docs
  * toggle (.is-docs), the Notes/Code tabs (aria-pressed, tab-bg, pane visibility),
@@ -267,6 +268,7 @@ export default function LabDetailPage({ slug }) {
                 </div>
               </div>
             </div>
+            {item.slug === 'polka-dots' && <PolkaDotsStage />}
           </div>
         </section>
 
