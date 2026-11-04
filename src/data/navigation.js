@@ -49,7 +49,7 @@ export const activeTopLevel = (path) => {
 // Sections that may carry exactly one trailing segment (e.g. a detail page under
 // a menu item). Declared explicitly so every other two-segment path still falls
 // through to not-found and the existing route surface is preserved.
-const nestedSections = new Set(['routes/writing']);
+const nestedSections = new Set(['routes/writing', 'routes/lab']);
 
 /** Sentence-cases a URL segment: `the-personal-starter` -> `The personal starter`. */
 export const formatSegment = (segment) =>

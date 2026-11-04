@@ -22,6 +22,7 @@ import './styles/frame.css';
  */
 const PAGES = {
   about: lazy(() => import('./pages/about/AboutPage.jsx')),
+  lab: lazy(() => import('./pages/lab/LabPage.jsx')),
 };
 
 /**
