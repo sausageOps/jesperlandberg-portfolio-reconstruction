@@ -10,6 +10,7 @@ import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
 import { activeTopLevel, formatSegment, resolveSection } from './data/navigation.js';
 import { resolveCarterPage } from './carter/routes.js';
+import { labDescription } from './carter/data/lab-slugs.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
 
@@ -73,13 +74,31 @@ export default function App() {
     experience.setRoute(route === 'project' && !project ? 'not-found' : route, project);
   }, [experience, route, project]);
 
+  // Carter's Lab documents carry their own document title and description
+  // (`${item.name} :: Lab`, item.description in lab/[slug].astro). They are the
+  // only Carter routes with per-slug metadata, so they are resolved here, where
+  // this effect has the last word on the document head.
   useEffect(() => {
     document.title = route === 'project' && project
       ? project.title
-      : section
-        ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-        : site.name;
-  }, [route, project, section]);
+      : carterPage?.key === 'lab-detail'
+        ? `${carterPage.label} :: Lab`
+        : section
+          ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
+          : site.name;
+  }, [route, project, section, carterPage]);
+
+  useEffect(() => {
+    if (carterPage?.key !== 'lab-detail') return undefined;
+    const description = document.querySelector('meta[name="description"]');
+    if (!description) return undefined;
+    const previous = description.getAttribute('content');
+    const text = labDescription(carterPage.slug);
+    if (text) description.setAttribute('content', text);
+    return () => {
+      if (previous != null) description.setAttribute('content', previous);
+    };
+  }, [carterPage]);
 
   const navigate = useCallback((to, { replace = false } = {}) => {
     const nextPath = cleanPath(to);

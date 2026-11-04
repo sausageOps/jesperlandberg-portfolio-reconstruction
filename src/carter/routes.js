@@ -9,7 +9,9 @@
  * This module is deliberately framework- and CSS-free: App.jsx imports it
  * statically, so it must stay tiny.
  */
-export const CARTER_PAGES = Object.freeze([
+import { LAB_ENTRIES } from './data/lab-slugs.js';
+
+const CARTER_PAGES = [
   { key: 'about', path: '/myself/about', carter: '/about' },
   { key: 'lab', path: '/routes/lab', carter: '/lab' },
   { key: 'writing', path: '/routes/writing', carter: '/writing' },
@@ -18,9 +20,26 @@ export const CARTER_PAGES = Object.freeze([
     path: '/routes/writing/the-personal-starter',
     carter: '/writing/the-personal-starter',
   },
-]);
+];
 
-const pagesByPath = new Map(CARTER_PAGES.map((page) => [page.path, page]));
+/* Phase 4B: the nine Lab experiment documents. Carter resolves these from one
+   dynamic route (`lab/[slug].astro`); Jesper's router is a plain path map, so
+   each slug is registered here. The order and names come from Carter's
+   app/data/lab.ts (see data/lab.js); the frame renders them with `lab-detail`. */
+for (const entry of LAB_ENTRIES) {
+  CARTER_PAGES.push({
+    key: 'lab-detail',
+    path: `/routes/lab/${entry.slug}`,
+    carter: `/lab/${entry.slug}`,
+    slug: entry.slug,
+    label: entry.name,
+  });
+}
+
+export const CARTER_PAGE_LIST = Object.freeze(CARTER_PAGES.map((page) => Object.freeze(page)));
+
+
+const pagesByPath = new Map(CARTER_PAGE_LIST.map((page) => [page.path, page]));
 
 /** Carter page for an already-cleaned Jesper path (App's cleanPath), or null. */
 export const resolveCarterPage = (path) => pagesByPath.get(path) || null;
