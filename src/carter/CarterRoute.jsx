@@ -1,4 +1,4 @@
-import { Component, Suspense, useEffect, useLayoutEffect, useRef } from 'react';
+import { Component, Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   bindCarterRuntime,
   destroyAll,
@@ -20,7 +20,9 @@ import './styles/frame.css';
  *
  * A key with no entry renders the route's Phase 1 placeholder inside the frame.
  */
-const PAGES = {};
+const PAGES = {
+  about: lazy(() => import('./pages/about/AboutPage.jsx')),
+};
 
 /**
  * Wraps one Carter page. It is keyed by route, so moving between Carter pages
