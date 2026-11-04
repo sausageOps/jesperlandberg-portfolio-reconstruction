@@ -234,3 +234,95 @@ Verification:
 - No browser available. Visual fidelity, real desktop/tablet/mobile layout,
   real touch/capture, browser console, and route-away/return/remount behavior
   still require browser review. No pixel-fidelity claim is made.
+
+## Phase 5D — Rotating Gallery engine
+
+Source audit across all seven remaining unported experiments (`live-cursors`,
+`dial`, `threejs-test`, `dynamic-scrollbar`, `rotating-gallery`, `paste-up`,
+`vocal-orb`) selected `rotating-gallery` from Carter's actual registry and
+source files at `3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249` (read-only). PR #15
+(Phase 5C) was confirmed merged into `main` before implementation.
+
+Candidate rationale:
+- `rotating-gallery` (`app/lib/experiments/rotating-gallery.js`, body
+  byte-identical to `src/rotating-gallery.Cu-VrtOq.js` and matching
+  `app/data/lab-restored/rotating-gallery.code.html`) is pure DOM + CSS 3D
+  perspective + `gsap` / `gsap/Flip` / `gsap/CustomEase` (all present in the
+  already-installed `gsap@^3.13.0`), using the same
+  `https://assets.carterogunsola.com` R2 image origin already used by
+  `LabPage.jsx` and `data/lab.js`, with zero missing local files, zero WebGL
+  contexts, zero external APIs/WebSockets/ML model hosts, and zero shared
+  runtime or dependency edits.
+- `paste-up` (runner-up) also uses `assets.carterogunsola.com` + `gsap`, but
+  requires WebGL2 (`#version 300 es`) plus unported `mesh.ts` wireframe-grid
+  and `?mesh` helpers.
+- `dial` and `dynamic-scrollbar` reference local `/lab/dial-tick.mp3` and
+  `/lab/music/*.mp3` + `/lab/covers/*.jpg` files that are absent (HTTP 404) in
+  Carter's own reconstruction.
+- `threejs-test` fetches external `Lantern.glb` from `cdn.jsdelivr.net` as its
+  default subject (leaving `.tj__loading` stuck on network failure) and uses
+  `.spin` CSS absent from Jesper's shared Carter styles.
+- `live-cursors` requires Carter's remote PartyKit WebSocket presence server
+  and unported `runtime.ts` presence client; `vocal-orb` requires external ML
+  model/CDN hosts, Web Worker, AudioWorklet, WebGL2 float FBOs, and microphone
+  input.
+
+Added `engines/rotating-gallery.js`, `RotatingGalleryStage.jsx`, and
+`.carter`-scoped `rotating-gallery.css`; the only shell edits in
+`LabDetailPage.jsx` are the stage import, the `rotating-gallery` conditional,
+and updated comments. Shared runtime, dependencies, data, global styles, and
+unrelated experiments are untouched. Polka Dots and Heart remain live; the
+remaining six experiments keep their existing placeholder state.
+
+Preserved behavior and adaptations:
+- Generates `.rg` (`.rg__stage > .rg__carousel + .rg__grid` and `.rg__hud`)
+  inside `[data-experiment-viewport]`, arranging the 10 `DTS_Unwrapped` plates
+  (`DRIFT` … `VAPOR`) around the vertical-plane `translate3d` ring with static
+  `500 + cos(θ)·100` z-index order inside `isolation: isolate`, continuous
+  exponential drift, axis-locked pointer drag + release momentum, non-passive
+  wheel scrub, fine-pointer hover preview, `ArrowLeft` / `ArrowRight` / `g`
+  keyboard controls, dual odometer + title strips, opening `clip-path` + HUD
+  reveal timeline, Carousel ↔ Grid `Flip` morph (`5` columns desktop, `2`
+  columns `<= 47.99rem`), mount-time `prefers-reduced-motion: reduce` handling,
+  and live CSS token theming (`--card-solid`, `--ink`, `--ink-muted`, `--fill`,
+  `--surface`).
+- Inline `#exp-rg-style` `<style>` injection is replaced by static
+  `rotating-gallery.css` scoped under `:where(.carter)`.
+- `onDestroy` registers idempotent teardown aborting all stage/window/button/
+  hover/keyboard listeners, disconnecting `ResizeObserver`, detaching
+  `gsap.ticker`, clearing `wheelIdle` and `keyIdle` timeouts, killing the
+  opening timeline, active `Flip` animations, and element tweens, and removing
+  `.rg`. The Tune UI remains deferred while `config` and `set` are preserved.
+
+Verification:
+- `npm run build`: passed (`LabDetailPage-*.js` 132.36 kB / 41.82 kB gzip,
+  `LabDetailPage-*.css` 55.55 kB / 9.38 kB gzip; 29/29 CSS rules scoped under
+  `:where(.carter)`, 0 leaked declaration `rem` units, media query preserved at
+  `47.99rem`, no `exp-rg-style` runtime injection).
+- Vite SSR (`react-dom/server`) across all nine `/routes/lab/<slug>` routes,
+  `/routes/lab`, `/myself/about`, and unknown Lab slug resolution: passed;
+  `RotatingGalleryStage` renders `null` server-side and all other six unported
+  routes keep their `.labd__empty` placeholder without `.rg` DOM.
+- Uncommitted Node DOM harness compared Carter's original
+  `app/lib/experiments/rotating-gallery.js` and `engines/rotating-gallery.js`
+  at 1440×1100, 768×1024, and 390×844 with reduced motion off/on across 120
+  ticker frames (exact match on `--rg-card-w`, perspective, `zIndex`,
+  `translate3d` transforms, odometer strips, and title strip), and exercised
+  hover, pointer drag/release, wheel scrub, keyboard controls, Carousel ↔ Grid
+  `Flip` morph, `ResizeObserver`, theme switching, `set()` config updates, and
+  5× mount → `destroyAll()` remount cycles with zero leaked DOM, window
+  listeners, or `ResizeObserver` observations. Layout geometry and DOM APIs
+  were mocked in Node: this is numeric, structural, and lifecycle verification,
+  **not browser visual verification**.
+- Production preview (`vite preview`): HTTP 200 on repeated direct requests to
+  `/routes/lab/rotating-gallery`, all other eight Lab detail routes,
+  `/routes/lab/unknown`, `/routes/lab`, `/`, `/projects`, `/myself/about`,
+  `/contact`, `/routes/studio`, `/routes/writing`,
+  `/routes/writing/the-personal-starter`, and built `LabDetailPage` JS/CSS
+  assets (SPA fallback + asset serving check only, not browser hydration).
+- No browser executable is available in this sandbox: rendered visual fidelity,
+  live remote `assets.carterogunsola.com` plate image decode, real CSS 3D
+  perspective/Flip compositing across desktop/tablet/mobile viewports, pointer
+  capture/touch feel, live browser console, and in-browser route transitions
+  remain unverified and require human browser review. No pixel-fidelity claim
+  is made.
