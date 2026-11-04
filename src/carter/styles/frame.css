@@ -1,0 +1,41 @@
+/*
+ * Carter frame <-> Jesper shell.
+ *
+ * These are the only rules that touch Jesper's shell. They apply only while a
+ * Carter route is mounted: App.jsx adds .route-carter on the four Carter routes,
+ * and the .carter root exists only inside CarterRoute.
+ */
+
+/* The same lift styles.css gives .route-project, .route-contact and
+   .route-studio. The fixed #main-content wrapper forms a stacking context, and
+   it must sit above the WebGL canvas (z-index 10, opaque black off the home
+   route), because Carter pages paint their own paper. The nav (z-index 45),
+   Loader (100) and skip link (200) stay above it. */
+.route-carter #main-content {
+  z-index: 20;
+}
+
+/* The root is Carter's <body>. Jesper's html, body and #root never scroll
+   (styles.css), so the root is the page's fixed scroller, like Contact's
+   .cletter-scroll. A local background attachment makes Carter's fibre ground
+   scroll with the content, as it does on Carter's scrolling body. Deviation:
+   the scrollbar is hidden (Jesper's convention, as on Contact), whereas Carter
+   reserves a scrollbar gutter on <html>. */
+.carter {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background-attachment: local;
+}
+
+.carter::-webkit-scrollbar {
+  display: none;
+}
+
+/* runtime.js scroll.stop() (Carter: Lenis stop()). */
+.carter[data-scroll-stopped] {
+  overflow-y: hidden;
+}

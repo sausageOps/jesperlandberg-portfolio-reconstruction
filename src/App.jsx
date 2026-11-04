@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Experience from './webgl/Experience.js';
 import { featured, projects, site } from './data/projects.js';
 import Hud from './components/Hud.jsx';
@@ -9,8 +9,19 @@ import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
 import { activeTopLevel, formatSegment, resolveSection } from './data/navigation.js';
+import { resolveCarterPage } from './carter/routes.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
+
+// The Carter pages (About, Lab, Writing) mount through the shared Carter frame
+// (src/carter). It is code-split, so Carter's styles and runtime load only on
+// those routes. If the chunk fails to load, the route keeps its placeholder.
+const CarterRoute = lazy(() =>
+  import('./carter/CarterRoute.jsx').catch((error) => {
+    console.error('[carter] frame failed to load', error);
+    return { default: ({ placeholder }) => placeholder };
+  }),
+);
 
 export default function App() {
   const canvas = useRef(null);
@@ -26,6 +37,7 @@ export default function App() {
   const [navReturning, setNavReturning] = useState(false);
 
   const section = useMemo(() => resolveSection(path), [path]);
+  const carterPage = useMemo(() => resolveCarterPage(path), [path]);
   const route = path.startsWith('/projects/') ? 'project' : section ? section.menu.key : path === '/' ? 'home' : 'not-found';
   const slug = route === 'project' ? path.split('/')[2] : null;
   const project = featured.find((item) => item.slug === slug) || null;
@@ -159,6 +171,22 @@ export default function App() {
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
     // Studio lives in the Routes menu group: /routes/studio (nav source of truth).
     if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
+    // Carter pages (src/carter/routes.js) mount inside the shared Carter frame.
+    // A page that is not ported yet renders its section placeholder inside it.
+    if (carterPage && section) {
+      const placeholder = (
+        <Section
+          menu={section.menu}
+          item={section.item}
+          subtitle={section.nested ? formatSegment(section.nested) : undefined}
+        />
+      );
+      return (
+        <Suspense fallback={null}>
+          <CarterRoute page={carterPage} appReady={!loading} onNavigate={navigate} placeholder={placeholder} />
+        </Suspense>
+      );
+    }
     // Nested section routes (e.g. /routes/writing/the-personal-starter) resolve to the
     // same placeholder until their page is ported. The section item still supplies the
     // heading; the trailing segment is shown beneath it so the URL is identifiable.
@@ -179,14 +207,15 @@ export default function App() {
       );
     }
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
-  }, [route, section, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading]);
+  }, [route, section, carterPage, project, experience, transitionFrom, exitTo, openProject, closeProject, navigateProject, finishClose, loading, navigate]);
 
-  // The letter desk and the lanyard stage are their own opaque surfaces: these
-  // route classes lift the DOM above the WebGL canvas with the same pattern
-  // project routes already use. Studio is reached via /routes/studio.
-  const routeClass =
-    (route === 'myself' && section?.item?.slug === 'contact') ||
-    (route === 'routes' && section?.item?.slug === 'studio')
+  // The letter desk, the lanyard stage and the Carter frame are their own opaque
+  // surfaces. These route classes lift the DOM above the WebGL canvas with the
+  // same pattern project routes already use. Studio is reached via /routes/studio.
+  const routeClass = carterPage
+    ? ' route-carter'
+    : (route === 'myself' && section?.item?.slug === 'contact') ||
+        (route === 'routes' && section?.item?.slug === 'studio')
       ? ` route-${section.item.slug}`
       : '';
 
