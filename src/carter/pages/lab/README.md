@@ -57,7 +57,7 @@ Carter's document splits cleanly; this port keeps the split:
 | `.labd` root, `data-experiment/name/prev/next/position/total` | static | ported verbatim |
 | docs toggle, tabs, tags, docs body, scroll thumb | shared `lab-doc` engine | shell chrome ported; state is React (`is-docs`, `aria-pressed`, tab pill, pane `hidden`, `d`/Escape) |
 | `[data-docs-scroll]` scroll + thumb sizing | shared engine | ported as a small effect (same maths as the source) |
-| `[data-experiment-viewport]` | per-experiment engine | **left to Carter's own empty state** ("Experiment coming soon" over the blurred poster) — that is the source's static markup with no experiment registered, not an invented placeholder, and it holds the stage's layout box |
+| `[data-experiment-viewport]` | per-experiment engine | Phase 4B kept Carter's own empty state ("Experiment coming soon" over the blurred poster). Phase 5A adds only Polka Dots' source `.pd > canvas` DOM, explicitly marked as an engine placeholder; its canvas stays blank and the shell empty state remains. The other eight details are unchanged. |
 | `[data-config-toggle]`, `.labcfg` | configurator (`lab-doc.js`) | rendered, `hidden`, exactly as Carter ships them until an experiment registers a config |
 | prev/count/next nav | static | ported; hrefs stay Carter's (`/lab/…`, `/lab`) and the frame's link interceptor maps them to Jesper routes |
 | Notes pane | build-time `set:html` | **ported verbatim** (`dangerouslySetInnerHTML`) |
@@ -111,6 +111,25 @@ Identical to Carter's `app/data/lab-evidence.ts`:
 - Every other breakpoint (`47.99rem` docs drawer to `100vw`, the `.labcfg`
   inline rules, the reduced-motion overrides) is Carter's.
 
+## Phase 5A — Polka Dots static DOM and CSS
+
+Source: `app/lib/experiments/polka-dots.js` in
+`sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249`
+(read-only). Carter's `mount()` creates a `div.pd`, appends a `canvas`, and then
+appends that wrapper to `[data-experiment-viewport]`. The two experiment CSS
+rules from that same source are in `polka-dots.css`, scoped to `.carter` without
+changing their declarations.
+
+`LabDetailPage.jsx` inserts this static DOM only for `polka-dots`. The wrapper
+has `data-engine-placeholder="polka-dots"` to make its status explicit. Its
+canvas has no backing store or context; the existing shell empty state remains
+in place. The GSAP ticker, canvas drawing, theme/resize observers, pointer
+handling, dot integration, and configurator are not imported or implemented.
+There are no Polka-Dots-specific local assets, package changes, or dependency
+upgrades. Carter's metadata and Notes pane continue to come from the Phase 4B
+registry and data unchanged. The other eight experiment routes retain their
+Phase 4B shell state.
+
 ## Verification performed
 
 - `npm run build` passes; the page is its own lazy chunk
@@ -143,3 +162,33 @@ desktop/tablet/mobile visual diff against Carter, and no real back/forward
 button test. Everything above is DOM/CSS/module level. Fonts are Carter's
 system fallbacks (Carter's licensed faces are not in either repository), and the
 poster images are loaded from Carter's asset host, exactly as Phase 4A does.
+
+### Phase 5A verification (2026-11-04)
+
+- `npm ci` and `npm run build` passed. The detail chunk builds as
+  `LabDetailPage-DUPR2Gqf.js` (83.35 kB) with its stylesheet
+  `LabDetailPage-1EsWtfdY.css` (51.98 kB); no dependency files changed.
+- Vite SSR with `react-dom/server` confirmed Polka Dots' route data, title
+  convention, description source, Notes text, GSAP reference link, poster URL,
+  previous/next links, source `.pd > canvas` markup and the shell empty state.
+  The same check confirmed all other eight experiment routes still render the
+  existing shell state and do not contain Polka Dots DOM.
+- PostCSS comparison against Carter's inline CSS confirmed both selectors and
+  every declaration match the source; only the Carter-frame scope prefix is
+  added. The layout fills its parent (`inset: 0`, canvas `100%` × `100%`) and
+  has no experiment-specific breakpoint.
+- The production preview returned HTTP 200 for direct requests to the selected
+  route (including a repeat request as a refresh smoke check), all eight other
+  experiment routes, Home, Projects, About, Contact, Studio, Lab index, and
+  Writing. The selected path serves the SPA entry on direct requests.
+- The build contains no Polka Dots engine chunk and no `exp-polka-style` runtime
+  identifier. The component imports only its CSS; there is no GSAP, `mesh.ts`,
+  or engine import. The Git diff is confined to the four planned Polka-Dots
+  files.
+
+**Browser limitation:** no system browser executable, Playwright, Puppeteer, or
+jsdom is installed in this sandbox. Therefore the production-preview checks
+verify SPA fallback responses, and SSR verifies route markup; I could not verify
+hydration, an actual in-browser refresh, loaded remote poster pixels, or visual
+responsiveness with screenshots. The responsive CSS was checked structurally,
+not by viewport screenshots.

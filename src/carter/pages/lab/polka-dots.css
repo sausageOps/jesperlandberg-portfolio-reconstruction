@@ -1,0 +1,20 @@
+/*
+ * Carter's Polka Dots engine CSS, copied from
+ * app/lib/experiments/polka-dots.js at
+ * sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249.
+ * Selectors are scoped to the Carter frame as required by src/carter/README.md.
+ */
+:where(.carter) .pd {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+:where(.carter) .pd canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
