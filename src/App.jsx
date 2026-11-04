@@ -8,7 +8,7 @@ import Project from './components/Project.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
-import { activeTopLevel, resolveSection } from './data/navigation.js';
+import { activeTopLevel, formatSegment, resolveSection } from './data/navigation.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
 
@@ -159,6 +159,10 @@ export default function App() {
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
     // Studio lives in the Routes menu group: /routes/studio (nav source of truth).
     if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
+    // Nested section routes (e.g. /routes/writing/the-personal-starter) resolve to the
+    // same placeholder until their page is ported. The section item still supplies the
+    // heading; the trailing segment is shown beneath it so the URL is identifiable.
+    if (section?.nested) return <Section menu={section.menu} item={section.item} subtitle={formatSegment(section.nested)} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     if (route === 'project' && project) {
       return (

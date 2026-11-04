@@ -46,13 +46,29 @@ export const activeTopLevel = (path) => {
   return null;
 };
 
-// Resolves `/routes/<slug>` and `/myself/<slug>` to their menu + item.
+// Sections that may carry exactly one trailing segment (e.g. a detail page under
+// a menu item). Declared explicitly so every other two-segment path still falls
+// through to not-found and the existing route surface is preserved.
+const nestedSections = new Set(['routes/writing']);
+
+/** Sentence-cases a URL segment: `the-personal-starter` -> `The personal starter`. */
+export const formatSegment = (segment) =>
+  segment
+    .split('-')
+    .filter(Boolean)
+    .map((word, index) => (index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+    .join(' ');
+
+// Resolves `/routes/<slug>` and `/myself/<slug>` to their menu + item, plus one
+// optional trailing segment for the sections listed in `nestedSections`.
 export const resolveSection = (path) => {
-  const match = /^\/(routes|myself)(?:\/([^/]+))?$/.exec(path);
+  const match = /^\/(routes|myself)(?:\/([^/]+))?(?:\/([^/]+))?$/.exec(path);
   if (!match) return null;
   const menu = navMenus[match[1]];
   const slug = match[2] || null;
   const item = slug ? menu.items.find((entry) => entry.slug === slug) || null : null;
   if (slug && !item) return null;
-  return { menu, item };
+  const nested = match[3] || null;
+  if (nested && !nestedSections.has(`${match[1]}/${slug}`)) return null;
+  return { menu, item, nested };
 };
