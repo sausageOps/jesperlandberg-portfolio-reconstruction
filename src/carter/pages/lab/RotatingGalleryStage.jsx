@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountRotatingGallery } from '../../engines/rotating-gallery.js';
+import { mountRotatingGallery, config as tuneConfig } from '../../engines/rotating-gallery.js';
+import { mountLabTune } from './lab-tune.js';
 import './rotating-gallery.css';
 
 /**
@@ -26,8 +27,10 @@ export default function RotatingGalleryStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountRotatingGallery(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'rotating-gallery');
     } catch (error) {
       console.error('[rotating-gallery] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -46,6 +49,7 @@ export default function RotatingGalleryStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

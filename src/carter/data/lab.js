@@ -60,6 +60,7 @@ export function labDocument(slug) {
     previous: ring(-1),
     next: ring(1),
     notes: labNotes[slug],
+    code: labCode[slug],
   };
 }
 
@@ -89,6 +90,15 @@ import polkaDotsNotes from './lab-notes/polka-dots.html?raw';
 import rotatingGalleryNotes from './lab-notes/rotating-gallery.html?raw';
 import threejsTestNotes from './lab-notes/threejs-test.html?raw';
 import vocalOrbNotes from './lab-notes/vocal-orb.html?raw';
+import dialCode from './lab-code/dial.code.html?raw';
+import dynamicScrollbarCode from './lab-code/dynamic-scrollbar.code.html?raw';
+import heartCode from './lab-code/heart.code.html?raw';
+import liveCursorsCode from './lab-code/live-cursors.code.html?raw';
+import pasteUpCode from './lab-code/paste-up.code.html?raw';
+import polkaDotsCode from './lab-code/polka-dots.code.html?raw';
+import rotatingGalleryCode from './lab-code/rotating-gallery.code.html?raw';
+import threeJsTestCode from './lab-code/threejs-test.code.html?raw';
+import vocalOrbCode from './lab-code/vocal-orb.code.html?raw';
 
 const labNotes = {
   'live-cursors': liveCursorsNotes,
@@ -100,4 +110,16 @@ const labNotes = {
   'rotating-gallery': rotatingGalleryNotes,
   'paste-up': pasteUpNotes,
   'vocal-orb': vocalOrbNotes,
+};
+
+const labCode = {
+  'live-cursors': liveCursorsCode,
+  dial: dialCode,
+  'polka-dots': polkaDotsCode,
+  heart: heartCode,
+  'threejs-test': threeJsTestCode,
+  'dynamic-scrollbar': dynamicScrollbarCode,
+  'rotating-gallery': rotatingGalleryCode,
+  'paste-up': pasteUpCode,
+  'vocal-orb': vocalOrbCode,
 };

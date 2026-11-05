@@ -266,7 +266,7 @@ function makeWindow({ width, height, reducedMotion = 'no-preference', gl = true,
 
   // `.tj` fills `[data-experiment-viewport]`; jsdom has no layout, so size the
   // stage from the requested viewport the way the CSS would.
-  const sized = (el) => el.classList?.contains('tj') || el.classList?.contains('labd__viewport');
+  const sized = (el) => el.classList?.contains('tj') || el.classList?.contains('labd__viewport') || el.classList?.contains('sb__scroll');
   Object.defineProperty(window.HTMLElement.prototype, 'clientWidth', {
     configurable: true,
     get() {
@@ -339,6 +339,28 @@ function makeWindow({ width, height, reducedMotion = 'no-preference', gl = true,
     }
   };
   window.__observers = observers;
+  const intersectionObservers = new Set();
+  window.IntersectionObserver = class IntersectionObserver {
+    constructor(cb) {
+      this.cb = cb;
+      this.targets = new Set();
+      intersectionObservers.add(this);
+    }
+    observe(target) {
+      this.targets.add(target);
+      queueMicrotask(() => {
+        if (this.targets.has(target)) this.cb([{ isIntersecting: true, target }], this);
+      });
+    }
+    unobserve(target) {
+      this.targets.delete(target);
+    }
+    disconnect() {
+      this.targets.clear();
+      intersectionObservers.delete(this);
+    }
+  };
+  window.__intersectionObservers = intersectionObservers;
 
   const mutations = new Set();
   const Mutation = window.MutationObserver;
@@ -426,17 +448,21 @@ function makeWindow({ width, height, reducedMotion = 'no-preference', gl = true,
   // three's WebGLAnimation binds to `self`; keep it pointable at this window
   window.self = window;
 
-  // audio: the other ported engines may construct it during route tests
-  window.Audio = class Audio {
+  // The other ported engines use browser media and visibility APIs in route tests.
+  // Keep media playback inert while preserving EventTarget listener/abort semantics.
+  window.Audio = class Audio extends window.EventTarget {
     constructor(src) {
+      super();
       this.src = src ?? '';
       this.paused = true;
+      this.currentTime = 0;
+      this.duration = 90;
       this.volume = 1;
     }
     play() {
       return Promise.reject(new Error('no audio in jsdom'));
     }
-    pause() {}
+    pause() { this.paused = true; }
     load() {}
   };
 
@@ -447,7 +473,7 @@ const SCOPE_KEYS = [
   'window', 'self', 'document', 'navigator', 'HTMLElement', 'Element', 'Node', 'Event', 'MouseEvent',
   'KeyboardEvent', 'CustomEvent', 'DocumentFragment', 'HTMLCanvasElement', 'HTMLImageElement',
   'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLAnchorElement', 'SVGElement', 'Audio',
-  'ResizeObserver', 'MutationObserver', 'AbortController', 'AbortSignal', 'matchMedia', 'Image',
+  'ResizeObserver', 'IntersectionObserver', 'MutationObserver', 'AbortController', 'AbortSignal', 'matchMedia', 'Image',
   'devicePixelRatio', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch', 'createImageBitmap',
   'Blob', 'Response', 'Headers', 'Request', 'URL', 'performance', 'ProgressEvent',
   'ReadableStream', 'WritableStream', 'TransformStream', 'atob', 'btoa',
@@ -1005,11 +1031,18 @@ async function integrationPath(server) {
       root.render(route(slug));
       await sleep(40);
     });
-    for (let i = 0; i < 8 && !container.querySelector('[data-lab-detail]'); i++) {
+    const ready = () => {
+      const detail = container.querySelector('[data-lab-detail]');
+      return detail && (slug !== 'threejs-test' || detail.hasAttribute('data-stage-live'));
+    };
+    // The shell commits before the lazy stage's passive effect. Wait for the
+    // actual mount marker before asserting engine state or advancing frames.
+    for (let i = 0; i < 40 && !ready(); i++) {
       await act(async () => {
         await sleep(60);
       });
     }
+    if (!ready()) throw new Error(`stage did not become ready before frame driving: ${slug}`);
     await settle();
   };
 
@@ -1117,7 +1150,7 @@ async function integrationPath(server) {
     window.__observers.size <= 2 && window.__rafCallbacks.size <= 2,
     `resizeObservers=${window.__observers.size} raf=${window.__rafCallbacks.size}`);
 
-  // other routes stay placeholder-only
+  // Other experiment routes must remain isolated from the ThreeJs stage.
   const others = ['live-cursors', 'dynamic-scrollbar', 'vocal-orb'];
   const placeholderFacts = [];
   for (const slug of others) {
@@ -1129,8 +1162,8 @@ async function integrationPath(server) {
       empty: !!container.querySelector('.labd__empty'),
     });
   }
-  check('B12 the three unported experiments stay placeholder-only',
-    placeholderFacts.every((f) => f.tj === 0 && f.empty && f.live === false),
+  check('B12 the three other experiments mount live while retaining fallback DOM and no ThreeJs stage',
+    placeholderFacts.every((f) => f.tj === 0 && f.empty && f.live),
     JSON.stringify(placeholderFacts));
 
   await act(async () => {
@@ -1139,8 +1172,8 @@ async function integrationPath(server) {
   });
   console.error = originalError;
   check('B13 unmount tears the frame down completely',
-    container.querySelectorAll('.tj').length === 0 && window.__observers.size === 0,
-    `tj=${container.querySelectorAll('.tj').length} observers=${window.__observers.size}`);
+    container.querySelectorAll('.tj').length === 0 && window.__observers.size === 0 && window.__intersectionObservers.size === 0,
+    `tj=${container.querySelectorAll('.tj').length} resizeObservers=${window.__observers.size} intersectionObservers=${window.__intersectionObservers.size}`);
   check('B14 no console errors across the whole integration run', errors.length === 0,
     errors.slice(0, 2).join(' | '));
 

@@ -21,3 +21,14 @@
   position: absolute;
   inset: 0;
 }
+
+/* The reconstructed portfolio docks its global nav at the bottom on tablet
+   and phone widths. Keep the Lab mode switch above that hit area so it remains
+   reachable instead of scrolling the clipped list when activated. */
+@media (max-width: 991px) {
+  :where(.carter) .lab__mode[data-astro-cid-jcwly6sb] {
+    inset-block-end: calc(
+      3.5rem + max(1.03em, 12px) + env(safe-area-inset-bottom, 0px) + var(--s-8)
+    );
+  }
+}

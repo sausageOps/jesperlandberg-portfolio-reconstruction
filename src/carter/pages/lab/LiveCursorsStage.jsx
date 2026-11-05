@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountLiveCursors } from '../../engines/live-cursors.js';
+import { mountLiveCursors, config as tuneConfig } from '../../engines/live-cursors.js';
+import { mountLabTune } from './lab-tune.js';
 import './live-cursors.css';
 
 /**
@@ -26,8 +27,10 @@ export default function LiveCursorsStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountLiveCursors(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'live-cursors');
     } catch (error) {
       console.error('[live-cursors] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -46,6 +49,7 @@ export default function LiveCursorsStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

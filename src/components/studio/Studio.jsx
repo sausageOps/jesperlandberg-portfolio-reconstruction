@@ -9,8 +9,8 @@
  *  - arrival: Carter waits for the global `veil:reveal` (ClientRouter). Jesper's
  *    loader gate (`appReady`) plays that slot — the engine mounts with
  *    veilActive=!appReady and the hook descends when the app is revealed.
- *  - theme: Carter observes html[data-theme]; Jesper keeps no theme attr today,
- *    so the light strap palette persists (observer kept, no visual effect).
+ *  - theme: Carter's theme observer is scoped to the .carter host in Jesper,
+ *    which starts in the dark theme just like Carter's BaseLayout default.
  */
 import { useEffect, useRef } from 'react'
 import { mountLanyard, prefersReducedMotion } from './lanyardScene.js'

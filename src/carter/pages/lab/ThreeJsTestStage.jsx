@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountThreeJsTest } from '../../engines/threejs-test.js';
+import { mountThreeJsTest, config as tuneConfig } from '../../engines/threejs-test.js';
+import { mountLabTune } from './lab-tune.js';
 import './threejs-test.css';
 
 /**
@@ -29,8 +30,10 @@ export default function ThreeJsTestStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountThreeJsTest(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'threejs-test');
     } catch (error) {
       console.error('[threejs-test] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -49,6 +52,7 @@ export default function ThreeJsTestStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

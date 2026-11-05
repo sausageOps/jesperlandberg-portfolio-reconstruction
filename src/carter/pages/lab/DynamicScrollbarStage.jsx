@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountDynamicScrollbar } from '../../engines/dynamic-scrollbar.js';
+import { mountDynamicScrollbar, config as tuneConfig } from '../../engines/dynamic-scrollbar.js';
+import { mountLabTune } from './lab-tune.js';
 import './dynamic-scrollbar.css';
 
 /**
@@ -26,8 +27,10 @@ export default function DynamicScrollbarStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountDynamicScrollbar(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'dynamic-scrollbar');
     } catch (error) {
       console.error('[dynamic-scrollbar] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -46,6 +49,7 @@ export default function DynamicScrollbarStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

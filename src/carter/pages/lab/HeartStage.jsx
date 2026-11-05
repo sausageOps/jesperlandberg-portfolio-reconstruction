@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountHeart } from '../../engines/heart.js';
+import { mountHeart, config as tuneConfig } from '../../engines/heart.js';
+import { mountLabTune } from './lab-tune.js';
 import './heart.css';
 
 /**
@@ -27,8 +28,10 @@ export default function HeartStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountHeart(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'heart');
     } catch (error) {
       console.error('[heart] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -47,6 +50,7 @@ export default function HeartStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountPasteUp } from '../../engines/paste-up.js';
+import { mountPasteUp, config as tuneConfig } from '../../engines/paste-up.js';
+import { mountLabTune } from './lab-tune.js';
 import './paste-up.css';
 
 /**
@@ -28,8 +29,10 @@ export default function PasteUpStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountPasteUp(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'paste-up');
     } catch (error) {
       console.error('[paste-up] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -48,6 +51,7 @@ export default function PasteUpStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

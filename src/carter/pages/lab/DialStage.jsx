@@ -1,6 +1,7 @@
 import { useCarterEngine } from '../../useCarterEngine.js';
 import { getCarterRoot, onDestroy } from '../../runtime.js';
-import { mountDial } from '../../engines/dial.js';
+import { mountDial, config as tuneConfig } from '../../engines/dial.js';
+import { mountLabTune } from './lab-tune.js';
 import './dial.css';
 
 /**
@@ -28,8 +29,10 @@ export default function DialStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountDial(viewport);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'dial');
     } catch (error) {
       console.error('[dial] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -48,6 +51,7 @@ export default function DialStage() {
     // useCarterEngine does not consume returned cleanup functions.
     // Register stage flags with the same route lifecycle as the engine.
     onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;

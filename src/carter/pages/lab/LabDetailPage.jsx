@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import './lab-detail.css';
 import './lab-detail-ec.css';
 import { labDocument, labHref, labImage } from '../../data/lab.js';
+import { navigate, veil } from '../../runtime.js';
+import { initExpressiveCode } from './expressiveCode.js';
 import PolkaDotsStage from './PolkaDotsStage.jsx';
 import HeartStage from './HeartStage.jsx';
 import RotatingGalleryStage from './RotatingGalleryStage.jsx';
@@ -25,10 +27,9 @@ import VocalOrbStage from './VocalOrbStage.jsx';
  * translations are HTML -> JSX mechanics (className, SVG camelCase, `set:html`
  * -> dangerouslySetInnerHTML) and the inlining of Carter's ArrowRoll component.
  *
- * All nine stages now have engine adapters. Vocal Orb is loaded lazily and is
- * the only stage with a live Tune adapter; other Tune panels remain deferred.
- * Populated Code listings and tuned-copy integration remain deferred to a
- * separate shared-docs phase; the existing tab and layout slot remain here.
+ * All nine experiment source listings are restored into the Code pane. The
+ * docs controls mirror Carter's tab, scroll thumb, stage-close, keyboard, code
+ * copy and line-wrap interactions.
  *
  * Shell chrome that *is* live, matching Carter's shared lab-doc engine: the docs
  * toggle (.is-docs), the Notes/Code tabs (aria-pressed, tab-bg, pane visibility),
@@ -81,9 +82,39 @@ function useDocsBar(open, activeTab) {
     update();
     body.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
+    let dragging = false;
+    let startY = 0;
+    let startScroll = 0;
+    const down = (event) => {
+      if (event.button !== 0) return;
+      dragging = true; startY = event.clientY; startScroll = body.scrollTop;
+      thumb.setPointerCapture?.(event.pointerId);
+      thumb.classList.add('is-scrubbing');
+      event.preventDefault();
+    };
+    const move = (event) => {
+      if (!dragging) return;
+      const trackRange = bar.clientHeight - thumb.clientHeight;
+      const scrollRange = body.scrollHeight - body.clientHeight;
+      if (trackRange > 0 && scrollRange > 0) body.scrollTop = startScroll + (event.clientY - startY) / trackRange * scrollRange;
+    };
+    const up = (event) => {
+      dragging = false; thumb.classList.remove('is-scrubbing');
+      try { thumb.releasePointerCapture?.(event.pointerId); } catch { /* capture may already be released */ }
+    };
+    thumb.addEventListener('pointerdown', down);
+    thumb.addEventListener('pointermove', move);
+    thumb.addEventListener('pointerup', up);
+    thumb.addEventListener('pointercancel', up);
+    thumb.addEventListener('lostpointercapture', up);
     return () => {
       body.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
+      thumb.removeEventListener('pointerdown', down);
+      thumb.removeEventListener('pointermove', move);
+      thumb.removeEventListener('pointerup', up);
+      thumb.removeEventListener('pointercancel', up);
+      thumb.removeEventListener('lostpointercapture', up);
     };
   }, [open, activeTab]);
 
@@ -93,6 +124,7 @@ function useDocsBar(open, activeTab) {
 export default function LabDetailPage({ slug }) {
   const labEntry = labDocument(slug);
   const [open, setOpen] = useState(false);
+  const detailRef = useRef(null);
   const [tab, setTab] = useState('notes');
   const { bodyRef, barRef, thumbRef } = useDocsBar(open, tab);
 
@@ -109,14 +141,27 @@ export default function LabDetailPage({ slug }) {
         setOpen(false);
         return;
       }
+      if (event.key === 'ArrowLeft' && !veil.active) {
+        event.preventDefault(); navigate(labHref(previous)); return;
+      }
+      if (event.key === 'ArrowRight' && !veil.active) {
+        event.preventDefault(); navigate(labHref(next)); return;
+      }
       if (event.key === 'd' || event.key === 'D') setOpen((value) => !value);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
+  useEffect(() => {
+    const root = detailRef.current;
+    if (!root) return undefined;
+    const disconnect = initExpressiveCode(root);
+    return disconnect;
+  }, [slug, tab, open]);
+
   if (!labEntry) return null;
-  const { item, previous, next, notes } = labEntry;
+  const { item, previous, next, notes, code } = labEntry;
   const number = pad(item.position);
   const count = pad(item.total);
 
@@ -130,6 +175,7 @@ export default function LabDetailPage({ slug }) {
     <main id="main">
       <h1 className="u-sr-only">{item.name} — Lab experiment</h1>
       <div
+        ref={detailRef}
         className={`labd${open ? ' is-docs' : ''}`}
         data-no-pulse=""
         data-lab-detail=""
@@ -215,25 +261,14 @@ export default function LabDetailPage({ slug }) {
                 dangerouslySetInnerHTML={{ __html: notes }}
                 data-astro-cid-f3pbbn5j=""
               />
-              {/*
-               * Deferred: Carter fills this pane with the captured, syntax-
-               * highlighted Code listing for the experiment (and links the
-               * Expressive Code enhancer from inside it). Those are deferred to
-               * a shared-docs phase; the pane and its layout slot stay here.
-               */}
               <div
                 className="labd__pane"
                 id="lab-docs-code"
                 data-docs-pane="code"
                 hidden={tab !== 'code'}
+                dangerouslySetInnerHTML={{ __html: code }}
                 data-astro-cid-f3pbbn5j=""
-              >
-                <div className="labd__code-sec" data-astro-cid-f3pbbn5j="">
-                  <p className="labd__summary text-lead" data-astro-cid-f3pbbn5j="">
-                    {item.slug === 'vocal-orb' ? 'The annotated source listing is deferred to a future shared-docs phase.' : `The annotated source for ${item.name} arrives with the experiment itself.`}
-                  </p>
-                </div>
-              </div>
+              />
             </div>
           </div>
           <div className="labd__bar" ref={barRef} data-docs-scrollbar="" aria-hidden="true" data-astro-cid-f3pbbn5j="">
@@ -241,7 +276,13 @@ export default function LabDetailPage({ slug }) {
           </div>
         </aside>
 
-        <section className="labd__stage" data-stage="" data-no-wake="" data-astro-cid-f3pbbn5j="">
+        <section
+          className="labd__stage"
+          data-stage=""
+          data-no-wake=""
+          onClick={() => { if (open) setOpen(false); }}
+          data-astro-cid-f3pbbn5j=""
+        >
           <div className="labd__viewport" data-experiment-viewport="" data-astro-cid-f3pbbn5j="">
             <div className="labd__empty" data-stage-empty="" data-astro-cid-f3pbbn5j="">
               <img
