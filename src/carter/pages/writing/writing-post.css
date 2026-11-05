@@ -1,0 +1,144 @@
+/*
+ * Carter Writing post styles from captured src/_slug_.BZeeZM_C.css +
+ * the .refrow atom from app/styles/global.scss
+ * (sausageOps/carterogunsola-reconstruction, read-only reference).
+ * Every selector is scoped to :where(.carter), with [data-theme=dark] and html
+ * rebased onto the .carter root; declarations are verbatim.
+ */
+
+:where(.carter) .toc[data-astro-cid-exnokgqg] {width:14.6875rem;padding:var(--s-8);border-radius:var(--r-md);background:var(--code-bg);color:var(--code-ink)}
+:where(.carter) .toc__head[data-astro-cid-exnokgqg] {justify-content:space-between;align-items:center;gap:var(--s-8);display:flex}
+:where(.carter) .toc__id[data-astro-cid-exnokgqg] {align-items:center;gap:var(--s-4);min-width:0;display:inline-flex}
+:where(.carter) .toc__label[data-astro-cid-exnokgqg] {text-transform:uppercase;white-space:nowrap;color:color-mix(in srgb, var(--code-ink) 60%, transparent);transition:color .3s var(--ease-out-quad)}
+:where(.carter) .toc[data-astro-cid-exnokgqg]:not(.is-open) .toc__label[data-astro-cid-exnokgqg] {color:var(--code-ink)}
+:where(.carter) .toc__ring[data-astro-cid-exnokgqg] {width:var(--s-14);height:var(--s-14);transform:rotate(-90deg)scaleY(-1)}
+:where(.carter) .toc__ring-track[data-astro-cid-exnokgqg], :where(.carter) .toc__ring-fill[data-astro-cid-exnokgqg] {fill:none;stroke-width:2px}
+:where(.carter) .toc__ring-track[data-astro-cid-exnokgqg] {stroke:color-mix(in srgb, var(--code-ink) 20%, transparent)}
+:where(.carter) .toc__ring-fill[data-astro-cid-exnokgqg] {stroke:var(--code-ink);stroke-linecap:round}
+:where(.carter) .toc__chev[data-astro-cid-exnokgqg] {width:var(--s-14);height:var(--s-14);border:1px solid color-mix(in srgb, var(--code-ink) 30%, transparent);border-radius:var(--r-xs);color:var(--code-ink);cursor:pointer;transition:border-color .25s var(--ease-out-quad);background:0 0;flex:none;place-items:center;padding:0;display:grid;position:relative}
+:where(.carter) .toc__chev[data-astro-cid-exnokgqg]:before {content:"";inset:calc(var(--s-8) * -1);position:absolute}
+@media (hover:hover) and (pointer:fine) {
+:where(.carter) .toc__chev[data-astro-cid-exnokgqg]:hover {border-color:color-mix(in srgb, var(--code-ink) 55%, transparent)}
+}
+:where(.carter) .toc__chev[data-astro-cid-exnokgqg]:focus-visible {outline:2px solid var(--code-ink);outline-offset:2px}
+:where(.carter) .toc[data-astro-cid-exnokgqg]:not(.is-open) .toc__chev[data-astro-cid-exnokgqg] {border-color:color-mix(in srgb, var(--code-ink) 10%, transparent)}
+:where(.carter) .toc__chev-icon[data-astro-cid-exnokgqg] {width:var(--s-8);height:var(--s-8);transition:rotate .35s var(--ease-out-expo);rotate:90deg}
+:where(.carter) .toc[data-astro-cid-exnokgqg]:not(.is-open) .toc__chev-icon[data-astro-cid-exnokgqg] {rotate:-90deg}
+:where(.carter) .toc__body[data-astro-cid-exnokgqg] {transition:grid-template-rows .45s var(--ease-out-expo);grid-template-rows:1fr;display:grid}
+:where(.carter) .toc[data-astro-cid-exnokgqg]:not(.is-open) .toc__body[data-astro-cid-exnokgqg] {grid-template-rows:0fr}
+:where(.carter) .toc__clip[data-astro-cid-exnokgqg] {min-height:0;overflow:hidden}
+:where(.carter) .toc__list[data-astro-cid-exnokgqg] {gap:var(--s-4);padding:var(--s-10) 0 0;opacity:1;isolation:isolate;transition:opacity .3s var(--ease-out-quad);flex-direction:column;margin:0;list-style:none;display:flex}
+:where(.carter) .toc[data-astro-cid-exnokgqg]:not(.is-open) .toc__list[data-astro-cid-exnokgqg] {opacity:0}
+:where(.carter) .toc__item[data-astro-cid-exnokgqg] {align-items:center;gap:var(--s-4);border-radius:var(--r-xs);height:1.3125rem;color:color-mix(in srgb, var(--code-ink) 55%, transparent);text-transform:uppercase;transition:color .25s var(--ease-out-quad);padding-inline:.375rem;text-decoration:none;display:flex;position:relative}
+@media (hover:hover) and (pointer:fine) {
+:where(.carter) .toc__item[data-astro-cid-exnokgqg]:hover {color:color-mix(in srgb, var(--code-ink) 80%, transparent)}
+}
+:where(.carter) .toc__item[data-astro-cid-exnokgqg]:focus-visible {outline:2px solid var(--code-ink);outline-offset:-2px}
+:where(.carter) .toc__item[data-astro-cid-exnokgqg][data-toc-active] {color:var(--code-ink)}
+:where(.carter) .toc__item-bg[data-astro-cid-exnokgqg] {z-index:-1;border-radius:var(--r-xs);background:color-mix(in srgb, var(--code-ink) 10%, transparent);position:absolute;inset:0}
+:where(.carter) .toc__dot[data-astro-cid-exnokgqg] {width:var(--s-4);height:var(--s-4);border-radius:var(--r-pill);background:currentColor;flex:none}
+:where(.carter) .toc__text[data-astro-cid-exnokgqg] {white-space:nowrap;text-overflow:ellipsis;min-width:0;overflow:hidden}
+@media (prefers-reduced-motion:reduce) {
+:where(.carter) .toc__body[data-astro-cid-exnokgqg], :where(.carter) .toc__chev-icon[data-astro-cid-exnokgqg], :where(.carter) .toc__list[data-astro-cid-exnokgqg] {transition:none}
+}
+:where(.carter) .wpost[data-astro-cid-7mn2gw7j] {padding-block:clamp(9rem, 16svh, 12rem) var(--s-96);--wpaper:min(100%, calc(var(--measure) + 9rem));z-index:2;position:relative}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j]>:is(p,ul,ol,pre,figure,blockquote,table,div,aside) {content-visibility:auto;contain-intrinsic-block-size:auto 4lh}
+:where(.carter) .wpost__col[data-astro-cid-7mn2gw7j] {width:var(--wpaper);--wsheet:color-mix(in srgb, #fff 55%, var(--paper));background-color:var(--wsheet);background-image:var(--sheet-tex);-webkit-font-smoothing:antialiased;border-radius:3px;justify-self:center;padding:4.2% 5.7% 6.5%;position:relative;box-shadow:0 2px 28px #0000000d}
+:where(.carter[data-theme="dark"]) .wpost__col[data-astro-cid-7mn2gw7j] {--wsheet:color-mix(in srgb, #fff 11%, var(--paper));box-shadow:0 2px 28px #0000004d}
+:where(.carter) .wpost__close[data-astro-cid-7mn2gw7j] {z-index:3;pointer-events:none;height:100%;position:absolute;inset-block-start:clamp(9rem,16svh,12rem);inset-inline-start:calc(50% + var(--wpaper) / 2 + 1.25rem)}
+:where(.carter) .wpost__close[data-astro-cid-7mn2gw7j]>* {pointer-events:auto;position:sticky;inset-block-start:7rem}
+:where(.carter) .wpost__masthead[data-astro-cid-7mn2gw7j] {justify-content:space-between;gap:var(--s-16);color:var(--ink-muted);border-block-end:1px solid var(--line);margin-block-end:var(--s-24);padding-block-end:var(--s-12);display:flex}
+:where(.carter) .wpost__claim[data-astro-cid-7mn2gw7j] {aspect-ratio:.796;visibility:hidden;pointer-events:none;width:100%;position:absolute;inset-block-start:0;inset-inline-start:0}
+:where(.carter) .wpost__rail[data-astro-cid-7mn2gw7j] {pointer-events:none;height:100%;position:absolute;inset-block-start:clamp(9rem,16svh,12rem);inset-inline-start:auto;inset-inline-end:calc(50% + var(--wpaper) / 2 + 1.5rem)}
+:where(.carter) .wpost__rail[data-astro-cid-7mn2gw7j] .toc {pointer-events:auto;position:sticky;inset-block-start:7rem}
+@media (width<=79.99rem) {
+:where(.carter) .wpost__rail[data-astro-cid-7mn2gw7j] {inset:auto var(--margin) calc(var(--s-12) + env(safe-area-inset-bottom,0px));z-index:500;height:auto;position:fixed}
+:where(.carter) .wpost__rail[data-astro-cid-7mn2gw7j] .toc {width:100%;box-shadow:var(--shadow-card);position:static}
+:where(.carter) .wpost[data-astro-cid-7mn2gw7j] {padding-block-end:calc(var(--s-96) + var(--s-64))}
+:where(.carter) {--toast-lift:4.25rem}
+:where(.carter) .wpost__close[data-astro-cid-7mn2gw7j] {z-index:500;height:auto;position:fixed;inset-block-start:clamp(6rem,10svh,7.5rem);inset-inline-start:auto;inset-inline-end:var(--margin)}
+:where(.carter) .wpost__close[data-astro-cid-7mn2gw7j]>* {position:static}
+}
+:where(.carter) .wpost__date[data-astro-cid-7mn2gw7j] {font-family:var(--font-sans);font-size:var(--fs-body-sm);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);color:var(--ink-muted);margin-block-end:var(--s-10)}
+:where(.carter) .wpost__title[data-astro-cid-7mn2gw7j] {font-family:var(--font-sans);font-size:var(--fs-h2);font-weight:var(--fw-medium);line-height:var(--lh-heading);letter-spacing:var(--track-heading);color:var(--ink);text-wrap:balance;margin-block-end:var(--s-24)}
+:where(.carter) .wpost__tldr[data-astro-cid-7mn2gw7j] {gap:var(--s-8);padding-block:var(--s-16);border-block:1px solid var(--line);margin-block-end:calc(var(--fs-body) * 1.5);display:grid}
+:where(.carter) .wpost__tldr-label[data-astro-cid-7mn2gw7j] {color:var(--ink-muted)}
+:where(.carter) .wpost__tldr-text[data-astro-cid-7mn2gw7j] {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);letter-spacing:-.01em;color:var(--ink);text-wrap:pretty;line-height:1.5}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] {--wline:calc(var(--fs-body) * 1.5);gap:var(--wline);overflow-wrap:break-word;flex-direction:column;min-width:0;display:flex}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] h2 {font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:clamp(1.5rem,2.2vw,1.75rem);line-height:var(--lh-heading);letter-spacing:var(--track-heading);color:var(--ink);text-wrap:balance;margin-block-start:calc(var(--wline) * 1.5);scroll-margin-block-start:8rem}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] p {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);letter-spacing:-.01em;color:var(--ink);text-wrap:pretty;line-height:1.5}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] h3 {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);font-weight:var(--fw-medium);color:var(--ink);margin-block-start:calc(var(--wline) * .5)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] p a, :where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li a {color:var(--ink);text-decoration:underline;text-decoration-color:color-mix(in srgb, var(--ink) 30%, transparent);text-underline-offset:.2em;transition:text-decoration-color .25s var(--ease-out-quad)}
+@media (hover:hover) and (pointer:fine) {
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] p a:hover, :where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li a:hover {text-decoration-color:var(--ink)}
+}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] ul, :where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] ol {margin:0;padding-inline-start:var(--s-20)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] ul {list-style:outside}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] ol {list-style:decimal}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li>ul {list-style-type:circle}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li+li {margin-block-start:var(--s-8)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);letter-spacing:-.01em;color:var(--ink);text-wrap:pretty;line-height:1.5}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li::marker {color:var(--ink-muted)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li>ul, :where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] li>ol {margin-block-start:var(--s-8)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] blockquote {margin:calc(var(--wline) * .5) 0;border-inline-start:2px solid color-mix(in srgb, var(--ink) 25%, transparent);padding-inline-start:var(--s-20)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] blockquote p {font-family:var(--font-sans);font-size:var(--fs-lead);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);color:var(--ink)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] blockquote p+p {margin-block-start:var(--s-8)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] blockquote p>em:only-child {color:var(--ink-muted);font-style:normal}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] hr {margin:var(--wline) 0;background:var(--divider);border:0;height:1px}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] table {border-collapse:collapse;width:100%}
+@media (width<=47.99rem) {
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] table {-webkit-overflow-scrolling:touch;display:block;overflow-x:auto}
+}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] th {font-family:var(--font-mono);font-size:.75rem;font-weight:var(--fw-mono-medium);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);text-align:start;padding:var(--s-8) var(--s-12) var(--s-8) 0;border-block-end:1px solid var(--divider)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] td {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);color:var(--ink);padding:var(--s-8) var(--s-12) var(--s-8) 0;border-block-end:1px solid var(--divider)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] code {font-variant-ligatures:none}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] :not(pre)>code {font-family:var(--font-mono);border-radius:var(--r-xs);background:var(--code-bg);color:var(--code-ink);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:.1em .35em;font-size:.9em}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code {margin-block:var(--s-16)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code .frame {box-shadow:none;border-radius:var(--r-lg);background:var(--code-card);padding:var(--s-4)}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code pre {border-radius:var(--r-sm);background:var(--code-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--code-ink) 8%, transparent);border:0;padding-block-start:2.4rem;position:relative}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code pre[data-language]:before {content:"." attr(data-language);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:color-mix(in srgb, var(--code-ink) 45%, transparent);font-size:.6875rem;line-height:1;position:absolute;inset-block-start:.8rem;inset-inline-start:.875rem}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code pre[data-language]:after {content:"";background:color-mix(in srgb, var(--code-ink) 8%, transparent);height:1px;position:absolute;inset-block-start:2.05rem;inset-inline:.875rem}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code .copy {inset-block-start:.45rem;inset-inline-end:.45rem}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code .copy button {background:color-mix(in srgb, var(--code-ink) 10%, transparent);border-radius:var(--r-sm);opacity:.55;width:1.625rem;height:1.625rem;transition:opacity .2s var(--ease-out-quad), background-color .2s var(--ease-out-quad);border:0;padding:0}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code .frame:hover .copy button {opacity:1}
+:where(.carter) .wpost__article[data-astro-cid-7mn2gw7j] .expressive-code .copy button:hover {background:color-mix(in srgb, var(--code-ink) 20%, transparent)}
+:where(.carter) .wpost__credits[data-astro-cid-7mn2gw7j] {gap:var(--s-16);flex-direction:column;margin-block-start:var(--s-64);display:flex}
+:where(.carter) .wpost__credits-label[data-astro-cid-7mn2gw7j] {text-transform:uppercase;color:color-mix(in srgb, var(--ink) 70%, transparent)}
+:where(.carter) .wpost__credits-rule[data-astro-cid-7mn2gw7j] {background:var(--divider);height:1px}
+:where(.carter) .wpost__credits-list[data-astro-cid-7mn2gw7j] {gap:var(--s-16);flex-direction:column;display:flex}
+:where(.carter) .wpost__signoff[data-astro-cid-7mn2gw7j] {align-items:flex-start;gap:var(--s-24);flex-direction:column;margin-block-start:var(--s-48);display:flex}
+:where(.carter) .wpost__signoff[data-astro-cid-7mn2gw7j] p[data-astro-cid-7mn2gw7j] {font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-body);line-height:var(--lh-body);letter-spacing:var(--track);color:var(--ink)}
+
+
+
+:where(.carter) .refrow {align-items:stretch;gap:var(--s-2);max-inline-size:100%;color:color-mix(in srgb, var(--ink) 58%, transparent);text-decoration:none;display:inline-flex}
+
+:where(.carter) .refrow__ext, :where(.carter) .refrow__label, :where(.carter) .refrow__badge {background:var(--fill);transition:background-color .25s var(--ease-out-quad);align-items:center;display:inline-flex}
+
+:where(.carter) .refrow__badge {padding-inline:var(--s-8);border-radius:var(--r-sm);flex:none;justify-content:center}
+
+:where(.carter) .refrow__icon {width:var(--s-18);height:var(--s-18);color:var(--ink)}
+
+:where(.carter) .refrow__wordmark {color:var(--ink);line-height:1}
+
+:where(.carter) .refrow__label {min-inline-size:0;padding:var(--s-4) var(--s-10);border-radius:var(--r-pill);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+
+:where(.carter) .refrow__ext {padding-inline:var(--s-8);border-radius:var(--r-sm);color:var(--ink);flex:none;justify-content:center}
+
+:where(.carter) .refrow__ext .arrow-roll {width:var(--s-16);height:var(--s-16)}
+
+@media (hover:hover) and (pointer:fine) {
+:where(.carter) .refrow--link:hover .refrow__badge, :where(.carter) .refrow--link:hover .refrow__label, :where(.carter) .refrow--link:hover .refrow__ext {background:var(--fill-strong)}
+}
+
+:where(.carter) .refrow--link {transition:scale .15s var(--ease-out-quad)}
+
+:where(.carter) .refrow--link:active {scale:.97}
+
+:where(.carter) .refrow--link:focus-visible {outline:2px solid var(--ink);outline-offset:3px;border-radius:var(--r-sm)}
+
+:where(.carter) .refrow--stretch {width:100%;display:flex}
+
+:where(.carter) .refrow--stretch .refrow__label {flex:auto}
+
+:where(.carter) .refrow--stretch.refrow--link:active {scale:1}
