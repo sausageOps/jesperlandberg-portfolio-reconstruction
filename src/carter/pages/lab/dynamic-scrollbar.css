@@ -1,0 +1,303 @@
+/*
+ * Carter's Dynamic Scrollbar engine CSS, copied from the inline
+ * `#exp-scrollbar-style` block in app/lib/experiments/dynamic-scrollbar.js at
+ * sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249
+ * (template constants resolved: bar width 264px, thumb 5x64px, radius 30px).
+ * Selectors are scoped to the Carter frame as required by src/carter/README.md.
+ */
+:where(.carter) .sb {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  --sb-paper: #f2f2f2;
+  --sb-rest: #d5d5d5;
+  --sb-ink: #000;
+  --sb-accent: #ff4d00;
+  --sb-muted: #727272;
+  --sb-track: #282828;
+}
+:where(.carter) .sb__scroll {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+:where(.carter) .sb__track {
+  will-change: transform;
+}
+:where(.carter) .sb__section {
+  height: var(--sb-vh, 100%);
+  display: grid;
+  place-items: center;
+  padding: 2rem 4rem;
+  box-sizing: border-box;
+}
+:where(.carter) .sb__caption {
+  max-width: 22ch;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  line-height: 1.25;
+  letter-spacing: var(--track);
+  text-wrap: balance;
+}
+
+/* the bar rides the right edge; the thumb is the morphing element (anchored right) */
+:where(.carter) .sb__bar {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  width: 264px;
+  pointer-events: none;
+  z-index: 5;
+}
+:where(.carter) .sb__thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 64px;
+  background: var(--sb-rest);
+  color: var(--sb-paper);
+  border-radius: 30px;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+/* generous invisible hit area so the 5px bar is easy to hover / grab (the
+   original wrapped the bar in a 20px buffer) — kept off the visible shape. */
+:where(.carter) .sb__thumb::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+}
+:where(.carter) .sb__inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* ── min state: clock ── */
+:where(.carter) .sb__min {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateX(20%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+:where(.carter) .sb__min-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+:where(.carter) .sb__clock {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sb-paper);
+  color: var(--sb-accent);
+}
+:where(.carter) .sb__clock-face {
+  width: 22px;
+  height: 22px;
+}
+:where(.carter) .sb__note {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--sb-accent);
+  cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, filter, opacity;
+}
+:where(.carter) .sb__note svg {
+  width: 16px;
+  height: 16px;
+}
+:where(.carter) .sb__time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.8px;
+  letter-spacing: -0.43px;
+  line-height: 1.1;
+  color: var(--sb-paper);
+}
+:where(.carter) .sb__time .ampm {
+  opacity: 0.75;
+}
+
+/* ── music state: player ── */
+:where(.carter) .sb__music {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 20px;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateX(100%);
+  filter: blur(30px);
+  pointer-events: none;
+  gap: 32px;
+}
+:where(.carter) .sb__cover {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  align-self: center;
+  border-radius: 20px;
+  overflow: hidden;
+  flex: none;
+}
+:where(.carter) .sb__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+:where(.carter) .sb__player {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+:where(.carter) .sb__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+:where(.carter) .sb__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+:where(.carter) .sb__title {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.64px;
+  color: var(--sb-paper);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:where(.carter) .sb__artist {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.64px;
+  color: var(--sb-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:where(.carter) .sb__wave {
+  width: 32px;
+  flex: none;
+  color: var(--sb-accent);
+}
+:where(.carter) .sb__wave svg {
+  width: 100%;
+  height: auto;
+}
+:where(.carter) .sb__timeline {
+  position: relative;
+  height: 3px;
+  border-radius: 100vw;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--sb-track);
+}
+:where(.carter) .sb__progress {
+  position: absolute;
+  inset: 0;
+  background: var(--sb-rest);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+:where(.carter) .sb__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--sb-paper);
+}
+:where(.carter) .sb__ctrl {
+  cursor: pointer;
+  color: var(--sb-paper);
+  transition: opacity 0.2s var(--ease-out-quad), scale 0.15s var(--ease-out-quad);
+}
+:where(.carter) .sb__ctrl:hover {
+  opacity: 0.7;
+}
+:where(.carter) .sb__ctrl:active {
+  scale: 0.9;
+}
+:where(.carter) .sb__ctrl svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+:where(.carter) .sb__ctrl--sm {
+  width: 28px;
+  height: 28px;
+}
+:where(.carter) .sb__toggle {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+:where(.carter) .sb__toggle > * {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
+}
+/* the hidden button must NOT intercept clicks meant for the visible one — the JS
+   flips pointer-events with the crossfade; this is just the resting state. */
+:where(.carter) .sb__pause {
+  opacity: 0;
+  scale: 0.5;
+  pointer-events: none;
+}
+:where(.carter) .sb__credits {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+:where(.carter) .sb__credit {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: -0.48px;
+  line-height: 1.3;
+  color: var(--sb-paper);
+}
+:where(.carter) .sb__credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.carter) .sb__scroll {
+    scroll-behavior: auto;
+  }
+}
