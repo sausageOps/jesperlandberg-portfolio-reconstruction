@@ -1068,6 +1068,19 @@ async function integrationPath(server) {
       });
     }
     if (!ready()) throw new Error(`stage did not become ready before frame driving: ${slug}`);
+    // Phase 14: a stage is now its own chunk, so routes that finish their own
+    // async mount (Vocal Orb imports its engine after mounting) need one more
+    // hop. Wait while the document still reports the stage as loading; the
+    // checks below are unchanged.
+    const settled = () => {
+      const el = container.querySelector('[data-lab-detail]');
+      return !!el && !el.hasAttribute('data-stage-loading');
+    };
+    for (let i = 0; i < 12 && !settled(); i++) {
+      await act(async () => {
+        await sleep(60);
+      });
+    }
     await settle();
   };
 
@@ -1226,11 +1239,12 @@ async function integrationPath(server) {
 
 async function ssrChecks(server) {
   const { default: LabDetailPage } = await server.ssrLoadModule('/src/carter/pages/lab/LabDetailPage.jsx');
-  const { LAB_ITEMS } = await server.ssrLoadModule('/src/carter/data/lab.js');
+  const { LAB_ITEMS, loadLabCode } = await server.ssrLoadModule('/src/carter/data/lab.js');
   const rows = LAB_ITEMS.map((item) => {
     const markup = renderToStaticMarkup(createElement(LabDetailPage, { slug: item.slug }));
     const dom = new JSDOM(markup);
     const doc = dom.window.document;
+    const codePane = doc.querySelector('[data-docs-pane="code"]');
     const row = {
       slug: item.slug,
       pu: !!doc.querySelector('.pu'),
@@ -1238,14 +1252,30 @@ async function ssrChecks(server) {
       empty: !!doc.querySelector('.labd__empty'),
       live: !!doc.querySelector('[data-stage-live]'),
       codeBlocks: doc.querySelectorAll('[data-docs-pane="code"] .expressive-code').length,
+      codeState: codePane?.getAttribute('data-docs-code-state') ?? null,
+      codeHidden: codePane?.hasAttribute('hidden') ?? false,
+      notesBlocks: doc.querySelectorAll('[data-docs-pane="notes"] > *').length,
       experiment: doc.querySelector('[data-lab-detail]')?.getAttribute('data-experiment'),
     };
     dom.window.close();
     return row;
   });
-  check('C1 all nine routes render server-side with no engine DOM and populated Code panes',
-    rows.length === 9 && rows.every((r) => !r.pu && !r.canvas && !r.live && r.empty && r.codeBlocks > 0 && r.experiment === r.slug),
-    rows.map((r) => `${r.slug}:pu=${r.pu} code=${r.codeBlocks}`).join(' '));
+  check('C1 all nine routes render server-side with no engine DOM and a populated Notes pane',
+    rows.length === 9 && rows.every((r) => !r.pu && !r.canvas && !r.live && r.empty && r.notesBlocks > 0 && r.experiment === r.slug),
+    rows.map((r) => `${r.slug}:pu=${r.pu} notes=${r.notesBlocks}`).join(' '));
+  check('C1b the Code pane is deferred server-side (pending, hidden, no listing inline)',
+    rows.every((r) => r.codeBlocks === 0 && r.codeState === 'loading' && r.codeHidden),
+    rows.map((r) => `${r.slug}:state=${r.codeState} code=${r.codeBlocks}`).join(' '));
+  // Phase 14 moved the listings out of the document, so prove they are still all
+  // restored: resolve each route's listing the way the page does.
+  const codes = [];
+  for (const item of LAB_ITEMS) {
+    const html = await loadLabCode(item.slug);
+    codes.push({ slug: item.slug, ok: !!html && html.includes('expressive-code') && html.length > 50000, length: html?.length ?? 0 });
+  }
+  check('C1c all nine captured Code listings still resolve on demand',
+    codes.every((c) => c.ok),
+    codes.map((c) => `${c.slug}=${c.length}`).join(' '));
 }
 
 /* -------------------------------------------------------------------------- */

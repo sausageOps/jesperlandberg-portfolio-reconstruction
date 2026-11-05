@@ -37,6 +37,14 @@ for (const item of LAB_ITEMS) {
     pd: (markup.match(/class="pd[" ]/g) || []).length,
     heart: (markup.match(/class="heart[" ]/g) || []).length,
     empty: markup.includes('labd__empty'),
+    notesPane: markup.includes('data-docs-pane="notes"'),
+    // Phase 14: the captured Code listing is deferred to the Code tab, so a
+    // server-rendered document carries the pending pane and no listing markup.
+    // `codeInline` keys off the pane's own state rather than an `expressive-code`
+    // class search: the dial and heart *Notes* panes contain inline Expressive
+    // Code examples, so a whole-markup search would report a false positive.
+    codeState: /data-docs-code-state="([^"]+)"/.exec(markup)?.[1] ?? null,
+    codeInline: markup.includes('data-docs-code-state="ready"'),
     stageLive: markup.includes('data-stage-live'),
     stageLoading: markup.includes('data-stage-loading'),
     dataExperiment: /data-experiment="([^"]+)"/.exec(markup)?.[1] ?? null,

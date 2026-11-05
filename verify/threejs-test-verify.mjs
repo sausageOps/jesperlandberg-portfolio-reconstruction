@@ -1043,6 +1043,19 @@ async function integrationPath(server) {
       });
     }
     if (!ready()) throw new Error(`stage did not become ready before frame driving: ${slug}`);
+    // Phase 14: a stage is now its own chunk, so routes that finish their own
+    // async mount (Vocal Orb imports its engine after mounting) need one more
+    // hop. Wait while the document still reports the stage as loading; the
+    // checks below are unchanged.
+    const settled = () => {
+      const el = container.querySelector('[data-lab-detail]');
+      return !!el && !el.hasAttribute('data-stage-loading');
+    };
+    for (let i = 0; i < 12 && !settled(); i++) {
+      await act(async () => {
+        await sleep(60);
+      });
+    }
     await settle();
   };
 

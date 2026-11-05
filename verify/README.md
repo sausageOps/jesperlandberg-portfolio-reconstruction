@@ -109,6 +109,31 @@ Files:
 | `threejs-test.port.mjs` | thin re-export of the shipped ThreeJs Scene engine + runtime |
 | `threejs-test-css.mjs` | rule-by-rule comparison of `threejs-test.css` against Carter's inline block and `.spin` |
 | `threejs-test-ssr.mjs` | per-route SSR facts dump for Phase 5G, diffable against the pre-edit baseline |
+| `lab-split.mjs` | Phase 14: Lab detail deferral — loader contracts, Code-pane on-demand load, stage loading/live lifecycle, per-route shell |
+
+## Phase 14 — Lab detail deferral
+
+`lab-split.mjs` renders the real `CarterRoute -> CarterPageBoundary ->
+LabDetailPage` path in jsdom and asserts the Phase 14 split: no Code listing in
+the document until the Code tab is opened, exactly one listing fetched for the
+current experiment, its copy/wrap handlers bound once it arrives, a visible
+pending status instead of an empty pane, the `data-stage-loading` ->
+`data-stage-live` handover for the deferred stage, and a complete shell on all
+nine detail routes.
+
+The three integration suites above mount stages through the same path, so their
+`render()` helpers now wait while a document still reports
+`data-stage-loading`: a stage is its own chunk, and Vocal Orb additionally
+imports its engine after mounting, so a route needs one more async hop than it
+did when every stage was a static import. Those waits are timing only — no
+assertion was relaxed.
+
+`paste-up-verify.mjs` Section C changed shape with the split. C1 no longer
+expects a populated Code pane in server-rendered markup (the listing is now
+deferred to the Code tab); it asserts the engine-DOM-free shell and a populated
+Notes pane, C1b asserts the Code pane is present, hidden and pending, and C1c
+resolves all nine listings through `loadLabCode()` so the "all nine restored"
+property is still checked directly.
 
 ## Limits — read before quoting results
 
