@@ -442,3 +442,134 @@ stubbed from the requested viewport, so the conic cover's painting, real CSS
 transforms/fonts, touch and pointer-capture feel, actual audio playback,
 desktop/tablet/mobile rendering, and pixel fidelity all remain unverified and
 need human browser review. No pixel-fidelity claim is made.
+
+## Phase 5F — Paste-Up engine
+
+Source audit of the **five** experiments still unported from Carter's registry
+(`app/lib/lab-experiments.js`) and source files at
+`3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249` (read-only), selected `paste-up`.
+PR #17 (Phase 5E / Dial) was confirmed merged into `main` before implementation.
+
+### Candidate comparison
+
+| Experiment | Source | Needs | Verdict |
+| --- | --- | --- | --- |
+| `paste-up` | `app/lib/experiments/paste-up.js` (11.9 kB, body identical to `src/paste-up.DESythSE.js`) | GSAP ticker + 6 prints on `assets.carterogunsola.com` (the origin Rotating Gallery already loads); WebGL2 with Carter's own no-WebGL fallback | **selected** |
+| `dynamic-scrollbar` | `dynamic-scrollbar.Ia0FQs2Y.js` | three `/lab/music/*.mp3` + `/lab/covers/*.jpg` — **absent (404) in Carter's own reconstruction**; the mini player is a third of the experiment | missing assets |
+| `threejs-test` | `threejs-test.CNSPgjYT.js` (79.7 kB) | `Lantern.glb` from `cdn.jsdelivr.net` as the default subject, embedded OrbitControls, three r185 chunks vs Jesper's r180 | remote model + version gap |
+| `live-cursors` | `live-cursors.js` | Carter's PartyKit presence host and the unported `runtime.ts` socket client; a single visitor sees an empty stage | external service |
+| `vocal-orb` | `vocal-orb.js` (926 lines) | `cdn.jsdelivr.net` transformers.js, `huggingface.co` models, worker/AudioWorklet, WebGL2 float FBOs, microphone | external model host |
+
+`paste-up` is the only remaining engine whose own "Dependencies" row in Carter's
+Notes pane is *"GSAP Core :: ticker"*. Nothing was substituted: the six prints
+come from the same CDN collection Rotating Gallery already uses, and the one
+piece of Carter's shared runtime it touches (`mesh.ts`'s grid texture) is inlined
+verbatim rather than replaced.
+
+### Added
+
+| File | Role |
+| --- | --- |
+| `src/carter/engines/paste-up.js` | The engine: `mountPasteUp(host)` returning `{ destroy, set }`, the Tune descriptors as `config`, and the Carter-shaped default export. Includes Carter's `kd()` grid-texture helper, inlined verbatim. |
+| `src/carter/pages/lab/PasteUpStage.jsx` | Route stage: loading → live flags, mounts the engine into `[data-experiment-viewport]`, renders `null` server-side. |
+| `src/carter/pages/lab/paste-up.css` | Carter's inline `<style data-lab-style="paste-up">` block, every selector prefixed `:where(.carter)`; declarations unchanged. |
+
+The only edit to an existing file is `LabDetailPage.jsx`: one import, one
+`{item.slug === 'paste-up' && <PasteUpStage />}` conditional, and updated
+comments. Shared runtime, dependencies, data, global styles, the Lab detail
+shell and the other eight experiments are untouched.
+
+### Behavior preserved
+
+Six prints (`p0`…`p5`) claimed by `data-print` on real DOM boxes across three
+boards (index 2×3, spread plate + 5-row rail, strip of six 3:4 columns). The DOM
+lays the boxes out and one WebGL2 canvas draws each print as a plane exactly on
+its box; there is no per-transition animation, only `measure()` caching each
+claim's rect and the ticker damping every plane toward it (`DAMP = 0.085`).
+Paper bow `(1 − sin(π·uv)) · vel` with velocity smoothed `0.8/0.2`, clamped at
+`48px/frame` and scaled by `0.4`; speed-sorted draw order so a flying print
+crosses over parked ones; `object-fit: cover` crop in the fragment shader;
+premultiplied alpha for the placeholder grid's transparent ground. Both demo
+knobs work: `fetch` (fake navigation latency — old board torn down, planes hold
+through the dwell, then fly late) and `memory` (a `0×0` home from a hidden board
+is refused; off, the planes collapse into the corner and pop). Tabs with one
+shared underline, click and `Enter`/`Space` selection, plate swap by attribute
+write, `BOARD::…` HUD, 720 → 1440 hi-res texture upgrade, `1.5` DPR cap,
+mount-time reduced-motion snapping and Carter's no-WebGL2 fallback (canvas
+removed, plain `<img>` in every box, swaps become cuts).
+
+### Adaptations from Carter
+
+1. `import { f, r, t } from "../mesh.ts"` → `gsap` for `f`; `r` (Carter's `kd`
+   pencil-grid canvas texture) inlined verbatim as `gridTexture()`; `t` (the
+   site-wide `?mesh` wireframe singleton) → `MESH_ON = false`, which is Carter's
+   own default (off unless `?mesh` is in the URL). The `MESH_ON` branches stay
+   in place; Jesper's Carter frame has no mesh debug mode to enable.
+2. `import { img } from "../assets.ts"` → the inline `ASSETS_ORIGIN` helper,
+   matching `LabPage.jsx`, `data/lab.js` and the Rotating Gallery port.
+3. The inline `<style>` is now `paste-up.css`, scoped to `.carter`.
+4. `--ink` is read from the Carter frame root (where the tokens live), not
+   `document.documentElement`.
+5. One `AbortController` for every listener, `ResizeObserver` disconnect, ticker
+   removal, `fetch` timer clear, `WEBGL_lose_context` release, generated `pu`
+   DOM removal — all behind an idempotent `onDestroy` teardown.
+6. Carter returns a bare cleanup function on the no-WebGL2 path; the port
+   returns the same `{ destroy, set }` shape on both paths so the stage tears
+   down uniformly.
+7. **Carter's no-WebGL2 path has a real bug and the port fixes it.** The early
+   `if (!gl) return …` sits above `let Z = true`, so Carter's first board switch
+   dies with `ReferenceError: Cannot access 'Z' before initialization` and the
+   page stays on `BOARD::INDEX`. The port declares `dirty`/`invalidate()` above
+   that branch, so the fallback the Notes pane promises ("the page still works,
+   which was his first point") actually works. Recorded, not silently changed:
+   the harness asserts both behaviours.
+
+### Verification
+
+Run with `CARTER_REF=<carter-checkout> node verify/paste-up-verify.mjs`
+(`verify/README.md` documents scope and limits).
+
+- `npm run build`: passed (`LabDetailPage-*.js` 184.68 kB / 63.69 kB gzip,
+  `LabDetailPage-*.css` 60.80 kB / 10.30 kB gzip; +10.7 kB JS / +2.5 kB CSS over
+  the Phase 5E baseline). No runtime `<style>` injection remains (`0` hits for
+  `data-lab-style` in the build); no dependency or lockfile change.
+- `verify/paste-up-css.mjs`: 19/19 rules identical to Carter's inline block —
+  same order, same selectors (plus the `:where(.carter)` scope), same
+  declarations, `0` unscoped selectors, `0` `rem` declarations, no keyframes.
+- **Section A, original vs port: exact match, `maxFloatDelta = 0`** on 18 checks
+  × 3 viewports (1440×900, 768×1024, 390×844) × reduced-motion off/on, covering
+  mount state and the placeholder grid (including the ink colour), index
+  settle, the spread switch's first frame, spread settle, plate swap, plate
+  click back to the index, `Enter` selection, the `fetch` dwell (planes hold
+  still, then fly late), the `memory`-off collapse-then-pop, `set('damp'/'bend')`,
+  resize re-measure, teardown, the no-WebGL2 fallback (18 images, exact URLs)
+  and the single 1440 hi-res upgrade.
+- **Section B, real integration path** (`CarterRoute` → `LabDetailPage` →
+  `PasteUpStage` → engine, React in jsdom, one recording WebGL2 context):
+  22 checks — single `.pu`, 3 boards / 18 slots / 3 tabs, loading→live flags,
+  the shell's `.labd__empty` still mounted, canvas at the DPR cap, 6 planes with
+  6 textures and premultiplied blending, placeholder grid from the frame ink,
+  tab switching (board + tab + underline + HUD), plate swap, `Enter` return,
+  index-click → spread, 6 route round-trips with zero DOM/observer/listener
+  growth and 6 released GL contexts, the four unported routes still
+  placeholder-only, each ported route mounting only its own engine, no
+  paste-up console error, and full teardown on unmount.
+- SSR (`react-dom/server`) across the nine detail routes: **all nine markup
+  hashes are byte-identical to the base commit**; no route gains engine DOM
+  (every stage still renders `null`).
+- Production preview: HTTP 200 on three consecutive direct requests to
+  `/routes/lab/paste-up` (refresh smoke), all eight other detail routes,
+  `/routes/lab/unknown`, `/routes/lab`, `/`, `/projects`, `/myself/about`,
+  `/contact`, `/routes/studio`, `/routes/writing`,
+  `/routes/writing/the-personal-starter`, and on the built `LabDetailPage` /
+  `CarterRoute` JS and CSS assets.
+
+**Browser limitation:** no browser executable exists in this sandbox (and the
+asset host is unreachable from it), so the rendered result is not visually
+verified. jsdom has no layout, CSS cascade, GPU or image decoding: geometry is a
+deterministic model of paste-up's own grid templates, canvas output is recorded
+rather than rasterised, and photographs are stubs. Therefore the actual
+photograph decode over CORS, the real `#version 300 es` GPU output, the bow's
+look at speed, real CSS grid layout at each breakpoint, touch/pointer feel and
+pixel fidelity remain unverified and need human browser review. No
+pixel-fidelity claim is made.
