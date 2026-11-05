@@ -254,6 +254,13 @@ async function integrationPath() {
     for (let i = 0; i < 8 && !container.querySelector('[data-lab-detail]'); i++) {
       await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
     }
+    // Phase 14: an experiment stage is its own chunk, so a route now needs one
+    // more async hop (stage module -> engine) before `data-stage-live`. Wait
+    // while the stage still reports loading instead of sampling immediately;
+    // the checks below are unchanged.
+    for (let i = 0; i < 10 && container.querySelector('[data-lab-detail][data-stage-loading]'); i++) {
+      await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+    }
     await settle();
   };
 

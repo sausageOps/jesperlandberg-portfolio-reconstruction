@@ -1,18 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import './lab-detail.css';
 import './lab-detail-ec.css';
-import { labDocument, labHref, labImage } from '../../data/lab.js';
+import { labDocument, labHref, labImage, loadLabCode } from '../../data/lab.js';
 import { navigate, veil } from '../../runtime.js';
 import { initExpressiveCode } from './expressiveCode.js';
-import PolkaDotsStage from './PolkaDotsStage.jsx';
-import HeartStage from './HeartStage.jsx';
-import RotatingGalleryStage from './RotatingGalleryStage.jsx';
-import DialStage from './DialStage.jsx';
-import PasteUpStage from './PasteUpStage.jsx';
-import ThreeJsTestStage from './ThreeJsTestStage.jsx';
-import DynamicScrollbarStage from './DynamicScrollbarStage.jsx';
-import LiveCursorsStage from './LiveCursorsStage.jsx';
-import VocalOrbStage from './VocalOrbStage.jsx';
+import { loadLabStage } from './lab-stages.js';
 
 /*
  * Carter's shared Lab document (experiment detail page), static DOM and CSS.
@@ -30,6 +22,12 @@ import VocalOrbStage from './VocalOrbStage.jsx';
  * All nine experiment source listings are restored into the Code pane. The
  * docs controls mirror Carter's tab, scroll thumb, stage-close, keyboard, code
  * copy and line-wrap interactions.
+ *
+ * Phase 14: both payloads that only one experiment needs are deferred. The
+ * stage module (engine + stylesheet) is fetched per slug through lab-stages.js
+ * while the poster shows Carter's own "Loading experiment" state, and the Code
+ * pane's captured listing is fetched for the current slug when the Code tab is
+ * first opened. The Notes pane — the pane a document opens on — stays static.
  *
  * Shell chrome that *is* live, matching Carter's shared lab-doc engine: the docs
  * toggle (.is-docs), the Notes/Code tabs (aria-pressed, tab-bg, pane visibility),
@@ -127,6 +125,60 @@ export default function LabDetailPage({ slug }) {
   const detailRef = useRef(null);
   const [tab, setTab] = useState('notes');
   const { bodyRef, barRef, thumbRef } = useDocsBar(open, tab);
+  // Experiment-level split: the stage (engine + stylesheet) and the Code pane's
+  // captured listing load per slug. `Stage` is the resolved component, so render
+  // is plain JSX with no suspense boundary; `codeState` keeps a failed chunk
+  // visible instead of leaving a silent empty pane.
+  const [Stage, setStage] = useState(null);
+  const [code, setCode] = useState(null);
+  const [codeState, setCodeState] = useState('idle');
+  // One request per (slug, document). The route remounts per slug because the
+  // page boundary is keyed by slug, but the stored slug makes that a guarantee
+  // rather than an assumption; holding the promise means leaving and re-entering
+  // the Code tab re-attaches to the same request instead of fetching again or
+  // stalling on a dropped listener.
+  const codeRequest = useRef(null);
+
+  useEffect(() => {
+    let current = true;
+    const detail = detailRef.current;
+    setStage(null);
+    // Carter's lab document marks the stage as loading before the experiment
+    // module resolves; the stage component clears the flag when it mounts.
+    if (detail) detail.dataset.stageLoading = '';
+    loadLabStage(slug).then((component) => {
+      if (!current) return;
+      if (component) {
+        setStage(() => component);
+        return;
+      }
+      // No stage for this slug, or its chunk failed: fall back to the poster and
+      // let the empty state say the experiment is not available.
+      if (detail) delete detail.dataset.stageLoading;
+    });
+    return () => { current = false; };
+  }, [slug]);
+
+  useEffect(() => {
+    if (tab !== 'code') return undefined;
+    if (codeRequest.current?.slug !== slug) {
+      // New experiment: never show the previous listing or its result.
+      codeRequest.current = { slug, promise: loadLabCode(slug) };
+      setCode(null);
+      setCodeState('loading');
+    }
+    let current = true;
+    codeRequest.current.promise.then((html) => {
+      if (!current) return;
+      if (html) {
+        setCode(html);
+        setCodeState('ready');
+      } else {
+        setCodeState('error');
+      }
+    });
+    return () => { current = false; };
+  }, [slug, tab]);
 
   // Carter's lab-doc engine: "d" toggles the docs, Escape closes them.
   useEffect(() => {
@@ -158,10 +210,12 @@ export default function LabDetailPage({ slug }) {
     if (!root) return undefined;
     const disconnect = initExpressiveCode(root);
     return disconnect;
-  }, [slug, tab, open]);
+    // `code` is deferred: bind the copy/wrap/tab-order handlers when the
+    // captured listing actually arrives.
+  }, [slug, tab, open, code]);
 
   if (!labEntry) return null;
-  const { item, previous, next, notes, code } = labEntry;
+  const { item, previous, next, notes } = labEntry;
   const number = pad(item.position);
   const count = pad(item.total);
 
@@ -261,14 +315,36 @@ export default function LabDetailPage({ slug }) {
                 dangerouslySetInnerHTML={{ __html: notes }}
                 data-astro-cid-f3pbbn5j=""
               />
-              <div
-                className="labd__pane"
-                id="lab-docs-code"
-                data-docs-pane="code"
-                hidden={tab !== 'code'}
-                dangerouslySetInnerHTML={{ __html: code }}
-                data-astro-cid-f3pbbn5j=""
-              />
+              {/* The two branches are keyed so React swaps the element instead
+                  of switching one node between children and innerHTML. */}
+              {code ? (
+                <div
+                  key="code-ready"
+                  className="labd__pane"
+                  id="lab-docs-code"
+                  data-docs-pane="code"
+                  data-docs-code-state="ready"
+                  hidden={tab !== 'code'}
+                  dangerouslySetInnerHTML={{ __html: code }}
+                  data-astro-cid-f3pbbn5j=""
+                />
+              ) : (
+                <div
+                  key="code-pending"
+                  className="labd__pane"
+                  id="lab-docs-code"
+                  data-docs-pane="code"
+                  data-docs-code-state={codeState === 'error' ? 'error' : 'loading'}
+                  hidden={tab !== 'code'}
+                  data-astro-cid-f3pbbn5j=""
+                >
+                  {/* Carter's own muted meta note treatment (.labd__empty-note),
+                      so the deferred pane needs no new stylesheet rule. */}
+                  <p className="labd__empty-note text-meta" role="status" data-docs-code-status="" data-astro-cid-f3pbbn5j="">
+                    {codeState === 'error' ? 'Source listing unavailable' : 'Loading source listing'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <div className="labd__bar" ref={barRef} data-docs-scrollbar="" aria-hidden="true" data-astro-cid-f3pbbn5j="">
@@ -309,15 +385,7 @@ export default function LabDetailPage({ slug }) {
                 </div>
               </div>
             </div>
-            {item.slug === 'polka-dots' && <PolkaDotsStage />}
-            {item.slug === 'heart' && <HeartStage />}
-            {item.slug === 'rotating-gallery' && <RotatingGalleryStage />}
-            {item.slug === 'dial' && <DialStage />}
-            {item.slug === 'paste-up' && <PasteUpStage />}
-            {item.slug === 'threejs-test' && <ThreeJsTestStage />}
-            {item.slug === 'dynamic-scrollbar' && <DynamicScrollbarStage />}
-            {item.slug === 'live-cursors' && <LiveCursorsStage />}
-            {item.slug === 'vocal-orb' && <VocalOrbStage />}
+            {Stage && <Stage />}
           </div>
         </section>
 

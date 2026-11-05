@@ -11,7 +11,9 @@
  * resolved without loading this module's Notes HTML.
  *
  * `notes` is the captured Notes pane for each experiment (see data/lab-notes).
- * Rendered as captured HTML, exactly like Carter's `set:html={notes}`.
+ * Rendered as captured HTML, exactly like Carter's `set:html={notes}`. It is
+ * imported statically because a document opens on Notes. The Code panes are
+ * deferred per experiment via `loadLabCode()`, which documents why.
  */
 import { LAB_ENTRIES } from './lab-slugs.js';
 
@@ -60,7 +62,6 @@ export function labDocument(slug) {
     previous: ring(-1),
     next: ring(1),
     notes: labNotes[slug],
-    code: labCode[slug],
   };
 }
 
@@ -90,16 +91,6 @@ import polkaDotsNotes from './lab-notes/polka-dots.html?raw';
 import rotatingGalleryNotes from './lab-notes/rotating-gallery.html?raw';
 import threejsTestNotes from './lab-notes/threejs-test.html?raw';
 import vocalOrbNotes from './lab-notes/vocal-orb.html?raw';
-import dialCode from './lab-code/dial.code.html?raw';
-import dynamicScrollbarCode from './lab-code/dynamic-scrollbar.code.html?raw';
-import heartCode from './lab-code/heart.code.html?raw';
-import liveCursorsCode from './lab-code/live-cursors.code.html?raw';
-import pasteUpCode from './lab-code/paste-up.code.html?raw';
-import polkaDotsCode from './lab-code/polka-dots.code.html?raw';
-import rotatingGalleryCode from './lab-code/rotating-gallery.code.html?raw';
-import threeJsTestCode from './lab-code/threejs-test.code.html?raw';
-import vocalOrbCode from './lab-code/vocal-orb.code.html?raw';
-
 const labNotes = {
   'live-cursors': liveCursorsNotes,
   dial: dialNotes,
@@ -112,14 +103,45 @@ const labNotes = {
   'vocal-orb': vocalOrbNotes,
 };
 
-const labCode = {
-  'live-cursors': liveCursorsCode,
-  dial: dialCode,
-  'polka-dots': polkaDotsCode,
-  heart: heartCode,
-  'threejs-test': threeJsTestCode,
-  'dynamic-scrollbar': dynamicScrollbarCode,
-  'rotating-gallery': rotatingGalleryCode,
-  'paste-up': pasteUpCode,
-  'vocal-orb': vocalOrbCode,
+/**
+ * Captured Code panes, loaded on demand.
+ *
+ * The nine listings are 3.8 MB of rendered Expressive Code HTML and were 92% of
+ * the Lab detail bundle (Phase 14 measurement), even though a document's Code
+ * pane is hidden until the reader selects the Code tab. Each listing is its own
+ * chunk here and is fetched only when that tab is opened, so a Lab document
+ * ships one listing instead of nine. Notes stay statically imported: they are
+ * the pane a document opens on, so they must be in the first paint.
+ *
+ * `?raw` keeps the listings byte-identical to the captured documents; the split
+ * only changes when a listing is fetched, never its markup. The specifiers are
+ * written out one by one rather than generated with `import.meta.glob` so each
+ * listing stays a plain, greppable dynamic import of its own captured file.
+ */
+const LAB_CODE_CHUNKS = {
+  'live-cursors': () => import('./lab-code/live-cursors.code.html?raw'),
+  dial: () => import('./lab-code/dial.code.html?raw'),
+  'polka-dots': () => import('./lab-code/polka-dots.code.html?raw'),
+  heart: () => import('./lab-code/heart.code.html?raw'),
+  'threejs-test': () => import('./lab-code/threejs-test.code.html?raw'),
+  'dynamic-scrollbar': () => import('./lab-code/dynamic-scrollbar.code.html?raw'),
+  'rotating-gallery': () => import('./lab-code/rotating-gallery.code.html?raw'),
+  'paste-up': () => import('./lab-code/paste-up.code.html?raw'),
+  'vocal-orb': () => import('./lab-code/vocal-orb.code.html?raw'),
 };
+
+/**
+ * Resolve the captured Code pane HTML for `slug`, or null when the listing is
+ * missing or its chunk cannot be fetched. Callers render a status instead of an
+ * empty pane, so a failed chunk is visible rather than silent.
+ */
+export function loadLabCode(slug) {
+  const load = LAB_CODE_CHUNKS[slug];
+  if (!load) return Promise.resolve(null);
+  return load()
+    .then((module) => module.default)
+    .catch((error) => {
+      console.error(`[lab] ${slug} code listing failed to load`, error);
+      return null;
+    });
+}
