@@ -781,3 +781,12 @@ appearance, the superformula surfaces' shading, the point cloud's density, real
 `Lantern.glb` decoding over CORS, and the scene's look at each breakpoint remain
 **unverified**. Pointer/touch orbit feel, real DPR changes and reduced-motion
 mode also need human browser review. No pixel-fidelity claim is made.
+
+### Phase 5J: Vocal Orb
+
+The final registry entry now has an isolated engine, stage and Vocal Orb-only
+Tune adapter. See [VOCAL_ORB_5J.md](./VOCAL_ORB_5J.md) for the source comparison,
+dependency manifest, browser gate, scope and test limitations. The earlier
+phase-specific deferred-stage tables above are historical. Model/audio parity
+is not claimed until the documented unrestricted-browser gate passes. Code pane
+content and tuned-copy integration remain deferred to shared docs.

@@ -10,6 +10,7 @@ import PasteUpStage from './PasteUpStage.jsx';
 import ThreeJsTestStage from './ThreeJsTestStage.jsx';
 import DynamicScrollbarStage from './DynamicScrollbarStage.jsx';
 import LiveCursorsStage from './LiveCursorsStage.jsx';
+import VocalOrbStage from './VocalOrbStage.jsx';
 
 /*
  * Carter's shared Lab document (experiment detail page), static DOM and CSS.
@@ -24,27 +25,10 @@ import LiveCursorsStage from './LiveCursorsStage.jsx';
  * translations are HTML -> JSX mechanics (className, SVG camelCase, `set:html`
  * -> dangerouslySetInnerHTML) and the inlining of Carter's ArrowRoll component.
  *
- * What is deliberately inert / deferred (Phases 4B–5G):
- * - [data-experiment-viewport] holds Carter's engine mount point. Its source
- *   empty state ("Experiment coming soon" over the blurred poster) remains for
- *   the three details without a ported engine. Polka Dots mounts its engine
- *   (Phase 5B, adopting the Phase 5A static `.pd > canvas` DOM), Heart mounts
- *   its engine (Phase 5C, engine-generated `div.heart > canvas`), Rotating
- *   Gallery mounts its engine (Phase 5D, engine-generated `div.rg`), Dial
- *   mounts its engine (Phase 5E, engine-generated `div.dial`), Paste-Up
- *   mounts its engine (Phase 5F, engine-generated `div.pu` with a WebGL2
- *   canvas), and ThreeJs Scene mounts its engine (Phase 5G, engine-generated
- *   `div.tj` with a Three.js WebGL canvas); `data-stage-live` hides the empty
- *   state on those six routes.
- * - [data-config-toggle] / .labcfg stay `hidden`, exactly as Carter ships them
- *   until an experiment registers a config.
- * - The Code pane keeps its element and layout slot but its content is deferred:
- *   Carter's ~2 MB of captured Expressive Code listings and the ec.*.js enhancer
- *   arrive with the experiments (see README.md).
- * - No experiment engine beyond Polka Dots, Heart, Rotating Gallery, Dial,
- *   Paste-Up and ThreeJs Scene: no scene, wheel/drag control, timeline or
- *   media playback is mounted here for the other three details, which keep
- *   the placeholder state.
+ * All nine stages now have engine adapters. Vocal Orb is loaded lazily and is
+ * the only stage with a live Tune adapter; other Tune panels remain deferred.
+ * Populated Code listings and tuned-copy integration remain deferred to a
+ * separate shared-docs phase; the existing tab and layout slot remain here.
  *
  * Shell chrome that *is* live, matching Carter's shared lab-doc engine: the docs
  * toggle (.is-docs), the Notes/Code tabs (aria-pressed, tab-bg, pane visibility),
@@ -234,8 +218,8 @@ export default function LabDetailPage({ slug }) {
               {/*
                * Deferred: Carter fills this pane with the captured, syntax-
                * highlighted Code listing for the experiment (and links the
-               * Expressive Code enhancer from inside it). That lands with the
-               * experiment phases; the pane and its layout slot stay here.
+               * Expressive Code enhancer from inside it). Those are deferred to
+               * a shared-docs phase; the pane and its layout slot stay here.
                */}
               <div
                 className="labd__pane"
@@ -246,7 +230,7 @@ export default function LabDetailPage({ slug }) {
               >
                 <div className="labd__code-sec" data-astro-cid-f3pbbn5j="">
                   <p className="labd__summary text-lead" data-astro-cid-f3pbbn5j="">
-                    The annotated source for {item.name} arrives with the experiment itself.
+                    {item.slug === 'vocal-orb' ? 'The annotated source listing is deferred to a future shared-docs phase.' : `The annotated source for ${item.name} arrives with the experiment itself.`}
                   </p>
                 </div>
               </div>
@@ -292,6 +276,7 @@ export default function LabDetailPage({ slug }) {
             {item.slug === 'threejs-test' && <ThreeJsTestStage />}
             {item.slug === 'dynamic-scrollbar' && <DynamicScrollbarStage />}
             {item.slug === 'live-cursors' && <LiveCursorsStage />}
+            {item.slug === 'vocal-orb' && <VocalOrbStage />}
           </div>
         </section>
 
