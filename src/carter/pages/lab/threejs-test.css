@@ -1,0 +1,188 @@
+/*
+ * Carter's ThreeJs Scene engine CSS, copied from the inline `#exp-three-style`
+ * block in app/lib/experiments/threejs-test.js at
+ * sausageOps/carterogunsola-reconstruction@3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249,
+ * plus Carter's `.spin` waiting mark from app/styles/global.scss (threejs-test
+ * is the only ported page using `.spin`; single-page atoms land with their page
+ * per src/carter/styles/atoms.css).
+ *
+ * Every selector is scoped to `.carter`; declarations keep Carter's authored
+ * units and are compiled by `carter-rem-to-px` in vite.config.js.
+ */
+:where(.carter) .tj {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  /* site is monochrome — wire + points read as ink; swap to re-colour */
+  --three-accent: var(--ink);
+  cursor: grab;
+  touch-action: none;
+}
+
+:where(.carter) .tj:active {
+  cursor: grabbing;
+}
+
+:where(.carter) .tj canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Carter's house waiting mark (app/styles/global.scss `_spinner.scss`), scoped
+   with zero added specificity over `.spin` so `.tj__loading .spin` overrides
+   `--spin-size` identically to the original cascade. */
+@keyframes spin-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+
+:where(.carter .tj) .spin {
+  --spin-size: 1.25rem;
+  --spin-dur: 0.84s;
+  --spin-ticks: 12;
+  inline-size: var(--spin-size);
+  block-size: var(--spin-size);
+  color: var(--ink-muted);
+  background: repeating-conic-gradient(from -1.5deg, currentColor 0 3deg, transparent 3deg 30deg);
+  animation: spin-turn var(--spin-dur) steps(var(--spin-ticks), end) infinite;
+  flex: none;
+  display: inline-block;
+  mask-image: radial-gradient(closest-side, #0000 52%, #000 57%), conic-gradient(#0000001f, #000);
+  mask-composite: intersect;
+}
+
+/* the house waiting mark over its label — the mark carries the wait, the
+   line only names it (styles/_spinner.scss owns .spin) */
+:where(.carter) .tj__loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-12, 0.75rem);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-meta, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+:where(.carter) .tj__loading .spin {
+  --spin-size: 1.75rem;
+}
+
+:where(.carter) .tj[data-ready] .tj__loading {
+  opacity: 0;
+}
+
+/* subject + mode switches — the site's segmented control, gsap-free (pill
+   slides via CSS). Stacked top-centre so they clear the lab's prev/next nav
+   at the bottom of the stage: WHAT is on the stage, then HOW it is drawn. */
+:where(.carter) .tj__bars {
+  position: absolute;
+  inset-block-start: var(--s-16, 1rem);
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-8, 0.5rem);
+  max-inline-size: calc(100% - var(--s-32, 2rem));
+}
+
+:where(.carter) .tj__modes {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s-2, 2px);
+  height: var(--s-40, 2.5rem);
+  max-inline-size: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 6px);
+  box-shadow: var(--shadow-control, 0 1px 3px rgba(30, 30, 30, 0.06));
+}
+
+:where(.carter) .tj__pill {
+  position: absolute;
+  inset-block: var(--s-2, 2px);
+  inset-inline-start: var(--s-2, 2px);
+  width: 0;
+  border-radius: var(--r-sm, 4px);
+  background: var(--fill);
+  box-shadow: var(--shadow-seg, 0 1px 2px rgba(30, 30, 30, 0.05));
+  transition:
+    transform 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+    width 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+:where(.carter) .tj__seg {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.4rem;
+  height: 100%;
+  padding-inline: var(--s-12, 0.75rem);
+  border: 0;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-meta, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition:
+    color 0.3s var(--ease-out-quad, cubic-bezier(0.5, 1, 0.89, 1)),
+    scale 0.15s ease;
+}
+
+:where(.carter) .tj__seg[aria-pressed="true"] {
+  color: var(--ink);
+}
+
+:where(.carter) .tj__seg:hover {
+  color: var(--ink);
+}
+
+:where(.carter) .tj__seg:active {
+  scale: 0.94;
+}
+
+:where(.carter) .tj__seg:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  border-radius: var(--r-sm, 4px);
+}
+
+/* Narrow stages: the labels keep their air by giving up their minimum. */
+@media (max-width: 40rem) {
+  :where(.carter) .tj__seg {
+    min-width: 0;
+    padding-inline: var(--s-8, 0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.carter .tj) .spin {
+    opacity: 0.55;
+    animation: none;
+    mask-image: radial-gradient(closest-side, #0000 52%, #000 57%);
+  }
+
+  :where(.carter) .tj__pill {
+    transition: none;
+  }
+}
