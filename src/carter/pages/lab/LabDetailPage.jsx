@@ -9,6 +9,7 @@ import DialStage from './DialStage.jsx';
 import PasteUpStage from './PasteUpStage.jsx';
 import ThreeJsTestStage from './ThreeJsTestStage.jsx';
 import DynamicScrollbarStage from './DynamicScrollbarStage.jsx';
+import LiveCursorsStage from './LiveCursorsStage.jsx';
 
 /*
  * Carter's shared Lab document (experiment detail page), static DOM and CSS.
@@ -290,6 +291,7 @@ export default function LabDetailPage({ slug }) {
             {item.slug === 'paste-up' && <PasteUpStage />}
             {item.slug === 'threejs-test' && <ThreeJsTestStage />}
             {item.slug === 'dynamic-scrollbar' && <DynamicScrollbarStage />}
+            {item.slug === 'live-cursors' && <LiveCursorsStage />}
           </div>
         </section>
 
