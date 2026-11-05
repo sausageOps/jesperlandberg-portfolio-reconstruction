@@ -997,12 +997,12 @@ async function integrationPath(server) {
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
   const { createRoot } = await import('react-dom/client');
+  // Vite's SSR module runner provides the GSAP instance imported by CarterRoute's
+  // engine. It has a separate ticker from the top-level ESM GSAP used by the
+  // source-equivalence harness, so integration frames must drive this instance.
+  const { default: appGsap } = await server.ssrLoadModule('gsap');
   const { default: CarterRoute } = await server.ssrLoadModule('/src/carter/CarterRoute.jsx');
   const { resolveCarterPage } = await server.ssrLoadModule('/src/carter/routes.js');
-  // Vite's SSR realm holds its own gsap instance; its ticker is the only thing
-  // driving the app's engine, so the harness pumps that ticker like rAF would.
-  const { default: appGsap } = await server.ssrLoadModule('gsap');
-  appGsap.ticker.sleep();
 
   const container = window.document.getElementById('root');
   const root = createRoot(container);
@@ -1022,8 +1022,11 @@ async function integrationPath(server) {
       placeholder: null,
     });
 
-  // Drive the window's own animation queue: gsap in the SSR realm captured it.
+  // Sleep the Vite SSR ticker (whose rAF is queued on the jsdom window), then
+  // advance that same ticker once per synthetic frame. The top-level verifier
+  // ticker is intentionally reserved for Carter/source equivalence in section A.
   const settle = async (ms = 320) => {
+    appGsap.ticker.sleep();
     const frames = Math.max(1, Math.round(ms / 16.667));
     await act(async () => {
       for (let i = 0; i < frames; i++) {
@@ -1052,11 +1055,19 @@ async function integrationPath(server) {
       root.render(route(slug));
       await sleep(40);
     });
-    for (let i = 0; i < 8 && !container.querySelector('[data-lab-detail]'); i++) {
+    const ready = () => {
+      const detail = container.querySelector('[data-lab-detail]');
+      return detail && (slug !== 'paste-up' || detail.hasAttribute('data-stage-live'));
+    };
+    // The detail shell can render before React runs PasteUpStage's passive
+    // effect. Wait for its live marker (set after mountPasteUp registers the
+    // ticker listener and measures the six claims) before dispatching frames.
+    for (let i = 0; i < 40 && !ready(); i++) {
       await act(async () => {
         await sleep(60);
       });
     }
+    if (!ready()) throw new Error(`stage did not become ready before frame driving: ${slug}`);
     await settle();
   };
 
@@ -1090,11 +1101,13 @@ async function integrationPath(server) {
     `canvas=${container.querySelector('.pu__canvas')?.width}px`);
 
   const gl = window.__gl2;
-  const drawn = gl.frames.length ? gl.frames[gl.frames.length - 1] : [];
+  // The deterministic frame driver must leave six live paper planes in its
+  // final captured frame; an earlier populated frame is not enough.
+  const drawn = gl.frames.at(-1) ?? [];
   check('B6 six planes, six textures, premultiplied blend, one program',
     drawn.length === 6 && new Set(drawn.map((d) => d.tex)).size === 6 &&
       gl.blend?.[0] === gl.ONE && gl.blend?.[1] === gl.ONE_MINUS_SRC_ALPHA && gl.programs === 1,
-    `${drawn.length} draws, blend=${JSON.stringify(gl.blend)}`);
+    `${drawn.length} draws, blend=${JSON.stringify(gl.blend)}, frameCounts=${gl.frames.slice(-8).map((frame) => frame.length).join(',')}, textures=${gl.uploads.length}, tickerFrame=${appGsap.ticker.frame}, tickerListeners=${appGsap.ticker._listeners.map((fn) => fn.name || fn.toString().slice(0, 50)).join('|')}`);
 
   // the placeholder grid is what a visitor sees before the photographs decode
   const gridStrokes = window.__grid?.ops?.stroke ?? 0;
@@ -1156,7 +1169,7 @@ async function integrationPath(server) {
   check('B16 every destroyed engine released its GL context',
     window.__lostContexts >= 6, `${window.__lostContexts} releases after 6 remounts`);
 
-  // ---- unported routes keep their placeholder state ----
+  // ---- other engines remain isolated from Paste-Up; jsdom capability varies ----
   const placeholders = {};
   for (const slug of ['live-cursors', 'threejs-test', 'dynamic-scrollbar', 'vocal-orb']) {
     await render(slug);
@@ -1166,8 +1179,11 @@ async function integrationPath(server) {
       empty: !!container.querySelector('.labd__empty'),
     };
   }
-  check('B17 the four other unported routes stay placeholder-only',
-    Object.values(placeholders).every((p) => p.pu === 0 && !p.live && p.empty), JSON.stringify(placeholders));
+  check('B17 four other experiment routes do not leak Paste-Up and retain fallback DOM',
+    Object.values(placeholders).every((p) => p.pu === 0 && p.empty), JSON.stringify(placeholders));
+  check('B17b Live Cursors and Vocal Orb set their live-stage marker',
+    placeholders['live-cursors'].live && placeholders['vocal-orb'].live,
+    JSON.stringify({ liveCursors: placeholders['live-cursors'], vocalOrb: placeholders['vocal-orb'] }));
 
   // ---- the ported engines are untouched ----
   const ported = {};
@@ -1213,18 +1229,23 @@ async function ssrChecks(server) {
   const { LAB_ITEMS } = await server.ssrLoadModule('/src/carter/data/lab.js');
   const rows = LAB_ITEMS.map((item) => {
     const markup = renderToStaticMarkup(createElement(LabDetailPage, { slug: item.slug }));
-    return {
+    const dom = new JSDOM(markup);
+    const doc = dom.window.document;
+    const row = {
       slug: item.slug,
-      pu: /class="pu[" ]/.test(markup),
-      canvas: /pu__canvas/.test(markup),
-      empty: markup.includes('labd__empty'),
-      live: markup.includes('data-stage-live'),
-      experiment: /data-experiment="([^"]+)"/.exec(markup)?.[1],
+      pu: !!doc.querySelector('.pu'),
+      canvas: !!doc.querySelector('.pu__canvas'),
+      empty: !!doc.querySelector('.labd__empty'),
+      live: !!doc.querySelector('[data-stage-live]'),
+      codeBlocks: doc.querySelectorAll('[data-docs-pane="code"] .expressive-code').length,
+      experiment: doc.querySelector('[data-lab-detail]')?.getAttribute('data-experiment'),
     };
+    dom.window.close();
+    return row;
   });
-  check('C1 all nine routes render server-side with no engine DOM',
-    rows.length === 9 && rows.every((r) => !r.pu && !r.canvas && !r.live && r.empty && r.experiment === r.slug),
-    rows.map((r) => `${r.slug}:pu=${r.pu}`).join(' '));
+  check('C1 all nine routes render server-side with no engine DOM and populated Code panes',
+    rows.length === 9 && rows.every((r) => !r.pu && !r.canvas && !r.live && r.empty && r.codeBlocks > 0 && r.experiment === r.slug),
+    rows.map((r) => `${r.slug}:pu=${r.pu} code=${r.codeBlocks}`).join(' '));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1237,9 +1258,8 @@ const portModule = await import('./paste-up.port.mjs');
 try {
   await equivalence();
   await fallbackPath();
-  // section B drives the app's ticker in real time; wake it and go
-  gsap.ticker.wake();
-  await sleep(60);
+  // Section B mounts the React stage and advances Vite SSR's GSAP ticker
+  // deterministically from the jsdom frame loop.
   await integrationPath(server);
   await ssrChecks(server);
 } finally {

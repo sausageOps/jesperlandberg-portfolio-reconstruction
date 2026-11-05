@@ -21,6 +21,7 @@
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { makeStudioEnv } from './studioEnv.js'
+import { getCarterTheme, observeCarterTheme } from '../../carter/runtime.js'
 
 /* ---------- Carter constants (verbatim) ---------- */
 const prefersReducedMotion = () =>
@@ -839,16 +840,14 @@ function buildStage(t, o, Se, veilActive) {
     repaint(), C.image = strapCanvas(Se.studio, '#5a5a5a'), C.needsUpdate = true
   })()
 
-  /* theme observer (verbatim; Jesper keeps no data-theme today so the light palette
-   * persists — the observer stays so a future theme switch behaves like Carter's). */
-  let applyTheme = () => {
-    let e = document.documentElement.getAttribute('data-theme') === 'dark'
-    frameMat.color.set(e ? 2302755 : 1644825)
-    strapMat.color.set(e ? 14211288 : 16777215)
+  /* Carter's theme lives on the scoped .carter frame in Jesper, not <html>. */
+  let applyTheme = (theme = getCarterTheme()) => {
+    let dark = theme === 'dark'
+    frameMat.color.set(dark ? 2302755 : 1644825)
+    strapMat.color.set(dark ? 14211288 : 16777215)
   }
   applyTheme()
-  let themeObserver = new MutationObserver(applyTheme)
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  let stopThemeObserver = observeCarterTheme(applyTheme)
 
   /* dispose (verbatim semantics: ticker, aborts, observers, textures, envRT.texture,
    * pmrem, traverse->geometry.dispose(), materials, renderer, forceContextLoss) */
@@ -856,7 +855,7 @@ function buildStage(t, o, Se, veilActive) {
     gsap.ticker.remove(tick)
     abort.abort()
     RO.disconnect()
-    themeObserver.disconnect()
+    stopThemeObserver()
     dbgEl?.remove()
     ;[frontTex, backTex, C, S, flagMat.map].forEach(e2 => e2?.dispose())
     envRT?.texture?.dispose()

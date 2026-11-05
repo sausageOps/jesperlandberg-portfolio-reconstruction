@@ -41,8 +41,9 @@ rendered with React into jsdom and driven through the window's own
 `requestAnimationFrame` queue. Checks mount, loading/live stage flags, ARIA,
 external link safety, wheel scrub, arrow-key stepping, pointer drag + release,
 12 route changes (dial ↔ heart) with listener/observer/DOM leak accounting, the
-other five experiments staying placeholder-only, the other ported engines
-mounting only their own DOM, and full teardown on unmount.
+other experiment routes staying isolated from Dial and retaining their fallback
+DOM (with active stage markers where their engines mount), the other ported
+engines mounting only their own DOM, and full teardown on unmount.
 
 **Phase 5F — Paste-Up.** `paste-up-verify.mjs` adds a recording WebGL2 context
 and a recording 2d context (so both the original and the port take the real GL
@@ -84,8 +85,11 @@ modes, the superformula morph / re-sample / group swap, a 13-value `set()`
 sweep, resize and teardown across three viewports with reduced motion off and
 on, plus the no-WebGL path and destroy-mid-load. Section B re-runs the real
 integration path and includes the canvas's GLTF traffic, three route
-round-trips with observer/listener accounting, the three unported routes staying
-placeholder-only, and teardown on unmount. `threejs-test-css.mjs` compares the
+round-trips with observer/listener accounting, the three other experiment
+routes isolated from ThreeJs while retaining their fallback DOM, and teardown
+on unmount. Section B also supplies event-capable Audio and asynchronous
+IntersectionObserver stubs plus a viewport metric for Dynamic Scrollbar.
+`threejs-test-css.mjs` compares the
 scoped stylesheet rule by rule against Carter's inline block **and** the `.spin`
 mark against `app/styles/global.scss`, then audits the built stylesheet for
 leftover `rem`. `threejs-test-ssr.mjs` is the Phase 5G SSR dump.

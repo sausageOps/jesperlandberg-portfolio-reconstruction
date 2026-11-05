@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { useCarterEngine } from '../../useCarterEngine.js';
-import { getCarterRoot } from '../../runtime.js';
-import { mountPolkaDots } from '../../engines/polka-dots.js';
+import { getCarterRoot, onDestroy } from '../../runtime.js';
+import { mountPolkaDots, config as tuneConfig } from '../../engines/polka-dots.js';
+import { mountLabTune } from './lab-tune.js';
 import './polka-dots.css';
 
 /**
@@ -32,8 +33,10 @@ export default function PolkaDotsStage() {
     if (detail) detail.dataset.stageLoading = '';
 
     let instance = null;
+    let cleanTune = () => {};
     try {
       instance = mountPolkaDots(host);
+      if (instance && detail) cleanTune = mountLabTune(detail, instance, tuneConfig, 'polka-dots');
     } catch (error) {
       console.error('[polka-dots] mount failed', error);
       if (detail) delete detail.dataset.stageLoading;
@@ -49,15 +52,15 @@ export default function PolkaDotsStage() {
       delete detail.dataset.stageLoading;
     }
 
-    // No manual cleanup needed here — the engine registered its own
-    // `onDestroy` teardown. Return a fallback to clear the stage flags
-    // if the frame unmounts before the engine's destroy fires.
-    return () => {
+    // useCarterEngine deliberately ignores returned cleanup functions. Clear
+    // the flags through the same Carter page lifecycle as the engine teardown.
+    onDestroy(() => {
+      cleanTune();
       if (detail) {
         delete detail.dataset.stageLive;
         delete detail.dataset.stageLoading;
       }
-    };
+    });
   });
 
   // Phase 5A DOM shape is preserved; the engine adopts this canvas on

@@ -73,12 +73,17 @@ export function initReveal(root) {
     if (kind === 'o') gsap.set(el, { opacity: 0 });
     else if (kind === 'x') gsap.set(el, { scaleX: 0, transformOrigin: '0% 50%' });
     else if (kind === 'y') {
-      const inner = document.createElement('span');
-      inner.className = 'y';
-      inner.innerHTML = el.innerHTML;
-      el.innerHTML = '';
-      el.classList.add('y_');
-      el.append(inner);
+      // React route remounts can re-run the reveal on retained Contact DOM.
+      // Reuse an existing mask instead of nesting `.y` wrappers indefinitely.
+      let inner = el.classList.contains('y_') ? el.querySelector(':scope > .y') : null;
+      if (!inner) {
+        inner = document.createElement('span');
+        inner.className = 'y';
+        inner.innerHTML = el.innerHTML;
+        el.innerHTML = '';
+        el.classList.add('y_');
+        el.append(inner);
+      }
       gsap.set(inner, { yPercent: 110 });
       item.targets = [inner];
     } else return; // 's' (multi-line splitter) is unused on the Contact page

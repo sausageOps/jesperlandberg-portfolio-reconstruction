@@ -53,11 +53,11 @@
 .cletter-scroll::-webkit-scrollbar { display: none; }
 
 .letterpage {
-  /* Carter body surface: paper + fiber grain (light scheme only here). */
-  background-color: #d6d6d5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.055'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  color-scheme: light;
-  color: #1e1e1e;
+  /* Carter's BaseLayout defaults to its dark paper; the letter itself stays warm. */
+  background-color: #1e1e1e;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.016'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  color-scheme: dark;
+  color: #f7f7f7;
   min-height: 100%;
   font-family: var(--font-sans);
   font-size: 16px;
@@ -85,7 +85,7 @@
      Fixed from the first-pass values after the /studio theme study; letter paper
      colors are unaffected (they use --bond/--pink, unchanged). */
   --ink: #f7f7f7; --ink-muted: #f7f7f780; --paper: #1e1e1e;
-  --spot: #b03a1e; --spot-rgb: 176, 58, 30; --spot-wash: rgba(var(--spot-rgb), .14);
+  --spot: #e06a4a; --spot-rgb: 224, 106, 74; --spot-wash: rgba(var(--spot-rgb), .24);
   --sheet-tex:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cg fill='%23808080' fill-opacity='0.055'%3E%3Ccircle cx='4' cy='4' r='1.05'/%3E%3Ccircle cx='0' cy='0' r='1.05'/%3E%3Ccircle cx='8' cy='0' r='1.05'/%3E%3Ccircle cx='0' cy='8' r='1.05'/%3E%3Ccircle cx='8' cy='8' r='1.05'/%3E%3C/g%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
@@ -183,7 +183,7 @@
 .letterpage .desk[data-letter-posed] .sheet,.letterpage .desk[data-letter-posed] .stub{box-shadow:none;background:0 0;margin:0;position:absolute}
 @media (scripting:enabled) and (prefers-reduced-motion:no-preference){.letterpage .desk:not([data-letter-posed]){padding-block-start:116px}@container desk (width>=760px){.letterpage .desk:not([data-letter-posed]) .sheet,.letterpage .desk:not([data-letter-posed]) .stub{--sw:clamp(560px, 56cqw, 800px)}.letterpage .desk:not([data-letter-posed]) .sheet{width:var(--sw);margin-block-end:calc(132px - var(--s-96));margin-inline-start:calc((100cqw - var(--sw) * 1.153) / 2)}.letterpage .desk:not([data-letter-posed]) .stub{inline-size:calc(var(--sw) * .34);block-size:calc(var(--sw) * .34 * 1.04);margin:0;position:absolute;inset-block-start:94px;inset-inline-start:calc((100cqw - var(--sw) * 1.153) / 2 + var(--sw) * .813)}}}
 .letterpage .sheet input:-webkit-autofill,.letterpage .sheet input:-webkit-autofill:hover,.letterpage .sheet input:-webkit-autofill:focus{-webkit-text-fill-color:var(--pink);caret-color:var(--pink);-webkit-background-clip:text;background-clip:text;transition:background-color 9999s ease-out}
-.letterpage .sheet{background:var(--bond);width:min(100% - 2rem,800px);color:var(--pink);font-family:var(--font-mono);letter-spacing:var(--track);margin-inline:auto;font-size:14px;line-height:30px;position:relative;box-shadow:0 2px 24px #0000001f;container-type:inline-size}
+.letterpage .sheet{background:var(--bond);width:min(calc(100% - 32px),800px);color:var(--pink);font-family:var(--font-mono);letter-spacing:var(--track);margin-inline:auto;font-size:14px;line-height:30px;position:relative;box-shadow:0 2px 24px #0000001f;container-type:inline-size}
 .letterpage .sheet ::selection,.letterpage .sheet :is(input,textarea)::selection{background:var(--spot-wash);color:var(--pink)}
 .letterpage .sheet__in{padding:8cqi 9cqi 7cqi}
 .letterpage .sheet__head{align-items:center;gap:var(--s-20);padding-block-end:var(--s-20);display:flex;position:relative}
@@ -269,7 +269,7 @@
 .letterpage .stamp svg{width:100%;height:auto;display:block}
 .letterpage .desk[data-letter-sent] input,.letterpage .desk[data-letter-sent] textarea{color:var(--pink-muted)}
 .letterpage .desk[data-letter-sent] .sig__clear{display:none}
-.letterpage .stub{inline-size:min(100% - 2rem,300px);margin:var(--s-40) auto 0;background:var(--thermal);color:var(--pink);font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;padding:26px 22px 22px;font-size:11px;line-height:1.5;position:relative;box-shadow:0 2px 16px #0000001a;container-type:inline-size}
+.letterpage .stub{inline-size:min(calc(100% - 32px),300px);margin:var(--s-40) auto 0;background:var(--thermal);color:var(--pink);font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;padding:26px 22px 22px;font-size:11px;line-height:1.5;position:relative;box-shadow:0 2px 16px #0000001a;container-type:inline-size}
 .letterpage .stub__head{font-weight:var(--fw-mono-medium);font-size:clamp(9px,4.4cqi,12px)}
 .letterpage .stub__sub{color:var(--pink-muted);border-block-end:1px dashed var(--prule);padding-block-end:10px;font-size:clamp(8px,3.8cqi,10px)}
 .letterpage .stub__rows{margin:12px 0 0;font-size:clamp(8px,3.9cqi,11px)}
