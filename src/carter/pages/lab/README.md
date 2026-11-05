@@ -57,7 +57,7 @@ Carter's document splits cleanly; this port keeps the split:
 | `.labd` root, `data-experiment/name/prev/next/position/total` | static | ported verbatim |
 | docs toggle, tabs, tags, docs body, scroll thumb | shared `lab-doc` engine | shell chrome ported; state is React (`is-docs`, `aria-pressed`, tab pill, pane `hidden`, `d`/Escape) |
 | `[data-docs-scroll]` scroll + thumb sizing | shared engine | ported as a small effect (same maths as the source) |
-| `[data-experiment-viewport]` | per-experiment engine | Phase 4B kept Carter's own empty state ("Experiment coming soon" over the blurred poster). Phase 5A adds only Polka Dots' source `.pd > canvas` DOM, explicitly marked as an engine placeholder; its canvas stays blank and the shell empty state remains. The other eight details are unchanged. |
+| `[data-experiment-viewport]` | per-experiment engine | Phase 4B kept Carter's own empty state ("Experiment coming soon" over the blurred poster). Phases 5B–5G mount the engines for Polka Dots, Heart, Rotating Gallery, Dial, Paste-Up and ThreeJs Scene; the three remaining details (`live-cursors`, `dynamic-scrollbar`, `vocal-orb`) keep Carter's empty state verbatim. See the phase sections below. |
 | `[data-config-toggle]`, `.labcfg` | configurator (`lab-doc.js`) | rendered, `hidden`, exactly as Carter ships them until an experiment registers a config |
 | prev/count/next nav | static | ported; hrefs stay Carter's (`/lab/…`, `/lab`) and the frame's link interceptor maps them to Jesper routes |
 | Notes pane | build-time `set:html` | **ported verbatim** (`dangerouslySetInnerHTML`) |
@@ -91,8 +91,11 @@ Identical to Carter's `app/data/lab-evidence.ts`:
   infrastructure and was deferred by decision in this phase. The pane, its id,
   its `data-docs-pane` hook and the `.labd__code-sec` layout slot are in place,
   so the experiment phases only need to swap the pane's children.
-- **Experiment engines, canvases, scenes, previews, wheel/drag controls,
-  timelines, media playback, Tune panel contents.** All per-experiment work.
+- **The three remaining experiment engines** (`live-cursors`,
+  `dynamic-scrollbar`, `vocal-orb`). Each needs infrastructure Jesper does not
+  have — a presence backend, absent audio/cover assets, or an external model
+  host plus microphone — so they stay in the placeholder state until a phase
+  takes them on deliberately.
 - **Arrow-key prev/next.** Carter's `lab-doc.js` maps `ArrowLeft`/`ArrowRight`
   to navigation. It is source-confirmed but is page interaction rather than
   static DOM; it is trivial to add with the experiment phases (the `data-prev-href`
@@ -573,3 +576,208 @@ photograph decode over CORS, the real `#version 300 es` GPU output, the bow's
 look at speed, real CSS grid layout at each breakpoint, touch/pointer feel and
 pixel fidelity remain unverified and need human browser review. No
 pixel-fidelity claim is made.
+
+## Phase 5G — ThreeJs Scene engine
+
+Source audit of the **three** experiments still unported from Carter's registry
+(`app/lib/lab-experiments.js`) and source files at
+`3f50832420aa2a7bc0d1e7d5c4ba5fc2e7361249` (read-only), selected `threejs-test`
+(Carter's title: *ThreeJs Scene*). PR #18 (Phase 5F / Paste-Up) was confirmed
+merged into `main` (`bd019bb7`) before implementation.
+
+### Candidate comparison
+
+| Experiment | Source | Needs | Verdict |
+| --- | --- | --- | --- |
+| `threejs-test` | `app/lib/experiments/threejs-test.js` (58 lines minified, 79.7 kB; body identical to `src/threejs-test.CNSPgjYT.js`) + `src/RoomEnvironment.CsPbsEjR.js` + `src/GLTFLoader.BD7CsO-c.js` | `Lantern.glb` (a public Khronos sample, pinned by commit in Carter's own URL), embedded `OrbitControls` + `MeshSurfaceSampler`, three r185 chunks vs Jesper's installed `three@0.180.0` | **selected** |
+| `dynamic-scrollbar` | `dynamic-scrollbar.Ia0FQs2Y.js` | six `/lab/music/*.mp3` and `/lab/covers/*.jpg` — **absent (404) in Carter's own reconstruction**; the audio player is the experiment | missing assets |
+| `live-cursors` | `live-cursors.js` | Carter's PartyKit/Cloudflare Durable Object presence host and the unported socket client; with no peers the stage stays empty | external service |
+| `vocal-orb` | `vocal-orb.js` (926 lines) | `cdn.jsdelivr.net` transformers.js, `huggingface.co` models, an ONNX Worker + AudioWorklet, WebGL2 float bloom FBOs, the microphone | external model host + mic permission |
+
+`threejs-test` is the only remaining engine whose dependencies are all present
+or public and version-checkable:
+
+- Every symbol it imports was mapped from Carter's minified `three` chunk to
+  `three@0.180.0` — 31 bindings in the experiment (`Spherical`, `Controls`,
+  `PMREMGenerator`, `MeshMatcapMaterial`, `MeshPhysicalMaterial`,
+  `WebGLRenderTarget`, `MOUSE`, `TOUCH`, …) and 8 in `RoomEnvironment`
+  (`MeshStandardMaterial`, `InstancedMesh`, `MeshLambertMaterial`, `Object3D`,
+  `BoxGeometry`, `PointLight`, `BackSide`). All exist with the same API.
+- `OrbitControls` and `MeshSurfaceSampler` are **already embedded** in Carter's
+  file (he did not import the jsm modules), so they port verbatim with no
+  behavioural gap.
+- The one model, `Lantern.glb`, is loaded over HTTPS from
+  `cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Assets@2bac6f8c…`. That is the
+  same file content as the Khronos repository commit, and Carter's URLs are kept
+  verbatim rather than re-hosted.
+- Carter's `GLTFLoader` (r185) and `three@0.180.0`'s
+  `examples/jsm/loaders/GLTFLoader.js` were run against the actual 9.2 MB asset
+  (sparse checkout of the pinned Khronos commit, kept in `/tmp`, **not**
+  vendored): both parse 3 meshes / 3 primitives, and the resulting
+  position/normal/uv/index arrays and node transforms are identical
+  (`LanternPole_Body` 926 verts / 2,616 indices, `LanternPole_Chain`
+  756 / 3,744, `LanternPole_Lantern` 2,463 / 9,822).
+
+### Added
+
+| File | Role |
+| --- | --- |
+| `src/carter/engines/threejs-test.js` | The engine: `mountThreeJsTest(host)` returning `{ destroy, set }`, the seven Tune descriptors as `config`, and the Carter-shaped default export. Contains Carter's embedded `OrbitControls`, `MeshSurfaceSampler` and `RoomEnvironment` verbatim, the matcap baker, the four superformula subjects, the `Lantern.glb` pipeline and the reduced-motion paths. |
+| `src/carter/pages/lab/ThreeJsTestStage.jsx` | Route stage: loading → live flags, mounts into `[data-experiment-viewport]`, renders `null` server-side. |
+| `src/carter/pages/lab/threejs-test.css` | Carter's inline `#exp-three-style` block, every selector prefixed `:where(.carter)`; declarations unchanged. Adds Carter's `.spin` waiting mark from `app/styles/global.scss` (scoped to `:where(.carter .tj)`) and its `@keyframes spin-turn`, both verbatim. |
+
+The only edit to an existing file is `LabDetailPage.jsx`: one import, one
+`{item.slug === 'threejs-test' && <ThreeJsTestStage />}` conditional, and updated
+comments. Shared runtime, dependencies, lockfile, data, global styles, the Lab
+detail shell and the other eight experiments are untouched. No new package was
+added — the port uses the `three` that Jesper already installs.
+
+### Behavior preserved
+
+- **Stage DOM**: `div.tj` with the `.tj__loading` spinner line ("Loading model"),
+  two stacked segmented controls (Subject / Render mode) with their sliding
+  `.tj__pill`, and a `WebGLRenderer` canvas. `data-ready` on `.tj` fades the
+  loading mark out when the model lands.
+- **Five subjects**: `Lantern` (the glTF) plus four superformula solids (Orb,
+  Bloom, Shell, Spike) sampled into a 120 × 72 grid (8,833 vertices, 51,840
+  indices) with Carter's seam-weld at ±π and his `SIZE / 2.9` normalisation.
+- **Three render modes** over the same geometry: Shaded (`MeshMatcapMaterial`),
+  Wire (`MeshBasicMaterial` wireframe at 0.55 opacity) and Points (a 20,000-point
+  `MeshSurfaceSampler` cloud, area-weighted per mesh, minimum 400 per mesh).
+- **Matcap baker**: `CarterRoomEnvironment` → `PMREMGenerator.fromScene(…, 0.04)`
+  → a 256² `WebGLRenderTarget` of a `MeshPhysicalMaterial` ball with Carter's key
+  and fill lights, re-baked on every Finish/Polish change with his
+  `roughness − polish · 0.45` / `metalness + max(0, polish) · 0.6` maths.
+- **Interactions**: `OrbitControls` with `enablePan = false`,
+  `minDistance = SIZE·1.4`, `maxDistance = SIZE·4.5`, polar clamp `0.15 … 0.9π`,
+  damping `0.08`, `autoRotate` at the Spin value; subject morphing
+  (`easeOutExpo` over 0.9 s; 0.35 s when Lobes/Sharp are tuned) and the
+  0.7 s scale swap between the model group and the superformula group.
+- **Resize**: `ResizeObserver` on `.tj` → `setSize(w, h, false)` (CSS keeps the
+  display size), DPR capped at 2, camera aspect and both pills re-measured.
+- **Theme**: re-reads `--ink` and re-inks the wire and point materials; the
+  `Accent` Tune value overrides both (`var(--ink)` returns to the theme ink).
+  Shaded goes white so the matcap carries the colour.
+- **Reduced motion**: `enableDamping`/`autoRotate` off, no rAF loop at all
+  (renders are driven by the `change` event and explicit calls), morphs snap,
+  group swaps snap, and the `.spin` mark holds still (Carter's global rule).
+- **Tune config**: `accent` (swatch), `finish` (studio/chrome/wax/ink),
+  `polish`, `spin`, `pointSize`, `lobes`, `sharp` — the same seven keys,
+  ranges, steps and defaults as Carter's `config`.
+- **Graceful degradation**: with no WebGL the engine throws, the stage reports
+  failure and the Lab detail keeps its own empty state.
+
+### Adaptations from Carter
+
+1. Three.js imports point at Jesper's installed `three` (`^0.180.0`) and
+   `three/examples/jsm/loaders/GLTFLoader.js` instead of Carter's bundled
+   `src/three.module.DBbmgHoE.js` / `src/GLTFLoader.BD7CsO-c.js` chunks. This is
+   the same dependency, one minor version back; no second copy is bundled.
+2. Carter's `RoomEnvironment` (`src/RoomEnvironment.CsPbsEjR.js`, r185) is
+   **inlined verbatim** rather than imported from r180's jsm module, because r185
+   sets `this.position.y = -3.5` and r180 does not — the env map, and therefore
+   every baked matcap, depends on it.
+3. The inline `<style id="exp-three-style">` injection is now
+   `threejs-test.css`, scoped to `.carter`. `.spin` is Carter's global
+   `app/styles/global.scss` atom; it is reproduced here because this is its only
+   ported consumer.
+4. Theme observation: Carter mutates `document.documentElement`; the port uses
+   `observeCarterTheme` when the Carter frame is bound and falls back to a
+   `MutationObserver` on the frame root (or `document.documentElement` when
+   mounted standalone by the harness).
+5. `--ink` is read with the host document's own `getComputedStyle`, so the
+   colour comes from the Carter frame's tokens rather than Jesper's document.
+6. Teardown is complete and idempotent behind `onDestroy`: `AbortController` for
+   the eight button listeners, `cancelAnimationFrame`, `ResizeObserver` and
+   theme observer disconnect, `controls.dispose()` **before** the canvas is
+   detached (so its capture-phase `keydown`/`keyup` pairs still resolve from
+   `getRootNode()`), disposal of every model/superformula/sampled geometry and
+   the three shared materials, the baker (render target, PMREM, env scene),
+   `renderer.dispose()` + `forceContextLoss()` and removal of `.tj`.
+7. Two cleanup bugs in Carter's source are fixed and recorded, not silently
+   changed:
+   - his `destroy()` never disposes the **discarded glTF PBR materials and
+     textures** (they are replaced by the matcap material); the port disposes
+     them, including `ImageBitmap.close()`, right after the swap;
+   - his `destroy()` also leaks the `keyup` listener `OrbitControls` adds when
+     Control is held, and leaves the `div.tj` in the DOM when `WebGLRenderer`
+     throws (a dead spinner over the Lab detail). The port removes the root
+     before rethrowing, and if `GLTFLoader` resolves after unmount it disposes
+     the resolved scene instead of adding it to a destroyed scene.
+8. `RoomEnvironment` is disposed immediately after the PMREM bake (Carter keeps
+   it alive for the page lifetime).
+
+### Verification
+
+Run with `CARTER_REF=<carter-checkout> node verify/threejs-test-verify.mjs`
+(`verify/README.md` documents scope and limits). `LANTERN_GLB` defaults to the
+sparse Khronos checkout in `/tmp`; the harness never downloads anything.
+
+- `npm run build`: passed. `LabDetailPage-*.js` 220.50 kB / 74.14 kB gzip,
+  `LabDetailPage-*.css` 63.98 kB / 10.94 kB gzip (+35.8 kB JS / +3.2 kB CSS over
+  the Phase 5F baseline, all of it `three` and the engine). `0` hits for
+  `data-lab-style` / `exp-three-style` / `.appendChild(style)`: no runtime style
+  injection remains. The only `cdn.jsdelivr.net` reference in the whole bundle is
+  Carter's pinned `Lantern.glb` URL. `package.json` and `package-lock.json` are
+  unchanged.
+- `verify/threejs-test-css.mjs`: 16/16 of Carter's inline rules identical in
+  order, selector (plus the `:where(.carter)` scope), declarations and enclosing
+  at-rule; the two extra rules are the `.spin` mark and its reduced-motion
+  override, both compared declaration-by-declaration against
+  `app/styles/global.scss`; `2` at-media blocks (`40rem`, `prefers-reduced-motion`)
+  and exactly one `@keyframes spin-turn`; `0` unscoped selectors; the built
+  stylesheet has `0` `rem` left in `.tj` declarations (the 10 source `rem`
+  values, matching Carter's 10, are compiled to `px` by the build).
+- **Section A, original vs port (94 checks, 94 pass).** Carter's own
+  `threejs-test.js` is rewritten at run time (only its three chunk imports) and
+  mounted next to the port in separate jsdom windows with an identical stub
+  WebGL2 context, staged layout, stubbed `fetch` fed the real `Lantern.glb`, a
+  `createImageBitmap` stub and one shared `three` module instance. The engines
+  are mounted one at a time — `FileLoader` dedupes concurrent requests to one URL
+  in a module-level map, so overlapping mounts would make the second engine
+  attach to the first engine's in-flight loads — and then stepped frame by frame
+  on their own rAF queues with identical timestamps. Covered: mount DOM (loading
+  mark, 5 subjects, 3 modes, both pills), model load and `data-ready`, GLTF
+  texture/geometry/buffer traffic (5 fetches, 4 bitmaps, 12 texture uploads,
+  60 buffer calls / 789,036 B on both), the three render-mode switches, Lantern →
+  Orb morph, Orb → Shell re-sample, Shell → Lantern group swap, a 13-value
+  `set()` sweep (finish/polish/spin/pointSize/lobes/sharp/accent), resize
+  re-render and teardown, at 1440×900, 768×1024 and 390×844 with reduced motion
+  off and on. Every snapshot matched exactly (`maxFloatDelta = 0` on the settled
+  frames). Plus: no-WebGL behaviour (both throw; only the port leaves no dead
+  `.tj`) and destroy-mid-load (no DOM, no observers, no pending frame, no
+  late geometry added).
+- Teardown parity detail worth recording: on the animated path Carter's own
+  `destroy()` leaves **one** pending rAF callback per mount (it cancels the
+  handle stored during the previous frame); the port leaves none. The harness
+  asserts that difference explicitly rather than hiding it.
+- **Section B, real integration path** (`CarterRoute` → `LabDetailPage` →
+  `ThreeJsTestStage` → engine, React in jsdom, the port's canvas backed by the
+  stub context and the app bundle's own `three` copy): 14 checks — single `.tj`,
+  5 subject + 3 mode segments with 2 pills and one canvas, loading→live flags,
+  the shell's `.labd__empty` still mounted, first subject/mode pressed with the
+  loading mark present, canvas backing store at `2880×1800` (stage × the 2× DPR
+  cap), `Lantern.glb` resolving through the bundle to `data-ready`,
+  mode switching, Bloom morph settling, a `data-theme` flip re-inking without a
+  throw, **3 route round-trips** with exactly one `.tj` on return, no growth in
+  window listeners / `ResizeObserver`s / pending frames, the three unported
+  routes still placeholder-only and `data-stage-live` absent there, zero console
+  errors, and full teardown on unmount.
+- SSR (`react-dom/server`) across the nine detail routes: **all nine markup
+  hashes byte-identical** to the pre-edit baseline recorded before any Phase 5G
+  change; no route gains engine DOM (`tj: 0`, `tj__`: 0 everywhere), and no
+  route gains `data-stage-live` or `data-stage-loading`.
+- Built output served by `vite preview`: HTTP 200 for `/lab/threejs-test`,
+  `/lab/live-cursors`, `/lab/dynamic-scrollbar`, `/lab/vocal-orb`,
+  `/lab/paste-up`, `/lab/dial` and for every emitted JS/CSS asset; the SPA shell
+  is served for each route (this app renders client-side, so route markup is not
+  in the HTML).
+
+**Browser limitation:** no browser executable exists in this sandbox, so nothing
+here is visual verification. jsdom has no layout engine, CSS cascade, GPU or
+image decoding; the WebGL context is a recorded stub, so GL *commands and
+payload sizes* are compared but nothing is rasterised, and the matcap bake's
+appearance, the superformula surfaces' shading, the point cloud's density, real
+`Lantern.glb` decoding over CORS, and the scene's look at each breakpoint remain
+**unverified**. Pointer/touch orbit feel, real DPR changes and reduced-motion
+mode also need human browser review. No pixel-fidelity claim is made.
