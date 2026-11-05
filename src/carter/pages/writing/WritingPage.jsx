@@ -32,7 +32,7 @@ function ArrowIcon() {
 }
 
 export default function WritingPage() {
-  useCarterEngine('writing-folders', () => Folders.init());
+  useCarterEngine('writing-folders', () => Folders.init(), { beforePaint: true });
   useCarterEngine('writing-index-reco', () => IndexReco.init());
 
   return (

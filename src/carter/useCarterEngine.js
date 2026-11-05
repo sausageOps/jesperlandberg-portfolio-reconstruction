@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { mountEngine } from './runtime.js';
 
 /**
@@ -7,14 +7,23 @@ import { mountEngine } from './runtime.js';
  *
  * Carter's runtime mounts every engine after the page swaps in. Here the init
  * runs after React commits the page's DOM, and after the frame has bound the
- * runtime. It runs through mountEngine, so a throwing engine is logged rather
- * than taking down Jesper's shell. Engines register their own teardown with
- * onDestroy(), and the frame flushes it when the page unmounts.
+ * runtime. Engines that must hide or measure newly committed transition content
+ * can opt into `beforePaint` to mount in a layout effect, before the browser
+ * paints that DOM. It runs through mountEngine, so a throwing engine is logged
+ * rather than taking down Jesper's shell. Engines register their own teardown
+ * with onDestroy(), and the frame flushes it when the page unmounts.
  *
  *   useCarterEngine('lab-index', () => labIndex.init());
  */
-export function useCarterEngine(name, init) {
+export function useCarterEngine(name, init, { beforePaint = false } = {}) {
+  useLayoutEffect(() => {
+    if (!beforePaint) return;
+    mountEngine(name, init);
+    // Init-once by design, like Carter's engines.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
+    if (beforePaint) return;
     mountEngine(name, init);
     // Init-once by design, like Carter's engines.
     // eslint-disable-next-line react-hooks/exhaustive-deps

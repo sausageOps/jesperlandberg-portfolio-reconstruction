@@ -81,7 +81,7 @@ function ExpressiveCodeBlock({ block }) {
 }
 
 export default function WritingPostPage() {
-  useCarterEngine('writing-folders', () => Folders.init());
+  useCarterEngine('writing-folders', () => Folders.init(), { beforePaint: true });
   useCarterEngine('writing-post', () => WritingPost.init());
   useCarterEngine('writing-signature', () => SignatureFx.init());
   useCarterEngine('writing-ec', () => initWritingExpressiveCode());
