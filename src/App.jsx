@@ -74,27 +74,32 @@ export default function App() {
     experience.setRoute(route === 'project' && !project ? 'not-found' : route, project);
   }, [experience, route, project]);
 
-  // Carter's Lab documents carry their own document title and description
-  // (`${item.name} :: Lab`, item.description in lab/[slug].astro). They are the
-  // only Carter routes with per-slug metadata, so they are resolved here, where
-  // this effect has the last word on the document head.
+  // Carter's Lab and Writing documents carry their own document title and
+  // description (`${item.name} :: Lab` in lab/[slug].astro, `${post.title} :: Writing`
+  // in writing/[slug].astro). Top-level section routes keep Jesper's `Title — Menu`
+  // convention while carrying Carter's section meta description when defined.
   useEffect(() => {
     document.title = route === 'project' && project
       ? project.title
       : carterPage?.key === 'lab-detail'
         ? `${carterPage.label} :: Lab`
-        : section
-          ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-          : site.name;
+        : carterPage?.key === 'writing-post'
+          ? `${carterPage.label} :: Writing`
+          : section
+            ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
+            : site.name;
   }, [route, project, section, carterPage]);
 
   useEffect(() => {
-    if (carterPage?.key !== 'lab-detail') return undefined;
+    const text =
+      carterPage?.key === 'lab-detail'
+        ? labDescription(carterPage.slug)
+        : carterPage?.description || null;
+    if (!text) return undefined;
     const description = document.querySelector('meta[name="description"]');
     if (!description) return undefined;
     const previous = description.getAttribute('content');
-    const text = labDescription(carterPage.slug);
-    if (text) description.setAttribute('content', text);
+    description.setAttribute('content', text);
     return () => {
       if (previous != null) description.setAttribute('content', previous);
     };

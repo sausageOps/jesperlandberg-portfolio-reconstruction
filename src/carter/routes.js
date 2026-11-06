@@ -14,11 +14,21 @@ import { LAB_ENTRIES } from './data/lab-slugs.js';
 const CARTER_PAGES = [
   { key: 'about', path: '/myself/about', carter: '/about' },
   { key: 'lab', path: '/routes/lab', carter: '/lab' },
-  { key: 'writing', path: '/routes/writing', carter: '/writing' },
+  {
+    key: 'writing',
+    path: '/routes/writing',
+    carter: '/writing',
+    description:
+      'Notes on design, development, motion, tools, creativity, and sometimes life outside of work.',
+  },
   {
     key: 'writing-post',
     path: '/routes/writing/the-personal-starter',
     carter: '/writing/the-personal-starter',
+    slug: 'the-personal-starter',
+    label: 'The personal starter',
+    description:
+      "Templates, kits, starters, boilerplates etc. What I'd call a personal starter, what I'd keep in one, and the one I use for my own sites.",
   },
 ];
 

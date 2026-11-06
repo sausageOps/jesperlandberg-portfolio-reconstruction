@@ -1,4 +1,5 @@
 import { Component, Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react';
+import WritingShelfHost from './pages/writing/WritingShelfHost.jsx';
 import {
   bindCarterRuntime,
   destroyAll,
@@ -25,6 +26,8 @@ const PAGES = {
   lab: lazy(() => import('./pages/lab/LabPage.jsx')),
   // Phase 4B: one shared document shell for the nine `/routes/lab/<slug>` pages.
   'lab-detail': lazy(() => import('./pages/lab/LabDetailPage.jsx')),
+  writing: lazy(() => import('./pages/writing/WritingPage.jsx')),
+  'writing-post': lazy(() => import('./pages/writing/WritingPostPage.jsx')),
 };
 
 /**
@@ -104,6 +107,7 @@ export default function CarterRoute({ page, appReady = false, onNavigate, placeh
   }, [appReady]);
 
   const Page = PAGES[page.key];
+  const isWritingRoute = page.key === 'writing' || page.key === 'writing-post';
 
   return (
     // The click handler only delegates link clicks to the router. Keyboard
@@ -115,6 +119,7 @@ export default function CarterRoute({ page, appReady = false, onNavigate, placeh
       data-carter-page={page.key}
       onClick={interceptLinkClick}
     >
+      {isWritingRoute && <WritingShelfHost />}
       <CarterPageBoundary key={`${page.key}:${page.slug ?? ''}`} rootRef={rootRef} fallback={placeholder}>
         {Page ? (
           <Suspense fallback={null}>
