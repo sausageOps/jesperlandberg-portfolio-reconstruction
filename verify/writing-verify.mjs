@@ -582,6 +582,8 @@ try {
   console.log('\n=== D. Live CarterRoute integration & lifecycle checks ===');
   const { act } = React;
   const { default: CarterRoute } = await vite.ssrLoadModule('/src/carter/CarterRoute.jsx');
+  const { useCarterEngine } = await vite.ssrLoadModule('/src/carter/useCarterEngine.js');
+  const runtime = await vite.ssrLoadModule('/src/carter/runtime.js');
   const labPageEntry = resolveCarterPage('/routes/lab');
 
   function setupDom({ width = 1440, height = 900, reducedMotion = false, webgl = false } = {}) {
@@ -801,6 +803,53 @@ try {
       });
     }
   };
+
+  /* ---- D0: beforePaint engine mount follows the frame runtime bind -------- */
+  {
+    const env = setupDom({ webgl: false });
+    const root = ReactDOMClient.createRoot(env.window.document.getElementById('app'));
+    let engineRoot = null;
+    let teardownRan = false;
+
+    function BeforePaintChild() {
+      useCarterEngine(
+        'before-paint-runtime-order',
+        () => {
+          engineRoot = runtime.getCarterRoot();
+          runtime.onDestroy(() => { teardownRan = true; });
+        },
+        { beforePaint: true },
+      );
+      return null;
+    }
+
+    function RuntimeFrame() {
+      const frame = React.useRef(null);
+      React.useLayoutEffect(() => {
+        runtime.bindCarterRuntime({ root: frame.current, navigate: () => {}, appReady: true });
+        return () => {
+          runtime.destroyAll();
+          runtime.unbindCarterRuntime(frame.current);
+        };
+      }, []);
+      return React.createElement('div', { ref: frame, className: 'carter' },
+        React.createElement(BeforePaintChild),
+      );
+    }
+
+    await act(async () => {
+      root.render(React.createElement(RuntimeFrame));
+      await Promise.resolve();
+    });
+    const frame = env.window.document.querySelector('.carter');
+    check(
+      'D0 beforePaint engine initializes after the parent Carter runtime bind and registers teardown',
+      engineRoot === frame && !teardownRan,
+    );
+    await act(async () => root.unmount());
+    check('D0b beforePaint engine teardown runs when the frame unmounts', teardownRan);
+    env.restore();
+  }
 
   /* ---- D1: Classic Fallback + IndexReco Filtering + Link Interception ---- */
   {

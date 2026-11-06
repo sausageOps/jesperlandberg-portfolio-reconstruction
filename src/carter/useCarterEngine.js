@@ -18,7 +18,17 @@ import { mountEngine } from './runtime.js';
 export function useCarterEngine(name, init, { beforePaint = false } = {}) {
   useLayoutEffect(() => {
     if (!beforePaint) return;
-    mountEngine(name, init);
+    // Child layout effects can run before CarterRoute's parent layout effect
+    // binds the runtime. Defer to the microtask checkpoint: the whole commit
+    // (including bindCarterRuntime) has finished, but the browser has not
+    // painted yet, so beforePaint engines still initialize before first paint.
+    let mounted = true;
+    const run = () => {
+      if (mounted) mountEngine(name, init);
+    };
+    if (typeof queueMicrotask === 'function') queueMicrotask(run);
+    else Promise.resolve().then(run);
+    return () => { mounted = false; };
     // Init-once by design, like Carter's engines.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
