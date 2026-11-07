@@ -53,3 +53,23 @@
   }
 }
 
+/* Tablet and phone: the reconstructed portfolio parks its global nav at the
+   bottom of the viewport (A24Nav, <=991px), while Carter's document reserved the
+   top of the viewport for its fixed header: `.labd` started at --labd-top
+   (6.375rem = 102px, or 5rem = 80px below 768px) and ran all the way to the
+   viewport bottom. Both halves of that box are wrong for this shell — the top
+   reserve is empty space with no header above it, and the bottom edge sits
+   behind the dock. The shell now starts at the page's own top margin (plus the
+   phone's top safe-area inset) and ends above the dock's footprint (64px covers
+   the 52-61px dock at these widths); the stage, docs panel, scroll bar, toggle
+   and Tune/Config panel keep their existing inner insets (--labd-pad), so the
+   composition and every control are unchanged. Because the two offsets trade
+   places (102+0 -> ~21+64), the shell's height is within a few px of Carter's at
+   every tablet/phone size, so nothing inside reflows. Desktop (>=992px, top
+   dock) keeps Carter's inset exactly. */
+@media (max-width: 991px) {
+  :where(.carter) .labd[data-astro-cid-f3pbbn5j] {
+    --labd-top: calc(var(--margin) + env(safe-area-inset-top, 0px));
+    inset-block-end: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
