@@ -18,7 +18,7 @@ npm run preview -- --host 0.0.0.0
 
 ## Routes and content
 
-- `/` — eight featured projects in the infinite WebGL run.
+- `/` — eight featured projects in the infinitely looping WebGL panel run.
 - `/full` — all 23 projects. Eight featured names open local project sheets; the other 15 use their external links.
 - `/projects/nathan-riley`
 - `/projects/casa-di-solare`
@@ -37,12 +37,17 @@ The canonical catalogue and site copy live in `src/data/projects.js`. Local publ
 
 ### Featured run
 
-- Horizontal infinite run at widths of 650px and above; vertical run below 650px.
-- Wheel, mouse/pointer dragging, and mobile touch dragging.
+- Infinitely looping horizontal panel run at all widths: last→first and first→last wrap in both directions, including under flick momentum.
+- Discrete wheel/trackpad navigation: one deliberate notch or coalesced gesture advances one panel; repeats and inertial tails are suppressed during the transition.
+- Unified mouse/touch/pointer dragging follows the pointer, tracks recent velocity, projects fast flicks across multiple panels and the loop seam, and decelerates into an exact panel-centred snap.
+- Navigation uses wrapped panel indices and continuous unwrapped spring targets; current/target offsets rebase together by whole loop periods after velocity sampling, so the seam never resets motion or injects a shader velocity spike.
+- Navigation physics feed the existing `homeOffset` damping and shader pipeline; curved shader sheets, velocity deformation, scale/depth treatment, captions, arrows, hover and intro animations remain single-sourced.
+- Desktop panel shading and drawn pose are authored separately from one velocity. The fragment stage keeps the source's resting depth (`u_sheetD = W · 0.2 · (1 + 1.1 · velocity)`, `u_sheetC = 1`, `u_shadeS = 1`, `u_leanA = -0.12 · W`) so the depth haze and surface light stay on the panels while idle. The vertex stage bends with `u_geoD`/`u_geoC`/`u_geoA`, which keep this gallery's upright resting pose and join the sheet as motion starts; above velocity `0.05` the two sets agree, so scrolling and velocity-driven bending are unchanged. Phone cards still bypass the sheet entirely.
 - Native HTML drag is disabled on cards so it cannot cancel the custom pointer gesture.
-- Initial Casa Di Solare selection, curved shader sheets, velocity deformation, captions, arrows, and desktop floor.
+- Initial Casa Di Solare selection and desktop floor are preserved.
 - Project opening transitions and close transitions return to the selected project rather than resetting to Casa.
-- Keyboard focus styles and a screen-reader project catalogue remain available.
+- Keyboard focus styles, arrow/page/space panel stepping, and a screen-reader project catalogue remain available.
+- Reduced-motion preferences snap discretely without momentum. The no-WebGL fallback keeps its native horizontal scroll-snap.
 
 ### Full Index
 

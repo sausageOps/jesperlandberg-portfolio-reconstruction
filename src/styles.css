@@ -265,9 +265,15 @@ input:focus-visible {
   transition: transform 0.28s ease-out;
 }
 
-/* Featured infinite run */
+/* Featured infinitely looping panel run. WebGL owns horizontal gestures; vertical touch
+   intent remains available to the page. The no-WebGL fallback keeps native
+   horizontal scrolling and scroll-snap below. */
 .home {
   z-index: 20;
+}
+
+.webgl .home {
+  touch-action: pan-y;
 }
 
 .card-run {
@@ -672,7 +678,7 @@ html.webgl.grabbing [data-no-drag] {
 
 .no-webgl .card-run {
   display: flex;
-  gap: 2.175vw;
+  gap: 0.706875vw;
   align-items: center;
   overflow-x: auto;
   padding: 0 22.75vw;
@@ -874,7 +880,7 @@ html.webgl.grabbing [data-no-drag] {
   }
 
   .no-webgl .card-run {
-    gap: 6.075vw;
+    gap: 1.974375vw;
     padding: 0 11.1vw;
   }
 
@@ -897,7 +903,7 @@ html.webgl.grabbing [data-no-drag] {
 }
 
 @media (min-width: 650px) and (max-width: 1023px) {
-  .no-webgl .card-run { gap: 3.5775vw; padding: 0 11.65vw; }
+  .no-webgl .card-run { gap: 1.1626875vw; padding: 0 11.65vw; }
   .no-webgl .home-card { width: 76.7vw; height: min(70vh, 44.335vw); }
 }
 
