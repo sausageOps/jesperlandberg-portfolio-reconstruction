@@ -12,6 +12,41 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Temporary startup-only diagnostic; remove after preview failure is identified. -->
+    <script>
+      (() => {
+        const failures = [];
+        let panel;
+        function report(message) {
+          failures.push(message);
+          if (!panel) {
+            panel = document.createElement('pre');
+            panel.style.cssText = 'position:fixed;z-index:2147483647;top:8px;left:8px;right:8px;max-height:80vh;overflow:auto;margin:0;padding:12px;background:white;color:black;border:2px solid red;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace';
+            document.body.appendChild(panel);
+          }
+          const modules = performance.getEntriesByType('resource').map(entry => entry.name)
+            .filter(name => /\/node_modules\/.*(?:react|chunk-)/i.test(name));
+          const root = document.getElementById('root');
+          panel.textContent = 'TEMPORARY STARTUP DIAGNOSTIC — please screenshot this panel\n' + failures.join('\n') +
+            '\nRoot children: ' + (root ? root.children.length : 'missing') +
+            '\nLoaded React/dependency module URLs:\n' + (modules.join('\n') || '(none recorded)');
+        }
+        window.addEventListener('error', event => {
+          if (event.target === window) {
+            report('JavaScript error: ' + (event.error?.stack || event.message || 'unknown'));
+            setTimeout(() => report('Module list updated after error.'), 1500);
+          }
+        });
+        window.addEventListener('unhandledrejection', event => {
+          report('Unhandled rejection: ' + (event.reason?.stack || String(event.reason)));
+        });
+        window.addEventListener('vite:preloadError', event => report('Dynamic import failed: ' + String(event.payload)));
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          if (!root || !root.children.length) report('Startup check after 15 seconds: application root is empty.');
+        }, 15000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

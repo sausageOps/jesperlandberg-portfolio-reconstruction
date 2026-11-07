@@ -2,7 +2,7 @@ import gsap from "gsap";
 
 export const aboutConfig = Object.freeze({
   url: "https://carterogunsola.com",
-  hud: { timeZone: "America/Denver" },
+  hud: { timeZone: "Asia/Kolkata" },
   presence: {
     host: "carter-2026-presence.carterogunsola7589.workers.dev",
   },
@@ -88,17 +88,16 @@ export function cancelRollText(element) {
 
 const clockFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: aboutConfig.hud.timeZone,
-  hour: "2-digit",
+  hour: "numeric",
   minute: "2-digit",
-  hour12: false,
-  timeZoneName: "short",
+  hour12: true,
 });
 
 function readClock() {
   const parts = clockFormatter.formatToParts(new Date());
   const part = (type) =>
     parts.find((entry) => entry.type === type)?.value ?? "";
-  return `${part("hour")}:${part("minute")}${part("timeZoneName")}`;
+  return `${part("hour")}:${part("minute")} ${part("dayPeriod")} IST`;
 }
 
 const clockSubscribers = new Set();
@@ -118,7 +117,7 @@ export const clock = {
     if (!clockTimer) {
       clockTimer = window.setInterval(() => {
         if (!document.hidden) tickClock();
-      }, 15_000);
+      }, 1_000);
     }
     if (!clockVisibilityListener) {
       clockVisibilityListener = () => {

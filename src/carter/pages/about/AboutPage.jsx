@@ -1,3 +1,5 @@
+import LetterSignature from './LetterSignature.jsx';
+import LiveLocation from './LiveLocation.jsx';
 import './about.css';
 import { About } from '../../engines/about.js';
 import { Canvas } from '../../engines/canvas.js';
@@ -7,7 +9,6 @@ import { FrankCard } from '../../engines/frank-card.js';
 import { Marks } from '../../engines/marks.js';
 import { NavRoll } from '../../engines/nav-roll.js';
 import { Record } from '../../engines/record.js';
-import { SignatureFx } from '../../engines/signature-fx.js';
 import { Tilt } from '../../engines/tilt.js';
 import { useCarterEngine } from '../../useCarterEngine.js';
 
@@ -33,17 +34,24 @@ import { useCarterEngine } from '../../useCarterEngine.js';
  *   their canvases only at Carter's desktop breakpoint, retaining the DOM card
  *   and flat radio fallback when those renderers are unavailable.
  * - [data-marks] field is filled by Marks; Tilt owns the stamp's pointer
- *   parallax/shine; SignatureFx paints the stored SVG path into an ink canvas.
+ *   parallax/shine.
  * - FrankCard owns the three native dialogs; Canvas owns desktop board drag,
  *   hover, activation, keyboard focus, scrim and the "Put it back" exit.
  * - About telemetry and Console fill Carter's boot-time labels from the Denver
  *   clock, local/live presence, GitHub contributions and radio endpoint.
  *
- * Asset gap: the stamp portrait WebPs exist in neither repo. The <img> keeps
- * Carter's filenames and attributes under the Phase 2 asset convention
- * (/assets/carter/about/); drop the files in public/assets/carter/about/.
- * Drawer links keep Carter hrefs (/writing, /lab); the frame maps them.
  */
+const experience = [
+  { company: 'Bloxora', role: 'Founder', period: 'January 2025 – Present' },
+  { company: 'Loopio', role: 'Senior Cloud Security Engineer', type: 'Full-time', period: 'June 2024 – Present' },
+  { company: 'Binance', role: 'Digital Asset Trader', type: 'Self-employed', period: 'June 2022 – Present' },
+  { company: 'Amazon Web Services (AWS)', role: 'AWS Cloud Projects', type: 'Self-employed', period: 'June 2024 – August 2025' },
+  { company: 'Gajraj Hyundai', role: 'Service Advisor', period: 'July 2023 – April 2024' },
+  { company: 'Gajraj Hyundai', role: 'Automotive Technician', period: 'March 2023 – June 2023' },
+  { company: 'Ashok Leyland', role: 'Automotive Technician (PDI)', type: 'Full-time', period: 'May 2022 – February 2023' },
+  { company: 'Google for Developers', role: 'Material Designer', period: 'April 10, 2020 – March 2022' },
+];
+
 export default function AboutPage() {
   useCarterEngine('about-canvas', () => Canvas.init());
   useCarterEngine('about-frank-card', () => FrankCard.init());
@@ -51,7 +59,6 @@ export default function AboutPage() {
   useCarterEngine('about-console', () => AboutConsole.init());
   useCarterEngine('about-telemetry', () => About.init());
   useCarterEngine('about-nav-roll', () => NavRoll.init());
-  useCarterEngine('about-signature', () => SignatureFx.init());
   useCarterEngine('about-record', () => Record.init());
   useCarterEngine('about-marks', () => Marks.init());
   useCarterEngine('about-tilt', () => Tilt.init());
@@ -59,7 +66,7 @@ export default function AboutPage() {
   return (
     <>
       <main id="main" className="ov3" data-canvas="" data-astro-cid-ta2fbyqs="">
-        <h1 className="u-sr-only" data-astro-cid-ta2fbyqs="">About Carter Ogunsola, Creative Developer &amp; Brand Engineer</h1>
+        <h1 className="u-sr-only" data-astro-cid-ta2fbyqs="">About Aniket Chakraborty</h1>
         <header className="ov3__ticket" hidden data-astro-cid-ta2fbyqs="">
         <span className="ov3__ticket-name text-label" data-astro-cid-ta2fbyqs="">The Front Office</span>
         <span className="ov3__ticket-kv text-mono-meta" aria-label="File status" data-astro-cid-ta2fbyqs="">
@@ -78,7 +85,7 @@ export default function AboutPage() {
         </span>
         </header>
         <div className="ov3__board" data-astro-cid-ta2fbyqs="">
-        <section className="ov3__item ov3__hero" data-canvas-item="" data-rot="0" tabIndex="0" style={{ '--fx': '0', '--fy': '-0.03' }} data-frank-stage="" aria-label="Carter Ogunsola" data-astro-cid-ta2fbyqs="">
+        <section className="ov3__item ov3__hero" data-canvas-item="" data-rot="0" tabIndex="0" style={{ '--fx': '0', '--fy': '-0.03' }} data-frank-stage="" aria-label="Aniket Chakraborty" data-astro-cid-ta2fbyqs="">
         <div className="ov3__hero-gl" data-frank-gl="" aria-hidden="true" data-astro-cid-ta2fbyqs="">
         </div>
         <div className="ov3__hero-layer" data-frank-layer="" data-astro-cid-ta2fbyqs="">
@@ -142,8 +149,8 @@ export default function AboutPage() {
         </defs>
         </svg>
         <div className="frank__stamp" data-tilt="" style={{ '--print': 'url(#stamp-print-dm6sa1)' }} data-astro-cid-tl32dyly="">
-        <img src="/assets/carter/about/carter-stamp.BRpWjIXQ_4vkhB.webp" srcSet="/assets/carter/about/carter-stamp.BRpWjIXQ_ZH60A1.webp 560w, /assets/carter/about/carter-stamp.BRpWjIXQ_4vkhB.webp 1000w" alt="Carter Ogunsola" sizes="(max-width: 63.99rem) 184px, 560px" draggable={false} data-astro-cid-tl32dyly="true" loading="eager" decoding="sync" fetchPriority="high" width="1000" height="1250" className="frank__photo u-cover u-no-drag" />
-        <span className="frank__cap" data-astro-cid-tl32dyly="">Carter Ogunsola<svg className="frank__waves" viewBox="0 0 26 10" fill="none" aria-hidden="true" focusable="false" data-astro-cid-tl32dyly="">
+        <img src="/assets/carter/about/stamp-portrait-4x5-v2.png" alt="Aniket Chakraborty" draggable={false} data-astro-cid-tl32dyly="true" loading="eager" decoding="sync" fetchPriority="high" width="1000" height="1250" className="frank__photo u-cover u-no-drag" />
+        <span className="frank__cap" data-astro-cid-tl32dyly="">Aniket Chakraborty<svg className="frank__waves" viewBox="0 0 26 10" fill="none" aria-hidden="true" focusable="false" data-astro-cid-tl32dyly="">
         <path d="M1 2c3-1.6 5-1.6 8 0s5 1.6 8 0 5-1.6 8 0" data-astro-cid-tl32dyly="">
         </path>
         <path d="M1 5c3-1.6 5-1.6 8 0s5 1.6 8 0 5-1.6 8 0" data-astro-cid-tl32dyly="">
@@ -188,13 +195,13 @@ export default function AboutPage() {
         </div>
         <div className="ov3__conn" data-astro-cid-ta2fbyqs="">
         <div className="ov3__conn-row" data-marks-avoid="" data-astro-cid-ta2fbyqs="">
-        <ul className="socials"><li><a className="socials__link" href="https://x.com/CarterOgunsola" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)"><span className="socials__roll"><span className="socials__move"><svg width="1em" height="1em" className="socials__icon" data-icon="x"><symbol id="ai:local:x" viewBox="0 0 24 24"><path fill="currentColor" d="M17.565 3.25h2.967l-6.482 7.413 7.625 10.087h-5.97l-4.676-6.118-5.35 6.118H2.71l6.933-7.929L2.328 3.25H8.45l4.227 5.592zm-1.041 15.723h1.644L7.557 4.933H5.793z" /></symbol><use href="#ai:local:x"></use></svg><svg width="1em" height="1em" viewBox="0 0 24 24" className="socials__icon" data-icon="x"><use href="#ai:local:x"></use></svg></span></span></a></li><li><a className="socials__link" href="https://www.instagram.com/carterogunsola.dev/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><span className="socials__roll"><span className="socials__move"><svg width="1em" height="1em" className="socials__icon" data-icon="instagram"><symbol id="ai:local:instagram" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4.212c2.537 0 2.837.01 3.839.055a5.3 5.3 0 0 1 1.763.327c.413.153.786.395 1.093.711.316.307.558.68.71 1.093.21.564.32 1.16.328 1.763.046 1.002.055 1.303.055 3.839s-.01 2.837-.055 3.839a5.3 5.3 0 0 1-.327 1.763 3.15 3.15 0 0 1-1.804 1.804c-.564.209-1.16.32-1.763.327-1.002.046-1.303.055-3.839.055s-2.837-.01-3.839-.055a5.3 5.3 0 0 1-1.764-.327 2.94 2.94 0 0 1-1.092-.711 2.94 2.94 0 0 1-.71-1.093 5.3 5.3 0 0 1-.328-1.763c-.046-1.002-.055-1.303-.055-3.839s.01-2.837.055-3.839a5.3 5.3 0 0 1 .327-1.763c.153-.413.395-.786.711-1.093.307-.316.68-.558 1.093-.71a5.3 5.3 0 0 1 1.763-.328c1.002-.046 1.303-.055 3.839-.055M12 2.5c-2.58 0-2.904.011-3.917.057a7 7 0 0 0-2.306.441 4.7 4.7 0 0 0-1.683 1.097 4.7 4.7 0 0 0-1.096 1.683 7 7 0 0 0-.44 2.305C2.51 9.096 2.5 9.42 2.5 12s.011 2.903.057 3.917c.016.788.165 1.567.441 2.306a4.7 4.7 0 0 0 1.097 1.683 4.7 4.7 0 0 0 1.683 1.096 7 7 0 0 0 2.305.44c1.013.048 1.337.058 3.917.058s2.903-.011 3.917-.057a7 7 0 0 0 2.306-.441 4.86 4.86 0 0 0 2.779-2.78 7 7 0 0 0 .44-2.305c.048-1.014.058-1.337.058-3.917s-.011-2.904-.057-3.917a7 7 0 0 0-.441-2.306 4.7 4.7 0 0 0-1.097-1.683 4.7 4.7 0 0 0-1.683-1.096 7 7 0 0 0-2.305-.44C14.903 2.51 14.58 2.5 12 2.5m0 4.621a4.879 4.879 0 1 0 0 9.758 4.879 4.879 0 0 0 0-9.758m0 8.046a3.167 3.167 0 1 1 0-6.334 3.167 3.167 0 0 1 0 6.334m5.071-9.378a1.14 1.14 0 1 0 0 2.28 1.14 1.14 0 0 0 0-2.28" /></symbol><use href="#ai:local:instagram"></use></svg><svg width="1em" height="1em" viewBox="0 0 24 24" className="socials__icon" data-icon="instagram"><use href="#ai:local:instagram"></use></svg></span></span></a></li><li><a className="socials__link" href="https://github.com/CarterOgunsola" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span className="socials__roll"><span className="socials__move"><svg width="1em" height="1em" className="socials__icon" data-icon="github"><symbol id="ai:local:github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.95c5.525 0 10 4.476 10 10a10.02 10.02 0 0 1-6.812 9.488c-.5.1-.688-.212-.688-.475 0-.337.012-1.412.012-2.75 0-.937-.312-1.537-.675-1.85 2.226-.25 4.563-1.1 4.563-4.937 0-1.1-.387-1.988-1.025-2.688.1-.25.45-1.275-.1-2.65 0 0-.837-.275-2.75 1.025a9.3 9.3 0 0 0-2.5-.337c-.85 0-1.7.112-2.5.337-1.913-1.287-2.75-1.025-2.75-1.025-.55 1.375-.2 2.4-.1 2.65-.638.7-1.025 1.6-1.025 2.688 0 3.825 2.325 4.687 4.55 4.937-.287.25-.55.688-.637 1.338-.575.262-2.013.687-2.913-.825-.187-.3-.75-1.038-1.538-1.025-.837.012-.337.475.013.662.425.238.912 1.125 1.025 1.413.2.562.85 1.637 3.362 1.175 0 .837.013 1.625.013 1.862 0 .263-.187.563-.687.475A9.99 9.99 0 0 1 2 11.951c0-5.525 4.475-10 10-10" /></symbol><use href="#ai:local:github"></use></svg><svg width="1em" height="1em" viewBox="0 0 24 24" className="socials__icon" data-icon="github"><use href="#ai:local:github"></use></svg></span></span></a></li><li><a className="socials__link" href="https://www.awwwards.com/carter-ogunsola/" target="_blank" rel="noopener noreferrer" aria-label="Awwwards"><span className="socials__roll"><span className="socials__move"><svg className="socials__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M19.1667 4.99999L13.5833 16.05H8.34167L10.675 11.4667H10.5667C8.64167 14 5.75833 15.6667 1.66667 16.05V11.5333C1.66667 11.5333 4.29167 11.375 5.83333 9.73333H1.66667V4.99166H6.34167V8.89167H6.45L8.35833 4.99166H11.9V8.86667H12.0083L13.9917 4.99166H19.1667V4.99999Z"></path></svg><svg className="socials__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M19.1667 4.99999L13.5833 16.05H8.34167L10.675 11.4667H10.5667C8.64167 14 5.75833 15.6667 1.66667 16.05V11.5333C1.66667 11.5333 4.29167 11.375 5.83333 9.73333H1.66667V4.99166H6.34167V8.89167H6.45L8.35833 4.99166H11.9V8.86667H12.0083L13.9917 4.99166H19.1667V4.99999Z"></path></svg></span></span></a></li></ul>
+        <ul className="socials"><li><a className="socials__link" href="https://www.instagram.com/voyagerscape/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><span className="socials__roll"><span className="socials__move"><svg width="1em" height="1em" className="socials__icon" data-icon="instagram"><symbol id="ai:local:instagram" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4.212c2.537 0 2.837.01 3.839.055a5.3 5.3 0 0 1 1.763.327c.413.153.786.395 1.093.711.316.307.558.68.71 1.093.21.564.32 1.16.328 1.763.046 1.002.055 1.303.055 3.839s-.01 2.837-.055 3.839a5.3 5.3 0 0 1-.327 1.763 3.15 3.15 0 0 1-1.804 1.804c-.564.209-1.16.32-1.763.327-1.002.046-1.303.055-3.839.055s-2.837-.01-3.839-.055a5.3 5.3 0 0 1-1.764-.327 2.94 2.94 0 0 1-1.092-.711 2.94 2.94 0 0 1-.71-1.093 5.3 5.3 0 0 1-.328-1.763c-.046-1.002-.055-1.303-.055-3.839s.01-2.837.055-3.839a5.3 5.3 0 0 1 .327-1.763c.153-.413.395-.786.711-1.093.307-.316.68-.558 1.093-.71a5.3 5.3 0 0 1 1.763-.328c1.002-.046 1.303-.055 3.839-.055M12 2.5c-2.58 0-2.904.011-3.917.057a7 7 0 0 0-2.306.441 4.7 4.7 0 0 0-1.683 1.097 4.7 4.7 0 0 0-1.096 1.683 7 7 0 0 0-.44 2.305C2.51 9.096 2.5 9.42 2.5 12s.011 2.903.057 3.917c.016.788.165 1.567.441 2.306a4.7 4.7 0 0 0 1.097 1.683 4.7 4.7 0 0 0 1.683 1.096 7 7 0 0 0 2.305.44c1.013.048 1.337.058 3.917.058s2.903-.011 3.917-.057a7 7 0 0 0 2.306-.441 4.86 4.86 0 0 0 2.779-2.78 7 7 0 0 0 .44-2.305c.048-1.014.058-1.337.058-3.917s-.011-2.904-.057-3.917a7 7 0 0 0-.441-2.306 4.7 4.7 0 0 0-1.097-1.683 4.7 4.7 0 0 0-1.683-1.096 7 7 0 0 0-2.305-.44C14.903 2.51 14.58 2.5 12 2.5m0 4.621a4.879 4.879 0 1 0 0 9.758 4.879 4.879 0 0 0 0-9.758m0 8.046a3.167 3.167 0 1 1 0-6.334 3.167 3.167 0 0 1 0 6.334m5.071-9.378a1.14 1.14 0 1 0 0 2.28 1.14 1.14 0 0 0 0-2.28" /></symbol><use href="#ai:local:instagram"></use></svg><svg width="1em" height="1em" viewBox="0 0 24 24" className="socials__icon" data-icon="instagram"><use href="#ai:local:instagram"></use></svg></span></span></a></li><li><a className="socials__link" href="https://github.com/sausageOps" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span className="socials__roll"><span className="socials__move"><svg width="1em" height="1em" className="socials__icon" data-icon="github"><symbol id="ai:local:github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.95c5.525 0 10 4.476 10 10a10.02 10.02 0 0 1-6.812 9.488c-.5.1-.688-.212-.688-.475 0-.337.012-1.412.012-2.75 0-.937-.312-1.537-.675-1.85 2.226-.25 4.563-1.1 4.563-4.937 0-1.1-.387-1.988-1.025-2.688.1-.25.45-1.275-.1-2.65 0 0-.837-.275-2.75 1.025a9.3 9.3 0 0 0-2.5-.337c-.85 0-1.7.112-2.5.337-1.913-1.287-2.75-1.025-2.75-1.025-.55 1.375-.2 2.4-.1 2.65-.638.7-1.025 1.6-1.025 2.688 0 3.825 2.325 4.687 4.55 4.937-.287.25-.55.688-.637 1.338-.575.262-2.013.687-2.913-.825-.187-.3-.75-1.038-1.538-1.025-.837.012-.337.475.013.662.425.238.912 1.125 1.025 1.413.2.562.85 1.637 3.362 1.175 0 .837.013 1.625.013 1.862 0 .263-.187.563-.687.475A9.99 9.99 0 0 1 2 11.951c0-5.525 4.475-10 10-10" /></symbol><use href="#ai:local:github"></use></svg><svg width="1em" height="1em" viewBox="0 0 24 24" className="socials__icon" data-icon="github"><use href="#ai:local:github"></use></svg></span></span></a></li></ul>
         </div>
         <div className="ov3__conn-row" data-marks-avoid="" data-astro-cid-ta2fbyqs="">
         <button type="button" className="btn btn--solid text-tag" data-dialog-open="letter" aria-haspopup="dialog" aria-expanded="false" data-astro-cid-ta2fbyqs="" data-astro-cid-j6ocf6pu="">
         <span className="btn__label roll" data-roll="" data-astro-cid-j6ocf6pu="">About me</span>
         </button>
-        <span className="ov3__conn-from text-label" data-astro-cid-ta2fbyqs="">Lagos → Utah</span>
+        <LiveLocation />
         </div>
         </div>
         </article>
@@ -214,26 +221,25 @@ export default function AboutPage() {
         </span>
         <span data-live="" data-astro-cid-ta2fbyqs="">
         <span className="k" data-astro-cid-ta2fbyqs="">POS::</span>
-        <span className="v" data-astro-cid-ta2fbyqs="">N 37°05′47″ / W 113°34′06″</span>
+        <span className="v" data-astro-cid-ta2fbyqs="">N 22°34′36″ / E 088°17′36″</span>
         </span>
         <span data-online-row="" data-astro-cid-ta2fbyqs="">
         <span className="k" data-astro-cid-ta2fbyqs="">ONLINE::</span>
         <span className="v ov3__roll" data-online="" data-astro-cid-ta2fbyqs="">···</span>
         </span>
         <span data-commits-row="" data-astro-cid-ta2fbyqs="">
-        <span className="k" data-astro-cid-ta2fbyqs="">COMMITS::</span>
+        <span className="k" data-astro-cid-ta2fbyqs="">CONTRIBUTIONS::</span>
         <span className="v ov3__roll" data-commits-total="" data-astro-cid-ta2fbyqs="">···</span>
         </span>
         </div>
         <div className="ov3__commits" data-commits="" aria-hidden="true" data-astro-cid-ta2fbyqs="">
-        {/* Carter's 154 commit cells; the About telemetry engine sets their
-            --heat/--gh/--d values from the GitHub contributions response. */}
+        {/* Carter’s original 22-week, seven-row activity grid. */}
         {Array.from({ length: 154 }, (_, i) => (
           <span key={i} data-astro-cid-ta2fbyqs="" />
         ))}
         </div>
         </article>
-        <article className="ov3__item ov3__radio" data-canvas-item="" data-rot="0.8" tabIndex="0" style={{ '--fx': '0.35', '--fy': '0.17' }} data-deck-stage="" aria-label="Radio" data-astro-cid-ta2fbyqs="">
+        <article className="ov3__item ov3__radio" data-canvas-item="" data-rot="0.8" tabIndex="0" style={{ '--fx': '0.35', '--fy': '0.17' }} data-deck-stage="" aria-label="Simulated radio, no audio" data-astro-cid-ta2fbyqs="">
         <div className="ov3__deck" data-deck-gl="" aria-hidden="true" data-astro-cid-ta2fbyqs="">
         </div>
         <div className="ov3__deck-layer" data-deck-layer="" data-astro-cid-ta2fbyqs="">
@@ -242,12 +248,12 @@ export default function AboutPage() {
         <img alt="" className="con__art-src" data-con-img="" hidden data-astro-cid-v6dmze42="" />
         <div className="con__zone" data-astro-cid-v6dmze42="">
         <div className="con__head" data-astro-cid-v6dmze42="">
-        <span className="con__tag text-mono-tag" data-astro-cid-v6dmze42="">Radio::<span className="con__roll" data-con-state="" data-astro-cid-v6dmze42="">Tuning</span>
+        <span className="con__tag text-mono-tag" data-astro-cid-v6dmze42="">RADIO::<span className="con__roll" data-con-state="" data-astro-cid-v6dmze42="">LIVE</span>
         </span>
         <span className="con__meta text-mono-meta" data-astro-cid-v6dmze42="">
         <span className="con__onair" aria-hidden="true" data-astro-cid-v6dmze42="">
         </span>
-        <span className="con__roll" data-con-status="" data-astro-cid-v6dmze42="">SEARCHING</span>
+        <span className="con__roll" data-con-status="" data-astro-cid-v6dmze42="">ON AIR</span>
         </span>
         </div>
         <div className="con__now" data-astro-cid-v6dmze42="">
@@ -278,15 +284,15 @@ export default function AboutPage() {
         </div>
         </div>
         <div className="con__spec" data-astro-cid-v6dmze42="">
-        <span className="con__read" hidden data-con-rot-mod="" data-astro-cid-v6dmze42="">
+        <span className="con__read" data-con-rot-mod="" data-astro-cid-v6dmze42="">
         <span className="con__k text-mono-sm" data-astro-cid-v6dmze42="">Rotation::</span>
         <span className="con__v text-mono-sm" data-astro-cid-v6dmze42="">
         <span className="con__roll" data-con-rot="" data-astro-cid-v6dmze42="">
         </span>
         </span>
         </span>
-        <span className="con__read" hidden data-con-tape-mod="" data-astro-cid-v6dmze42="">
-        <span className="con__k text-mono-sm" data-con-tape-k="" data-astro-cid-v6dmze42="">Tape::</span>
+        <span className="con__read" data-con-tape-mod="" data-astro-cid-v6dmze42="">
+        <span className="con__k text-mono-sm" data-con-tape-k="" data-astro-cid-v6dmze42="">3 DAYS::</span>
         <span className="con__v text-mono-sm" data-astro-cid-v6dmze42="">
         <span className="con__roll" data-con-tape="" data-astro-cid-v6dmze42="">
         </span>
@@ -440,15 +446,11 @@ export default function AboutPage() {
         </svg>
         </button>
         </div>
-        <nav className="ov3__drawer" aria-label="Adjacent files" data-astro-cid-ta2fbyqs="">
-        <a className="ov3__drawer-tab text-label" href="/writing" data-astro-cid-ta2fbyqs="">File:: Writing</a>
-        <a className="ov3__drawer-tab text-label" href="/lab" data-astro-cid-ta2fbyqs="">File:: Lab</a>
-        </nav>
       </main>
       <dialog className="ov3__dialog ov3__letter" data-dialog="letter" aria-labelledby="letter-title" data-lenis-prevent="" data-astro-cid-ta2fbyqs="">
       <div className="ov3__dialog-scroll" data-lenis-prevent="" data-astro-cid-ta2fbyqs="">
       <div className="ov3__dialog-head" data-astro-cid-ta2fbyqs="">
-      <span className="text-label ov3__dialog-tag" data-astro-cid-ta2fbyqs="">The letter ::</span>
+      <span className="text-label ov3__dialog-tag" data-astro-cid-ta2fbyqs="">THE LETTER ::</span>
       <button type="button" aria-label="Close" className="closebox closebox--sm closebox--fill" data-dialog-close="" data-astro-cid-ta2fbyqs="" data-astro-cid-rqy3m4bm="">
       <svg width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" data-icon="close" data-astro-cid-rqy3m4bm="">
       <use href="#ai:local:close">
@@ -458,12 +460,14 @@ export default function AboutPage() {
       </div>
       <p className="ov3__salut" id="letter-title" data-astro-cid-ta2fbyqs="">Hey, you pulled my file.</p>
       <div className="ov3__body" data-astro-cid-ta2fbyqs="">
-      <p data-astro-cid-ta2fbyqs="">I’m a creative developer, director and entrepreneur focused on crafting truly unique web experiences. Strong background in design, an unconventional way into every problem, and a taste for pure digital originality.</p>
-      <p data-astro-cid-ta2fbyqs="">Days I’m the lead web developer and brand engineer at <a href="https://strivepharmacy.com" data-underline-link="" target="_blank" rel="noopener noreferrer" data-astro-cid-ta2fbyqs="">Strive</a>. I founded and run <a href="https://www.balky.studio/" data-underline-link="" target="_blank" rel="noopener noreferrer" data-astro-cid-ta2fbyqs="">Balky Studio</a>, and I’m building <a href="https://www.odyn.dev/" data-underline-link="" target="_blank" rel="noopener noreferrer" data-astro-cid-ta2fbyqs="">Odyn</a>, custom code in production for Webflow. Nights, the lab stays lit.</p>
-      <p data-astro-cid-ta2fbyqs="">Born in Lagos, Nigeria. Based in Utah. The press out front is what the shop makes. This room is who makes it.</p>
+      <p data-astro-cid-ta2fbyqs="">I am Aniket Chakraborty. A creative mind drawn to technology, design, and the endless possibilities of the digital world.</p>
+      <p data-astro-cid-ta2fbyqs="">I enjoy exploring ideas, breaking things apart, and putting them back together in ways that feel different. From interactive web experiences to little experiments with code, I'm always looking for something new to build.</p>
+      <p data-astro-cid-ta2fbyqs="">I believe the best work happens somewhere between curiosity and obsession. I do not just want to use the tools, I want to understand them, experiment with them, and see how far I can push them.</p>
+      <p data-astro-cid-ta2fbyqs="">Still exploring. Still building. Never quite finished.</p>
+      <p data-astro-cid-ta2fbyqs="">This room is a little piece of that journey.</p>
       </div>
       <div className="ov3__sigrow" data-astro-cid-ta2fbyqs="">
-      <span className="signature ov3__sig" data-signature="" data-sig-pts="[2,88.95,15.34,85.96,28.7,83.1,42.07,80.28,55.45,77.48,68.83,74.68,82.2,71.87,95.57,69.04,108.93,66.18,122.29,63.28,135.63,60.33,148.97,57.33,162.29,54.26,175.59,51.13,188.87,47.91,202.13,44.6,215.36,41.19,228.56,37.65,241.72,33.96,254.83,30.1,267.88,26.03,280.84,21.7,293.7,17.06,306.33,11.86,317.15,4.21,304.18,2.06,290.55,3.04,276.97,4.61,263.44,6.48,249.93,8.54,236.45,10.82,223.07,13.6,209.81,16.89,196.66,20.63,183.65,24.79,170.76,29.34,158.01,34.25,145.4,39.53,132.95,45.16,120.66,51.15,108.56,57.5,96.67,64.23,85.03,71.39,73.68,79.01,62.73,87.17,52.3,96,42.68,105.7,34.49,116.61,29.53,129.25,31.36,142.5,42.07,150.53,55.43,153.21,69.08,153.41,82.7,152.29,96.22,150.31,109.64,147.74,122.97,144.73,136.22,141.37,149.38,137.7,162.47,133.77,175.49,129.61,188.44,125.25,201.32,120.68,214.13,115.91,226.86,110.94,239.5,105.74,252.02,100.26,264.36,94.39,276.26,87.68,272.83,82.88,259.36,85.14,246.17,88.7,233.27,93.22,220.74,98.67,208.87,105.41,200.71,115.65,212.28,121.6,225.85,123.04,239.47,122.11,252.79,119.1,265.53,114.19,277.32,107.31,287.38,98.11,293,105.01,286.58,116.96,276.52,126.15,264.53,132.66,251.55,136.87,238.08,139.18,224.45,139.98,233.2,136.1,246.23,131.97,259.21,127.7,272.14,123.25,285.03,118.72,297.91,114.16,310.81,109.63,323.73,105.18,336.69,100.84,349.71,96.69,362.8,92.78,375.99,89.2,371.81,92.51,359.23,97.86,346.66,103.23,334.15,108.73,321.73,114.42,309.44,120.4,297.41,126.88,285.99,134.37,280.86,145.21,293.89,148.67,307.54,148.69,321.06,146.78,334.42,143.9,347.65,140.46,360.78,136.67,373.83,132.61,386.82,128.36,399.75,123.94,412.64,119.4,425.49,114.76,438.32,110.04,451.13,105.29,464.01,100.71,453.56,106.39,441.19,112.21,428.8,117.97,416.99,124.78,418.82,134.44,432.19,137.11,445.83,138.05,459.49,138.26,473.15,138.01,486.81,137.42,500.44,136.53,514.06,135.35,527.64,133.86,541.18,131.98,554.61,129.45,567.8,125.91,580.83,121.77,593.69,117.14,606.39,112.11,618.94,106.7,631.34,100.94,643.57,94.84,655.61,88.39,667.44,81.55,679,74.25,690.16,66.38,700.67,57.65,709.57,47.33,708.94,35.11,696.27,30.27,682.69,28.94,669.03,29.21,655.42,30.44,641.88,32.31,628.43,34.69,615.04,37.46,601.73,40.56,588.5,43.96,575.33,47.63,562.24,51.54,549.21,55.68,536.26,60.05,523.4,64.65,510.62,69.49,497.93,74.58,485.36,79.93,472.91,85.57,460.62,91.55,448.54,97.93,436.72,104.79,425.3,112.3,414.53,120.7,405.11,130.57,399.44,142.82,403.96,155.2,416.18,160.85,429.79,161.75,443.41,160.65,456.89,158.42,470.23,155.46,483.44,151.95,496.53,148.03,509.51,143.77,522.39,139.2,535.17,134.35,547.85,129.24,560.41,123.87,572.86,118.23,585.17,112.29,597.29,105.97,609.13,99.15,620.43,91.48,628.38,81.03,619.94,70.52,607.32,65.61,593.7,65.56,580.37,68.48,567.62,73.36,555.56,79.78,544.36,87.6,534.42,96.96,527,108.35,526.9,121.57,537.25,130.07,550.3,134.04,563.85,135.76,577.51,135.78,591.11,134.51,604.58,132.24,617.89,129.15,631.03,125.39,644,121.07,656.78,116.24,669.38,110.94,681.77,105.17,693.89,98.86,705.41,91.54,695.82,93.15,683.38,98.8,671.11,104.82,658.94,111.04,646.85,117.42,634.83,123.92,622.86,130.5,610.91,137.14,598.98,143.81,587.07,150.51,575.18,157.24,563.3,164,552.16,170.96,564.57,165.25,576.85,159.25,589.12,153.24,601.41,147.26,613.73,141.34,626.1,135.53,638.56,129.91,651.22,124.76,664.28,120.75,677.48,117.22,690.82,114.27,704.31,112.06,717.91,110.78,731.57,110.57,745.21,111.37,758.79,112.88,772.34,114.65,785.91,116.29,799.52,117.56,813.16,118.38,826.82,118.72,840.49,118.63,854.14,118.15,867.79,117.32,881.41,116.19,895,114.8]"><svg className="signature__svg" role="img" aria-label="Carter Ogunsola signature" overflow="visible" viewBox="0 0 897 173" fill="none" xmlns="http://www.w3.org/2000/svg"><path className="signature__path" data-sig-path="" d="M2 88.9456C55.784 76.5215 191.196 51.7674 274.826 23.7476C334.221 3.84742 337.508 -5.77007 243.577 9.56486C149.646 24.8998 37.9703 88.5267 29.722 127.977C13.4431 205.837 316.853 80.9592 276.575 82.6084C244.834 83.9081 180.958 112.5 206.563 120.165C237.48 129.42 272.863 114.718 285.462 100.025C300.893 82.0273 301.127 140.001 222.664 140.001C220.987 140.001 225.74 138.422 243.579 132.817C282.011 120.744 333.646 99.8913 376.974 88.9455C406.796 81.4117 217.494 148 301.127 148.962C355.109 149.583 542.975 64.9965 428.679 118.029C366.194 147.021 515.241 139.258 556.329 129.041C628.401 111.119 731.609 50.6349 708.58 34.8267C662.174 2.97263 360.921 106.976 403.403 154.658C432.562 187.387 636.491 97.9544 628.26 80.5907C605.432 32.4348 486.945 110.13 538.165 130.476C618.254 162.288 790.777 42.4844 658.137 111.452C632.25 124.912 590.416 148.592 568.46 161.052C508.857 194.877 627.218 132.266 653.385 124.03C757.953 91.1157 752.806 130.719 895 114.799" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"></path></svg></span>
+      <LetterSignature />
       </div>
       </div>
       </dialog>
@@ -481,72 +485,22 @@ export default function AboutPage() {
       <h2 className="ov3__dialog-title text-h2" id="record-title" data-astro-cid-ta2fbyqs="">Where I’ve worked.</h2>
       <div className="ov3__dialog-sec" data-astro-cid-ta2fbyqs="">
       <section className="rec" aria-label="Experience" data-section="Experience" data-astro-cid-kq42ek7p="">
-      <div className="rec__sheet u-card" data-record="" style={{ '--rec-role': '138px' }} data-astro-cid-kq42ek7p="">
+      <div className="rec__sheet u-card" data-record="" data-astro-cid-kq42ek7p="">
       <div className="rec__head" aria-hidden="true" data-astro-cid-kq42ek7p="">
       <span className="rec__field text-mono-sm" data-astro-cid-kq42ek7p="">Company</span>
       <span className="rec__field rec__field--role text-mono-sm" data-astro-cid-kq42ek7p="">Role</span>
-      <span className="rec__field rec__field--year text-mono-sm" data-astro-cid-kq42ek7p="">Year</span>
+      <span className="rec__field rec__field--year text-mono-sm" data-astro-cid-kq42ek7p="">Period</span>
       </div>
       <div className="rec__body" data-row-list="" data-record-body="" data-astro-cid-kq42ek7p="">
       <span className="rec__reader" data-record-reader="" aria-hidden="true" data-astro-cid-kq42ek7p="">
       </span>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Odyn</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Founder</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">Present</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Strive</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Creative Developer</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">Present</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Balky Studio</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Founder</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">Present</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Bondir</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Web Designer &amp; Dev</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">2024</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Auvlie</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Co-Founder</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">2023</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Utah Tech University</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Adjunct Professor</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">2023</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">Adapte</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Creative Director</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">2022</span>
-      </div>
-      <div className="rec__row" data-astro-cid-kq42ek7p="">
-      <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">beatBread</span>
-      <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">Product Designer</span>
-      <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">2022</span>
-      </div>
-      </div>
-      <div className="rec__foot text-mono-sm" data-astro-cid-kq42ek7p="">
-      <a className="rec__link" href="https://www.linkedin.com/in/carterogunsola/" target="_blank" rel="noopener noreferrer" data-hover="" data-astro-cid-kq42ek7p="">LinkedIn<span className="arrow-roll" aria-hidden="true" data-astro-cid-klkmuj5r="">
-      <span className="arrow-roll__icon arrow-roll__current" data-astro-cid-klkmuj5r="">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-      <path d="M14 5.75L20.25 12L14 18.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19.5 12H3.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      </span>
-      <span className="arrow-roll__icon arrow-roll__next" data-astro-cid-klkmuj5r="">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-      <path d="M14 5.75L20.25 12L14 18.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19.5 12H3.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      </span>
-      </span>
-      </a>
+      {experience.map(({ company, role, type, period }) => (
+        <div className="rec__row" key={`${company}:${role}`} data-astro-cid-kq42ek7p="">
+          <span className="rec__co text-tag" data-astro-cid-kq42ek7p="">{company}</span>
+          <span className="rec__role text-mono-meta" data-astro-cid-kq42ek7p="">{role}{type && <><br />{type}</>}</span>
+          <span className="rec__year text-mono-meta" data-astro-cid-kq42ek7p="">{period}</span>
+        </div>
+      ))}
       </div>
       </div>
       </section>

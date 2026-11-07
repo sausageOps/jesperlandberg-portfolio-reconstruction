@@ -48,7 +48,6 @@ main.ov3[data-canvas]
   article.ov3__radio[data-deck-stage]
     [data-deck-gl] / [data-deck-layer] / [data-console][data-con-plain]
   .ov3__exit[data-canvas-exit]
-  nav.ov3__drawer (ordinary Writing and Lab anchors)
 dialog[data-dialog=letter]   letter prose and [data-signature]
 dialog[data-dialog=record]   record rows and [data-record-reader]
 dialog[data-dialog=onfile]   awards and featured-in rows
@@ -68,10 +67,6 @@ dialog[data-dialog=onfile]   awards and featured-in rows
 | **Tilt** | Applies the original fine-pointer tilt and shine response and resets on pointer leave. |
 | **Record** | Moves the existing reader line to hovered experience rows and hides it on leave/window blur. |
 | **NavRoll** | Wraps the existing “About me” label characters using Carter's `--index` hooks. |
-
-The Writing and Lab items in `.ov3__drawer` are ordinary anchors, not an About
-drawer controller. They continue through the existing Carter frame link
-interceptor; no Lab or Writing engine is mounted here.
 
 ## Lifecycle, responsive behavior, and scope
 
