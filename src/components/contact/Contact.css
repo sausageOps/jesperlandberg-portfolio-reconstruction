@@ -181,7 +181,7 @@
 .letterpage .desk[data-letter-posed]{padding-block:0}
 .letterpage .desk[data-letter-posed] .desk__canvas{display:block}
 .letterpage .desk[data-letter-posed] .sheet,.letterpage .desk[data-letter-posed] .stub{box-shadow:none;background:0 0;margin:0;position:absolute}
-@media (scripting:enabled) and (prefers-reduced-motion:no-preference){.letterpage .desk:not([data-letter-posed]){padding-block-start:116px}@container desk (width>=760px){.letterpage .desk:not([data-letter-posed]) .sheet,.letterpage .desk:not([data-letter-posed]) .stub{--sw:clamp(560px, 56cqw, 800px)}.letterpage .desk:not([data-letter-posed]) .sheet{width:var(--sw);margin-block-end:calc(132px - var(--s-96));margin-inline-start:calc((100cqw - var(--sw) * 1.153) / 2)}.letterpage .desk:not([data-letter-posed]) .stub{inline-size:calc(var(--sw) * .34);block-size:calc(var(--sw) * .34 * 1.04);margin:0;position:absolute;inset-block-start:94px;inset-inline-start:calc((100cqw - var(--sw) * 1.153) / 2 + var(--sw) * .813)}}}
+@media (scripting:enabled) and (prefers-reduced-motion:no-preference){.letterpage .desk:not([data-letter-posed]){padding-block-start:var(--letter-top, 116px)}@container desk (width>=760px){.letterpage .desk:not([data-letter-posed]) .sheet,.letterpage .desk:not([data-letter-posed]) .stub{--sw:clamp(560px, 56cqw, 800px)}.letterpage .desk:not([data-letter-posed]) .sheet{width:var(--sw);margin-block-end:calc(132px - var(--s-96));margin-inline-start:calc((100cqw - var(--sw) * 1.153) / 2)}.letterpage .desk:not([data-letter-posed]) .stub{inline-size:calc(var(--sw) * .34);block-size:calc(var(--sw) * .34 * 1.04);margin:0;position:absolute;inset-block-start:calc(var(--letter-top, 116px) - 22px);inset-inline-start:calc((100cqw - var(--sw) * 1.153) / 2 + var(--sw) * .813)}}}
 .letterpage .sheet input:-webkit-autofill,.letterpage .sheet input:-webkit-autofill:hover,.letterpage .sheet input:-webkit-autofill:focus{-webkit-text-fill-color:var(--pink);caret-color:var(--pink);-webkit-background-clip:text;background-clip:text;transition:background-color 9999s ease-out}
 .letterpage .sheet{background:var(--bond);width:min(calc(100% - 32px),800px);color:var(--pink);font-family:var(--font-mono);letter-spacing:var(--track);margin-inline:auto;font-size:14px;line-height:30px;position:relative;box-shadow:0 2px 24px #0000001f;container-type:inline-size}
 .letterpage .sheet ::selection,.letterpage .sheet :is(input,textarea)::selection{background:var(--spot-wash);color:var(--pink)}
@@ -296,3 +296,60 @@
 /* Tablet receipt fit (Carter's fix for 760–1270px stub spacing). */
 @property --rs{syntax:"<length>";inherits:true;initial-value:560px}
 @container desk (width>=760px){.letterpage .stub{--rs:clamp(560px,56cqw,720px);padding:calc(var(--rs)*.0875 - 37px) 22px calc(var(--rs)*.075 - 32px)}.letterpage .stub__sub{padding-block-end:calc(var(--rs)*.03125 - 12.5px)}.letterpage .stub__rows{margin-block-start:calc(var(--rs)*.0375 - 15px)}.letterpage .stub__rows>div{padding-block:calc(var(--rs)*.01875 - 8.5px)}.letterpage .stub__bars{margin-block-start:calc(var(--rs)*.04375 - 15.5px)}.letterpage .stub__foot{margin-block-start:calc(var(--rs)*.025 - 10px)}}
+
+/* ============================================================================
+   Tablet and phone: vertical spacing for the docked navigation
+   ----------------------------------------------------------------------------
+   Carter's contact layout reserves the top of the page for its fixed header:
+   the sheet is placed at TOP = 116px (deskScene.js), and the CSS carries the
+   same 116px as the pre-entrance placeholder (with 64px of static top padding
+   for the reduced-motion / no-WebGL document flow). The reconstructed shell
+   parks the global navigation at the BOTTOM on tablet and phone (A24Nav,
+   <=991px), so that reserve is empty space here. It is replaced by the page's
+   own top spacing — the same 32px (tablet) / 20px (phone) + safe-area-inset
+   convention about.css uses for the About board — and the bottom room gains the
+   device's bottom safe-area inset so nothing can sit under the dock.
+
+   --letter-top / --letter-bottom are read by deskScene.js measure(), so the
+   posed sheet and the CSS placeholder cannot drift apart: desktop evaluates to
+   Carter's exact 116px / 132px, tablet/phone to the smaller top offset. The
+   desk maths, the entrance timeline, the paper scene, the form, validation and
+   submission are untouched. */
+.letterpage .desk {
+  --letter-top: 116px;
+  --letter-bottom: 132px;
+}
+
+@media (max-width: 991px) {
+  .letterpage .desk {
+    --letter-top: calc(32px + env(safe-area-inset-top, 0px));
+    --letter-bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Static document flow (reduced motion / no WebGL): the top reserve shrinks
+     with the posed layout, the bottom keeps Carter's 96px plus the safe-area
+     inset so the receipt stub can always clear the dock. `[data-letter-posed]`
+     still zeroes both paddings (Carter's rule) and the scene positions the
+     sheet from --letter-top. */
+  .letterpage .desk,
+  .letterpage .desk:not([data-letter-posed]) {
+    padding-block-start: var(--letter-top);
+    padding-block-end: calc(var(--s-96) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 479px) {
+  /* Phone refinement: less dead space above the paper. 8px reads as a
+     deliberate inset beside the sheet's 16px side gaps (deskScene sx = 16)
+     rather than a floating gap.
+     This is the page's only top offset, so the posed scene (measure() -> sy),
+     the pre-entrance placeholder and the static flow all follow it and cannot
+     drift. Nothing else moves: the sheet's width, paper, type and internal
+     padding are untouched, the bottom room stays 132px (+ safe-area inset;
+     96px + inset in static flow) which clears the dock by ~75px here, and the
+     desk height is derived from those two offsets, so the letter, signature
+     and receipt stay fully reachable.
+     Phone only: tablet (<=991px: 32px) and desktop (116px) are untouched. */
+  .letterpage .desk {
+    --letter-top: calc(8px + env(safe-area-inset-top, 0px));
+  }
+}

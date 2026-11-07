@@ -22,13 +22,24 @@
   inset: 0;
 }
 
-/* The reconstructed portfolio docks its global nav at the bottom on tablet
-   and phone widths. Keep the Lab mode switch above that hit area so it remains
-   reachable instead of scrolling the clipped list when activated. */
+/* Tablet and phone: the reconstructed portfolio parks its global nav at the
+   bottom of the viewport (A24Nav, <=991px), so the height this page may use is
+   the viewport minus that dock's footprint and the phone's bottom safe-area
+   inset. Carter's .lab fills the whole viewport (100svh, full-bleed, no top
+   offset), which left the last list rows / grid cards running behind the dock.
+   Subtracting the dock footprint from the height is the same correction as the
+   About page's 88px bottom padding: the layer keeps its own composition and only
+   its available box changes. lab-index.js measures .lab__viewport.clientHeight,
+   so List, Wheel and Grid re-centre and re-fit in the smaller box with their own
+   maths (no engine change). The mode switch keeps Carter's `inset-block-end:
+   var(--s-24)` against that box, so it now sits 24px clear of the dock instead
+   of inside its hit area. Desktop (>=992px, top dock) is untouched.
+   Dock footprint at these widths: 3.5em dock (40-47px) + its bottom edge gap
+   (max(1.03em, 12px) = 12-14px) = 52-61px; 64px covers the largest case. */
 @media (max-width: 991px) {
-  :where(.carter) .lab__mode[data-astro-cid-jcwly6sb] {
-    inset-block-end: calc(
-      3.5rem + max(1.03em, 12px) + env(safe-area-inset-bottom, 0px) + var(--s-8)
-    );
+  :where(.carter) .lab[data-astro-cid-jcwly6sb] {
+    --lab-dock-clearance: calc(64px + env(safe-area-inset-bottom, 0px));
+    height: calc(100vh - var(--lab-dock-clearance));
+    height: calc(100svh - var(--lab-dock-clearance));
   }
 }

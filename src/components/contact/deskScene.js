@@ -9,30 +9,66 @@ import { gsap } from 'gsap';
 const SHEET_PAPER = '#f3f2ef';
 const STUB_PAPER = '#f7f7f4';
 const COND = { lamp: 0.2, lampD: 460, ambient: 0.94, shadow: 0.4, tooth: 1, foil: 0.3, par: 1 };
+/* Carter's sheet offsets, and the fallback when the page does not carry them.
+   They are declared in Contact.css as --letter-top / --letter-bottom so the
+   tablet/phone rules (bottom-docked navigation, safe-area insets) live in one
+   place; sheetOffsets() resolves them to px, including any env() in the value. */
 const TOP = 116;
 const BOTTOM = 132;
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* Resolves the sheet offsets from the desk's own CSS. The probe is a hidden,
+   fixed-position 1px node inside the desk: it inherits the cascade (so the
+   tablet/phone media queries and env() safe-area insets apply), it is never
+   painted, and being fixed it cannot extend any scroll area. It is created once
+   per desk and lives with it. */
+const probes = new WeakMap();
+
+function sheetOffsets(desk) {
+  let probe = probes.get(desk);
+  if (!probe) {
+    probe = document.createElement('div');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none';
+    desk.appendChild(probe);
+    probes.set(desk, probe);
+  }
+  probe.style.paddingTop = `var(--letter-top, ${TOP}px)`;
+  probe.style.paddingBottom = `var(--letter-bottom, ${BOTTOM}px)`;
+  const style = getComputedStyle(probe);
+  const top = parseFloat(style.paddingTop);
+  const bottom = parseFloat(style.paddingBottom);
+  return {
+    top: Number.isFinite(top) ? top : TOP,
+    bottom: Number.isFinite(bottom) ? bottom : BOTTOM,
+  };
+}
+
 /* Measures the layout: sheet/stub rectangles and full stage height. */
 function measure(desk, sheet) {
   const vw = desk.clientWidth;
   const narrow = vw < 760;
+  const { top, bottom } = sheetOffsets(desk);
   const sw = narrow ? vw - 32 : Math.round(Math.min(Math.max(vw * 0.56, 560), 800));
   sheet.style.width = `${sw}px`;
   const sh = sheet.offsetHeight;
   const tw = narrow ? Math.min(sw, 300) : Math.round(sw * 0.34);
   const th = Math.round(tw * 1.04);
   if (narrow) {
-    const sy = TOP;
+    const sy = top;
     const tx = Math.round((vw - tw) / 2);
     const ty = Math.round(sy + sh + 40);
-    return { vw, narrow, sx: 16, sy, sw, sh, tx, ty, tw, th, stageH: ty + th + BOTTOM };
+    return { vw, narrow, sx: 16, sy, sw, sh, tx, ty, tw, th, stageH: ty + th + bottom };
   }
   const inset = Math.round(tw * 0.45);
   const sx = Math.round((vw - (sw + inset)) / 2);
-  const sy = TOP;
-  return { vw, narrow, sx, sy, sw, sh, tx: sx + sw - (tw - inset), ty: 94, tw, th, stageH: sy + sh + BOTTOM };
+  const sy = top;
+  /* Carter puts the receipt stub 22px above the sheet's top edge (94 vs
+     TOP=116), so the paperclip holds the two together. Keep that relation, not
+     the absolute 94, or a smaller top offset would slide the stub down the
+     sheet. */
+  return { vw, narrow, sx, sy, sw, sh, tx: sx + sw - (tw - inset), ty: sy - 22, tw, th, stageH: sy + sh + bottom };
 }
 
 const PAPER_GLSL = `
