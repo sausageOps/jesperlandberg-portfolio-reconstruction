@@ -1,90 +1,15 @@
-/* Phase 3B About engine — Carter's source-confirmed radio states and controls.
-   This static reconstruction polls Carter's API origin instead of the source's
-   same-origin `/api/radio`; a CORS/network failure retains Carter's `nosignal`
-   and 45-second retry path. Root-relative artwork is resolved against that API
-   origin. Carter's `?radio=mock` and `?radio=fail` debug modes are retained. */
+/* Local, visual-only simulated radio. No radio service or audio playback. */
+import catalogue from "./radio-catalogue.json";
 import { getCarterRoot, onDestroy as e } from "../runtime.js";
-import { c as t, o as n, r } from "./about-services.js";
-import {
-  J as i,
-  Rt as a,
-  St as o,
-  n as s,
-  ot as c,
-  ut as l,
-  xt as u,
-} from "./three.js";
-var d = () => matchMedia(`(prefers-reduced-motion: reduce)`).matches,
-  f = 45e3,
-  p = t.hud.timeZone,
-  m = {
-    live: !0,
-    track: {
-      title: `MCBH`,
-      artist: `Asake`,
-      art: `/og-default.png`,
-      url: null,
-      progress: 72e3,
-      duration: 17e4,
-    },
-    recent: (() => {
-      let e = [
-          [`MCBH`, `Asake`],
-          [`Essence`, `Wizkid`],
-          [`Passionfruit`, `Drake`],
-          [`N95`, `Kendrick Lamar`],
-          [`Lonely`, `Asake`],
-          [`Ojuelegba`, `Wizkid`],
-          [`Freestyle`, `Lil Baby`],
-          [`Money Trees`, `Kendrick Lamar`],
-          [`Know Yourself`, `Drake`],
-          [`Sungba`, `Asake`],
-          [`Bad To Me`, `Wizkid`],
-          [`Drip Too Hard`, `Lil Baby`],
-        ],
-        t = [],
-        n = Date.now() - 24e5;
-      for (let r = 0; r < 50; r++) {
-        let [i, a] = e[(r * 7) % e.length];
-        (t.push({
-          title: i,
-          artist: a,
-          at: new Date(n).toISOString(),
-          dur: 18e4 + (r % 5) * 2e4,
-          year: 2019 + (r % 7),
-          url: null,
-        }),
-          (n -= (r % 9 == 8 ? 324e5 : 21e4) + (r % 3) * 6e4));
-      }
-      return t;
-    })(),
-  },
-  h = (e) => {
-    let t = Math.max(0, Math.round(e / 1e3));
-    return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, `0`)}`;
-  },
-  g = (e) => {
-    if (!e) return ``;
-    let t = Math.max(1, Math.round((Date.now() - new Date(e).getTime()) / 6e4));
-    return t < 60
-      ? `${t}M`
-      : t < 1440
-        ? `${Math.round(t / 60)}H`
-        : `${Math.round(t / 1440)}D`;
-  },
-  _ = new Intl.DateTimeFormat(`en-US`, {
-    timeZone: p,
-    hour: `numeric`,
-    hour12: !1,
-  }),
-  v = new Intl.DateTimeFormat(`en-US`, {
-    timeZone: p,
-    year: `numeric`,
-    month: `2-digit`,
-    day: `2-digit`,
-  }),
-  y = (e) => Number(_.format(e).replace(/\D/g, ``)) % 24,
-  b = `void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+import { J as i, Rt as a, St as o, n as s, ot as c, ut as l, xt as u } from "./three.js";
+
+const d = () => matchMedia(`(prefers-reduced-motion: reduce)`).matches;
+const stationStartedAt = Date.now() - ((3 * 24 + 2) * 60 + 48) * 60 * 1000;
+const h = (ms) => {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, `0`)}`;
+};
+const b = `void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`,
   x = `
 precision highp float;
 uniform float uTime; uniform vec2 uRes; uniform float uDpr; uniform float uLive;
@@ -109,208 +34,91 @@ void main() {
   float ch = 2.0 + hash(vec2(seg * 7.3, tick30)) * 6.0;
   a += spike * smoothstep(ch, 0.0, abs(y - uWaveY)) * 0.26 * hmask;
   gl_FragColor = vec4(vec3(0.97), min(a, 1.0));
-}`,
-  S = new (class {
-    init() {
-      let t = getCarterRoot()?.querySelector(`[data-console]`);
-      if (!t) return;
-      let p = (e) => t.querySelector(e),
-        _ = {
-          state: p(`[data-con-state]`),
-          status: p(`[data-con-status]`),
-          img: p(`[data-con-img]`),
-          track: p(`[data-con-track]`),
-          artist: p(`[data-con-artist]`),
-          elapsed: p(`[data-con-elapsed]`),
-          bar: p(`[data-con-bar]`),
-          remain: p(`[data-con-remain]`),
-          now: p(`.con__now`),
-          clockMod: p(`[data-con-clock-mod]`),
-          strip: p(`[data-con-strip]`),
-          peak: p(`[data-con-peak]`),
-          tapeMod: p(`[data-con-tape-mod]`),
-          tape: p(`[data-con-tape]`),
-          tapeK: p(`[data-con-tape-k]`),
-          rotMod: p(`[data-con-rot-mod]`),
-          rot: p(`[data-con-rot]`),
-          last: p(`[data-con-last]`),
-          progress: p(`.con__progress`),
-        },
-        S = { live: !1, track: null },
-        C = { live: !1, track: null },
-        w = null,
-        T = 0,
-        E = 0,
-        transitionFrame = 0,
-        D = (e) => {
-          let t = (e ?? []).filter((e) => e.at);
-          if (!t.length) return;
-          let r = Array(24).fill(0),
-            i = new Set(),
-            a = 0;
-          for (let e of t) {
-            let t = new Date(e.at);
-            (r[y(t)]++, i.add(v.format(t)), (a += e.dur));
-          }
-          let o = Math.max(1, ...r);
-          if (_.strip && _.clockMod) {
-            _.strip.replaceChildren(
-              ...r.map((e) => {
-                let t = document.createElement(`i`);
-                return (
-                  t.style.setProperty(
-                    `--h`,
-                    e ? String(0.12 + (e / o) * 0.88) : `0.06`,
-                  ),
-                  t.style.setProperty(
-                    `--a`,
-                    e ? String(0.3 + (e / o) * 0.7) : `0.14`,
-                  ),
-                  t
-                );
-              }),
-            );
-            let e = r.indexOf(o);
-            (_.peak &&
-              (_.peak.textContent = ` PEAK ${String(e).padStart(2, `0`)}:00`),
-              (_.clockMod.hidden = !1),
-              O());
-          }
-          if (_.tape && _.tapeMod) {
-            let e = Math.round(a / 6e4),
-              t = Math.floor(e / 60);
-            ((_.tapeMod.hidden = !1),
-              _.tapeK &&
-                (_.tapeK.textContent =
-                  i.size > 1 ? `${i.size} days::` : `Today::`),
-              n(
-                _.tape,
-                t ? `${t}H ${String(e % 60).padStart(2, `0`)}M` : `${e}M`,
-              ));
-          }
-          if (
-            (_.last && n(_.last, `LAST:: ${g(t[0].at)} AGO`), _.rot && _.rotMod)
-          ) {
-            let e = new Map();
-            for (let n of t) e.set(n.artist, (e.get(n.artist) ?? 0) + 1);
-            let [r, i] = [...e].sort((e, t) => t[1] - e[1])[0];
-            i > 1
-              ? ((_.rotMod.hidden = !1),
-                n(_.rot, `${r} ×${i}`),
-                (_.rot.title = `${r}, ${i} of the last ${t.length} plays`))
-              : (_.rotMod.hidden = !0);
-          }
-        },
-        O = () => {
-          if (!_.strip) return;
-          let e = y(new Date());
-          _.strip
-            .querySelectorAll(`i`)
-            .forEach((t, n) => t.classList.toggle(`is-now`, n === e));
-        },
-        k = setInterval(O, 6e4);
-      e(() => clearInterval(k));
-      let A = (e, r = e.live ? `live` : e.track ? `off` : `quiet`) => {
-          ((S = e), (t.dataset.on = String(e.live)), (t.dataset.state = r));
-          let i = e.recent?.find((e) => e.at)?.at ?? null,
-            [a, o, s] = {
-              live: [`Live`, `ON AIR`, e.track?.title ?? ``],
-              off: [
-                `Off-air`,
-                i ? `${g(i)} AGO` : `LAST SPUN`,
-                e.track?.title ?? ``,
-              ],
-              quiet: [`Off-air`, `QUIET`, `Nothing on the tape`],
-              nosignal: [`No signal`, `RETRYING`, `Can’t reach the radio`],
-            }[r];
-          (n(_.state, a),
-            n(_.status, o, { delay: 0.05 }),
-            _.track &&
-              (n(_.track, s, { delay: 0.1 }),
-              (_.track.title = e.track?.title ?? ``)));
-          let c = r === `live` || r === `off` ? (e.track?.artist ?? ``) : ``;
-          (_.artist &&
-            ((_.artist.hidden = !c),
-            (_.artist.title = c),
-            c && n(_.artist, c, { delay: 0.15 })),
-            (t.dataset.progress =
-              e.live && e.track?.progress != null && e.track.duration
-                ? `live`
-                : `none`),
-            (t.dataset.title =
-              r === `live` || r === `off` ? (e.track?.title ?? ``) : s),
-            (t.dataset.artist = c),
-            (t.dataset.art =
-              r === `live` || r === `off` ? (e.track?.art ?? ``) : ``),
-            _.img &&
-              (e.track?.art
-                ? ((_.img.src = e.track.art), (_.img.hidden = !1))
-                : ((_.img.hidden = !0), _.img.removeAttribute(`src`))));
-          let l = !!e.track?.url && e.track.url === j;
-          ((j = e.track?.url ?? ``),
-            (T = e.track?.progress ?? 0),
-            (E = performance.now()),
-            F(!l),
-            D(e.recent));
-        },
-        j = ``,
-        M = (e, t) => {
-          let n = t.track,
-            r = e.track,
-            i =
-              r && n.url && r.url === n.url
-                ? {
-                    ...r,
-                    title: n.title,
-                    artist: n.artist,
-                    art: n.art ?? r.art,
-                    url: n.url,
-                  }
-                : {
-                    title: n.title,
-                    artist: n.artist,
-                    art: n.art,
-                    url: n.url,
-                    progress: null,
-                    duration: 0,
-                  };
-          return { ...e, live: !0, track: i };
-        },
-        N = !1,
-        P = (e) => {
-          ((N = !0), (C = e), w?.live && w.track ? A(M(e, w)) : A(e));
-        },
-        F = (e = !1) => {
-          let n = S.track;
-          if (
-            (_.bar && e && (_.bar.style.transition = `none`),
-            !n || n.progress == null || !n.duration)
-          )
-            (_.bar && (_.bar.style.transform = `scaleX(0)`),
-              _.elapsed && (_.elapsed.textContent = `0:00`),
-              _.remain && (_.remain.textContent = ``));
-          else {
-            let e = S.live
-              ? Math.min(T + (performance.now() - E), n.duration)
-              : T;
-            (_.elapsed && (_.elapsed.textContent = h(e)),
-              _.remain && (_.remain.textContent = `−${h(n.duration - e)}`),
-              _.bar &&
-                (_.bar.style.transform = `scaleX(${(e / n.duration).toFixed(4)})`),
-              (t.dataset.progressAt = String(e / n.duration)));
-          }
-          if (_.bar && e) {
-            transitionFrame && cancelAnimationFrame(transitionFrame);
-            transitionFrame = requestAnimationFrame(() => {
-              transitionFrame = 0;
-              _.bar && (_.bar.style.transition = ``);
-            });
-          }
-        },
-        I = setInterval(() => {
-          S.live && !document.hidden && F();
-        }, 1e3);
-      e(() => clearInterval(I));
+}`;
+const S = new (class {
+  init() {
+    const t = getCarterRoot()?.querySelector(`[data-console]`);
+    if (!t) return;
+    const p = (selector) => t.querySelector(selector);
+    const _ = {
+      state: p(`[data-con-state]`), status: p(`[data-con-status]`),
+      img: p(`[data-con-img]`), track: p(`[data-con-track]`),
+      artist: p(`[data-con-artist]`),
+      elapsed: p(`[data-con-elapsed]`), remain: p(`[data-con-remain]`),
+      bar: p(`[data-con-bar]`), now: p(`.con__now`),
+      rot: p(`[data-con-rot]`), tape: p(`[data-con-tape]`),
+      tapeK: p(`[data-con-tape-k]`),
+    };
+    let S = { live: true, track: null }, lastIndex = -1, trackStartedAt = 0;
+    const controller = new AbortController();
+    const updateUptime = () => {
+      const minutes = Math.max(0, Math.floor((Date.now() - stationStartedAt) / 60000));
+      const days = Math.floor(minutes / 1440), hours = Math.floor(minutes % 1440 / 60);
+      if (_.tapeK) _.tapeK.textContent = `${days} DAYS::`;
+      if (_.tape) _.tape.textContent = `${hours}H ${String(minutes % 60).padStart(2, `0`)}M`;
+    };
+    const updateProgress = () => {
+      if (!S.track) return;
+      const elapsed = Math.min(Math.max(0, Date.now() - trackStartedAt), S.track.duration_ms);
+      if (_.elapsed) _.elapsed.textContent = h(elapsed);
+      if (_.remain) _.remain.textContent = `−${h(S.track.duration_ms - elapsed)}`;
+      if (_.bar) _.bar.style.transform = `scaleX(${(elapsed / S.track.duration_ms).toFixed(4)})`;
+      t.dataset.progressAt = String(elapsed / S.track.duration_ms);
+    };
+    const fitRotation = () => {
+      if (!_.rot?.parentElement) return;
+      _.rot.style.fontSize = ``;
+      const available = _.rot.parentElement.clientWidth;
+      const measured = _.rot.offsetWidth;
+      if (available && measured > available) {
+        const size = parseFloat(getComputedStyle(_.rot).fontSize);
+        _.rot.style.fontSize = `${Math.max(7, size * available / measured * 0.98)}px`;
+      }
+    };
+    const rotationObserver = _.rot?.parentElement && new ResizeObserver(fitRotation);
+    if (rotationObserver) rotationObserver.observe(_.rot.parentElement);
+    e(() => rotationObserver?.disconnect());
+    const selectTrack = () => {
+      let index = Math.floor(Math.random() * (catalogue.length - 1));
+      if (lastIndex < 0) index = Math.floor(Math.random() * catalogue.length);
+      else if (index >= lastIndex) index++;
+      lastIndex = index;
+      const song = catalogue[index];
+      trackStartedAt = Date.now();
+      S = { live: true, track: song };
+      const artist = [song.artist, ...(song.featuredArtists ?? [])].join(`, `);
+      const count = 9 + Math.floor(Math.random() * 12);
+      t.dataset.on = `true`;
+      t.dataset.state = `live`;
+      t.dataset.catalogue = `true`;
+      t.dataset.progress = `live`;
+      t.dataset.title = song.title;
+      t.dataset.artist = artist;
+      t.dataset.album = song.album;
+      t.dataset.duration = String(song.duration_ms);
+      t.dataset.art = song.artwork ?? ``;
+      if (_.state) _.state.textContent = `LIVE`;
+      if (_.status) _.status.textContent = `ON AIR`;
+      if (_.track) { _.track.textContent = song.title; _.track.title = song.title; }
+      if (_.artist) { _.artist.textContent = artist; _.artist.title = artist; _.artist.hidden = false; }
+      if (_.rot) { _.rot.textContent = `${song.artist} ×${count}`; _.rot.title = `${song.artist} ×${count}`; fitRotation(); }
+      if (_.img) {
+        if (song.artwork) { _.img.src = song.artwork; _.img.hidden = false; }
+        else { _.img.hidden = true; _.img.removeAttribute(`src`); }
+      }
+      updateProgress();
+      updateUptime();
+    };
+    const tick = () => {
+      updateUptime();
+      if (S.track && Date.now() - trackStartedAt >= S.track.duration_ms) selectTrack();
+      else updateProgress();
+    };
+    _.img?.addEventListener(`error`, () => { _.img.hidden = true; }, { signal: controller.signal });
+    document.addEventListener(`visibilitychange`, () => { if (!document.hidden) tick(); }, { signal: controller.signal });
+    selectTrack();
+    const interval = setInterval(() => { if (!document.hidden) tick(); }, 1000);
+    e(() => { clearInterval(interval); controller.abort(); });
       let L = null,
         R = () => {
           if (!(L || d() || t.hasAttribute(`data-con-plain`)))
@@ -411,45 +219,6 @@ void main() {
           { rootMargin: `25% 0px` },
         );
       (z.observe(t), e(() => z.disconnect()));
-      let B = r.subscribe((e) => {
-        ((w = e), e.live && e.track ? A(M(C, e)) : N && P(C));
-      });
-      e(B);
-      let V = new AbortController();
-      e(() => V.abort());
-      let H = new URLSearchParams(location.search).get(`radio`) === `mock`,
-        U = new URLSearchParams(location.search).get(`radio`) === `fail`,
-        q = `https://carterogunsola.com`,
-        W = () => {
-          if (H) {
-            P(m);
-            return;
-          }
-          fetch(U ? `/api/radio-unreachable` : q + `/api/radio`, {
-            signal: V.signal,
-          })
-            .then((e) => (e.ok ? e.json() : Promise.reject(e.status)))
-            .then((e) => {
-              let t = e?.track;
-              (t &&
-                typeof t.art == `string` &&
-                t.art[0] === `/` &&
-                (e = { ...e, track: { ...t, art: q + t.art } }),
-                P(e));
-            })
-            .catch((e) => {
-              e?.name !== `AbortError` &&
-                (N || A({ live: !1, track: null }, `nosignal`));
-            });
-        };
-      W();
-      let G = setInterval(() => {
-        document.hidden || W();
-      }, f);
-      e(() => clearInterval(G));
-      e(() => {
-        if (transitionFrame) cancelAnimationFrame(transitionFrame);
-      });
     }
   })();
 export { S as Console };

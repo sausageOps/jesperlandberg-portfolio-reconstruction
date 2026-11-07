@@ -237,7 +237,7 @@ export default function App() {
   // surfaces. These route classes lift the DOM above the WebGL canvas with the
   // same pattern project routes already use. Studio is reached via /routes/studio.
   const routeClass = carterPage
-    ? ' route-carter'
+    ? ` route-carter${carterPage.key === 'about' ? ' route-about' : ''}`
     : (route === 'myself' && section?.item?.slug === 'contact') ||
         (route === 'routes' && section?.item?.slug === 'studio')
       ? ` route-${section.item.slug}`

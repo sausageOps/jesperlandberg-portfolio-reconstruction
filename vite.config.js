@@ -21,6 +21,9 @@ const carterRemToPx = {
 };
 
 export default defineConfig({
+  // Give optimized dependencies fresh URLs so stale proxy/browser cache entries
+  // cannot mix React's hook dispatcher with a different React DOM bundle.
+  cacheDir: 'node_modules/.vite-preview-recovery',
   plugins: [react()],
   css: {
     postcss: {

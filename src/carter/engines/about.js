@@ -2,20 +2,17 @@ import gsap from "gsap";
 import {
   cancelRollText,
   clock,
-  c as aboutConfig,
   o as rollText,
   presence,
 } from "./about-services.js";
 import { getCarterRoot, onDestroy } from "../runtime.js";
+import contributions from "./github-contributions-2026.json";
 
 const reducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const contributionUrl = `https://github-contributions-api.jogruber.de/v4/${aboutConfig.socials.github
-  .split("/")
-  .filter(Boolean)
-  .pop()}?y=last`;
+// Snapshot obtained from GitHub's profile contribution calendar (UTC).
 const heat = [0.07, 0.22, 0.42, 0.65, 0.9];
-const greens = ["", "#0e4429", "#006d32", "#26a641", "#39d353"];
+const greens = ["rgba(247, 247, 247, 0.07)", "#0e4429", "#006d32", "#26a641", "#39d353"];
 
 export const About = {
   init() {
@@ -44,7 +41,6 @@ export const About = {
     let tapeIsGreen = false;
     let stopClock = () => {};
     let stopPresence = () => {};
-    let fetchController = null;
 
     const markReady = () => {
       if (!alive || live || pending.size) return;
@@ -117,48 +113,31 @@ export const About = {
 
     if (grid || commitsTotal) {
       const ready = gauge("commits", commitsRow);
-      fetchController = new AbortController();
-      fetch(contributionUrl, { signal: fetchController.signal })
-        .then((response) =>
-          response.ok ? response.json() : Promise.reject(response.status),
-        )
-        .then((data) => {
-          if (!alive) return;
-          if (grid) {
-            const contributions = data.contributions?.slice(-154) ?? [];
-            contributions.forEach((entry, index) => {
-              const cell = cells[index];
-              if (!cell) return;
-              const delay = reducedMotion() ? 0 : 0.028;
-              cell.style.setProperty(
-                "--d",
-                `${(Math.floor(index / 7) * delay).toFixed(3)}s`,
-              );
-              cell.style.setProperty(
-                "--heat",
-                String(heat[entry.level] ?? heat[0]),
-              );
-              if (entry.level)
-                cell.style.setProperty(
-                  "--gh",
-                  greens[entry.level] ?? greens[1],
-                );
-            });
-          }
-          const total = commitsTotal
-            ? Object.values(data.total ?? {}).at(-1)
-            : undefined;
-          if (commitsTotal && total) {
-            rollText(commitsTotal, `${total.toLocaleString("en-US")}/YR`);
-            ready();
-          }
-        })
-        .catch((error) => {
-          if (error?.name !== "AbortError") {
-            // Carter's source leaves this row in its loading state until the
-            // 7-second gauge hides it; the About state then becomes Live.
-          }
+      if (commitsTotal) {
+        rollText(commitsTotal, `${contributions.total.toLocaleString("en-US")}/YR`);
+        ready();
+      }
+      if (grid) {
+        const byDate = new Map(contributions.days.map((day) => [day.date, day]));
+        // Show the 22 calendar weeks ending with the snapshot's week, Sunday first.
+        const end = new Date(`${contributions.asOf}T00:00:00Z`);
+        end.setUTCDate(end.getUTCDate() + 6 - end.getUTCDay());
+        const start = new Date(end);
+        start.setUTCDate(start.getUTCDate() - (cells.length - 1));
+        const today = new Date().toISOString().slice(0, 10);
+        cells.forEach((cell, index) => {
+          const date = new Date(start);
+          date.setUTCDate(start.getUTCDate() + index);
+          const iso = date.toISOString().slice(0, 10);
+          const day = byDate.get(iso);
+          const level = day && iso <= today && iso <= contributions.asOf ? day.level : 0;
+          const opacity = heat[level] ?? heat[0];
+          cell.style.setProperty("--heat", String(opacity));
+          // The reverse face uses the same activity level in Carter’s green mode.
+          cell.style.setProperty("--gh", greens[level] ?? greens[0]);
+          cell.style.setProperty("--d", `${(Math.floor(index / 7) * (reducedMotion() ? 0 : 0.028)).toFixed(3)}s`);
         });
+      }
     }
 
     if (scopeButton && grid) {
@@ -201,7 +180,6 @@ export const About = {
       controller.abort();
       stopClock();
       stopPresence();
-      fetchController?.abort();
       timers.forEach((timer) => window.clearTimeout(timer));
       timers.clear();
       gsap.killTweensOf([...cells, onlineRow, commitsRow].filter(Boolean));

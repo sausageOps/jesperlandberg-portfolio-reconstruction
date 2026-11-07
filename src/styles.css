@@ -131,22 +131,22 @@ input:focus-visible {
 /* The source's noise image was not in the capture. This small, locally
    generated translucent tile approximates its appearance in the screenshots.
    Home and project routes share this one animated backdrop. */
-.app.route-home::before,
+.app:is(.route-home, .route-about)::before,
 .app.route-project::before,
-.app.route-home::after,
+.app:is(.route-home, .route-about)::after,
 .app.route-project::after,
 .no-webgl .project-background::after, .no-webgl .related-background::after {
   content: '';
   position: fixed;
   pointer-events: none;
 }
-.app.route-home::before,
+.app:is(.route-home, .route-about)::before,
 .app.route-project::before {
   z-index: 0;
   inset: 0;
   background: #171717;
 }
-.app.route-home::after,
+.app:is(.route-home, .route-about)::after,
 .app.route-project::after,
 .no-webgl .project-background::after, .no-webgl .related-background::after {
   z-index: 1;
@@ -159,7 +159,7 @@ input:focus-visible {
   animation: a24-home-grain .6s step-end infinite;
 }
 /* The same dark grain needs a light ink color to remain visible on charcoal. */
-.app.route-home::after,
+.app:is(.route-home, .route-about)::after,
 .app.route-project::after { filter: contrast(75%) brightness(70%) invert(1); }
 @keyframes a24-home-grain {
   0% { transform: translate(0, 0); }
@@ -169,19 +169,19 @@ input:focus-visible {
   80% { transform: translate(.2em, .5em); }
 }
 @media (min-width: 992px) and (min-aspect-ratio: 11/5) {
-  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(8.2667px, calc(100dvh * 16 / 9 / 120), 32px); }
+  .app:is(.route-home, .route-about)::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(8.2667px, calc(100dvh * 16 / 9 / 120), 32px); }
 }
 @media (max-width: 991px) {
-  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(12.4px, 1.61453vw, 16px); }
+  .app:is(.route-home, .route-about)::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(12.4px, 1.61453vw, 16px); }
 }
 @media (max-width: 767px) {
-  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.013px, 2.08605vw, 16px); }
+  .app:is(.route-home, .route-about)::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.013px, 2.08605vw, 16px); }
 }
 @media (max-width: 479px) {
-  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.689px, 3.34029vw, 16px); }
+  .app:is(.route-home, .route-about)::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { font-size: clamp(10.689px, 3.34029vw, 16px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app.route-home::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { animation: none; }
+  .app:is(.route-home, .route-about)::after, .app.route-project::after, .no-webgl .project-background::after, .no-webgl .related-background::after { animation: none; }
 }
 
 .webgl-canvas {

@@ -523,7 +523,7 @@ function A(t) {
     G = t.querySelector(`[data-console]`);
   if (G) {
     let e = () => {
-        ((St = G.dataset.on === `true`), (W = G.dataset.state ?? `boot`));
+        ((St = G.dataset.on === `true` || G.dataset.catalogue === `true`), (W = G.dataset.state ?? `boot`));
         let e = parseFloat(G.dataset.progressAt ?? ``);
         ((Ct = Number.isFinite(e) ? e : -1), D());
         let t = G.dataset.title || (W === `boot` ? `Tuning in…` : `Off air`),
@@ -538,6 +538,7 @@ function A(t) {
       attributes: !0,
       attributeFilter: [
         `data-on`,
+        `data-catalogue`,
         `data-state`,
         `data-title`,
         `data-artist`,
