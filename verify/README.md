@@ -5,6 +5,23 @@ Paste-Up, Phase 5G ThreeJs Scene). It is **not** part of the app: no
 `src/` module imports it and Vite never bundles it. `jsdom` is installed ad hoc
 for this directory only and is deliberately **not** added to `package.json`.
 
+## Home gallery navigation
+
+`home-gallery-verify.mjs` checks the infinitely looping panel navigation module
+that feeds `Experience.updateHome()` — wheel coalescing/suppression, direction
+reversal, last→first/first→last wrapping, multi-loop drift, pointer velocity,
+slow/fast release projection across the seam, cancelled pointers, reduced
+motion, and 30/60/120 Hz spring settling. It needs only Node:
+
+```bash
+node verify/home-gallery-verify.mjs
+```
+
+Browser interaction/shader checks are run separately against the dev server and
+production preview (wheel, trackpad, mouse/touch drag, loop-seam flicks, outside
+release, vertical touch intent, project-route isolation, active-panel scale,
+reduced motion).
+
 ```bash
 npm i --no-audit --no-fund jsdom@25   # verification only; revert manifests after
 CARTER_REF=/tmp/carter node verify/dial-verify.mjs

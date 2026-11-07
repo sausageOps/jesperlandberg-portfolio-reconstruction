@@ -24,6 +24,12 @@ const surfaceChunks = /* glsl */ `
   uniform float u_sheetC;
   uniform float u_sheetP;
   uniform float u_sheetV;
+  // Drawn-pose inputs. The vertex stage bends with these while the fragment
+  // stage keeps shading from u_sheetD/u_sheetC/u_leanA, so the gallery can rest
+  // upright and still carry the source's depth haze.
+  uniform float u_geoD;
+  uniform float u_geoC;
+  uniform float u_geoA;
   uniform float u_hover;
   uniform vec2 u_hoverPoint;
   uniform float u_dent;
@@ -46,19 +52,23 @@ const surfaceChunks = /* glsl */ `
   float sheetQ(float wx) {
     return wx / max(u_sheetW, 0.0001) * u_sheetT + SHEET_SHIFT;
   }
-  float sheetShape(float q) {
-    return mix(1.0 - q * q, sin(PI * q), u_sheetC) * exp(-q * q);
+  // The profile helpers take the blend/depth they belong to instead of reading
+  // one uniform set, so the drawn surface and the shaded surface can be fed
+  // separately without duplicating the maths. Geometry passes u_geoC/u_geoD;
+  // shading passes u_sheetC/u_sheetD.
+  float sheetShape(float q, float c) {
+    return mix(1.0 - q * q, sin(PI * q), c) * exp(-q * q);
   }
-  float sheetShapeSlope(float q) {
+  float sheetShapeSlope(float q, float c) {
     float g = exp(-q * q);
     float bowl = -2.0 * q * (1.0 + (1.0 - q * q));
     float ess = PI * cos(PI * q) - 2.0 * q * sin(PI * q);
-    return mix(bowl, ess, u_sheetC) * g;
+    return mix(bowl, ess, c) * g;
   }
-  float sheetZ(float wx) { return -u_sheetD * sheetShape(sheetQ(wx)); }
-  float sheetRoll(float wx) {
+  float sheetZ(float wx, float d, float c) { return -d * sheetShape(sheetQ(wx), c); }
+  float sheetRoll(float wx, float c) {
     if (u_sheetW < 0.001) return 0.0;
-    return SHEET_BANK * sheetShapeSlope(sheetQ(wx)) / PI * u_sheetC * u_sheetP;
+    return SHEET_BANK * sheetShapeSlope(sheetQ(wx), c) / PI * c * u_sheetP;
   }
   float dome(vec2 uv) {
     vec2 q = uv * 2.0 - 1.0;
@@ -74,7 +84,7 @@ const surfaceChunks = /* glsl */ `
     return 1.5 * (1.0 - s * s);
   }
   vec4 sheet(vec4 w) {
-    float a = sheetRoll(w.x);
+    float a = sheetRoll(w.x, u_geoC);
     if (u_sheetV > 0.001 && u_sheetW > 0.001 && u_sheetP > 0.001) {
       float qe = w.x / u_sheetW;
       a += SHEET_VTWIST * u_sheetV * smoothstep(0.3, 0.9, abs(qe)) * sign(qe) * u_sheetP;
@@ -83,10 +93,10 @@ const surfaceChunks = /* glsl */ `
       float s = sin(a), c = cos(a);
       w = vec4(w.x, w.y * c - w.z * s, w.y * s + w.z * c, w.w);
     }
-    w.z += sheetZ(w.x) * u_sheetP;
+    w.z += sheetZ(w.x, u_geoD, u_geoC) * u_sheetP;
     if (u_sheetW > 0.001) {
       float qw = w.x / u_sheetW;
-      w.y += SHEET_DIAG * w.x * u_sheetC * u_sheetP;
+      w.y += SHEET_DIAG * w.x * u_geoC * u_sheetP;
       if (u_sheetV > 0.001) {
         float m = 1.0 - smoothstep(-1.0, 0.3, qw);
         w.y += 0.1 * u_sheetW * u_sheetV * m * u_sheetP;
@@ -98,13 +108,13 @@ const surfaceChunks = /* glsl */ `
   float shadeAt(float wx, vec2 uv, float resY) {
     if (u_sheetD < 0.001) return 0.0;
     float d = (u_sheetW > 0.001 && u_sheetP > 0.001)
-      ? clamp((u_sheetD - sheetZ(wx)) / (2.0 * u_sheetD), 0.0, 1.0) * u_sheetP * smoothstep(0.0, resY * 0.04, u_sheetD) : 0.0;
+      ? clamp((u_sheetD - sheetZ(wx, u_sheetD, u_sheetC)) / (2.0 * u_sheetD), 0.0, 1.0) * u_sheetP * smoothstep(0.0, resY * 0.04, u_sheetD) : 0.0;
     if (u_hover > 0.0001) d += (u_hover * u_dent * resY * dome(uv)) / max(2.0 * u_sheetD, resY * 0.25);
     return clamp(d, 0.0, 1.0);
   }
   float offsetAt(float wx, vec2 uv, float resY) {
     float z = 0.0;
-    if (u_sheetW > 0.001 && u_sheetP > 0.001 && u_sheetD > 0.001) z += sheetZ(wx) * u_sheetP;
+    if (u_sheetW > 0.001 && u_sheetP > 0.001 && u_sheetD > 0.001) z += sheetZ(wx, u_sheetD, u_sheetC) * u_sheetP;
     if (u_leanW > 0.001) z += u_leanA * leanRamp(wx / u_leanW) * u_sheetP;
     if (u_hover > 0.0001) z -= u_hover * u_dent * resY * dome(uv);
     return z;
@@ -112,7 +122,7 @@ const surfaceChunks = /* glsl */ `
   vec3 normalAt(float wx, vec2 uv, vec2 res) {
     float dx = 0.0, dy = 0.0;
     if (u_sheetW > 0.001 && u_sheetP > 0.001 && u_sheetD > 0.001)
-      dx += -u_sheetD * sheetShapeSlope(sheetQ(wx)) * u_sheetT / u_sheetW * u_sheetP;
+      dx += -u_sheetD * sheetShapeSlope(sheetQ(wx), u_sheetC) * u_sheetT / u_sheetW * u_sheetP;
     if (u_leanW > 0.001) dx += (u_leanA / u_leanW) * leanSlope(wx / u_leanW) * u_sheetP;
     if (u_hover > 0.0001) {
       vec2 q = uv * 2.0 - 1.0;
@@ -121,7 +131,7 @@ const surfaceChunks = /* glsl */ `
       dy += 4.0 * a * q.y * (1.0 - q.x * q.x);
     }
     vec3 n = normalize(vec3(-dx, -dy, 1.0));
-    float a = sheetRoll(wx);
+    float a = sheetRoll(wx, u_sheetC);
     if (abs(a) > 0.0001) {
       float s = sin(a), c = cos(a);
       n = vec3(n.x, n.y * c - n.z * s, n.y * s + n.z * c);
@@ -151,7 +161,7 @@ export const surfaceVertex = /* glsl */ `
     vec4 w = modelMatrix * vec4(p, 1.0);
     w = pillLens(w);
     w = sheet(w);
-    if (u_leanW > 0.001 && u_sheetP > 0.001) w.z += u_leanA * leanRamp(w.x / u_leanW) * u_sheetP;
+    if (u_leanW > 0.001 && u_sheetP > 0.001) w.z += u_geoA * leanRamp(w.x / u_leanW) * u_sheetP;
     if (u_bulgeH > 0.001) {
       float t = clamp(w.y / u_bulgeH, -1.0, 1.0);
       w.z += u_bulgeA * (1.0 - t * t);

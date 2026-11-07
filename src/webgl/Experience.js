@@ -14,11 +14,9 @@ import {
   awardVertex,
   awardFragment,
 } from './shaders.js';
+import { DragVelocityTracker, PanelNavigation, centeredWrap, normalizeWheelDelta } from './panelNavigation.js';
 
 const clamp = (v, min = 0, max = 1) => Math.min(max, Math.max(min, v));
-const mod = (v, n) => ((v % n) + n) % n;
-const centeredWrap = (v, n) => mod(v + n / 2, n) - n / 2;
-const rangeWrap = (v, min, max) => mod(v - min, max - min) + min;
 const ease = (dt, speed = 6.6) => 1 - Math.exp(-speed * Math.min(dt, 0.05));
 const expoInOut = gsap.parseEase('expo.inOut');
 const holeFlightCurves = [
@@ -115,7 +113,8 @@ export default class Experience {
   constructor(canvas, callbacks = {}) {
     this.canvas = canvas;
     this.callbacks = callbacks;
-    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion = this.motionQuery.matches;
     this.route = 'home';
     this.overlay = null;
     this.interactive = false;
@@ -130,12 +129,15 @@ export default class Experience {
     this.homeRects = new Map();
     this.homeElements = [];
     this.homeBase = [];
-    this.homeTotal = 1;
-    this.homeContentHeight = 1;
-    this.homeOffset = { current: 0, target: 0, max: 0 };
+    this.homeOffset = { current: 0, target: 0, period: 0 };
     this.homeVelocity = 0;
+    this.homeRawVelocity = 0;
     this.homeLayoutReady = false;
     this.activeHomeSlug = null;
+    // Input intent lives here; updateHome remains the only gallery renderer.
+    this.homeNavigation = new PanelNavigation();
+    this.homeDragVelocity = new DragVelocityTracker();
+    this.homeClickBlockUntil = 0;
     this.project = null;
     this.projectMedia = [];
     this.projectAwards = [];
@@ -485,6 +487,9 @@ export default class Experience {
         u_sheetC: { value: 1 },
         u_sheetP: { value: textMode ? 1 : 1 },
         u_sheetV: { value: 0 },
+        u_geoD: { value: 0 },
+        u_geoC: { value: 1 },
+        u_geoA: { value: 0 },
         u_hover: { value: 0 },
         u_hoverPoint: { value: new THREE.Vector2(0.5, 0.5) },
         u_arrowMode: { value: 0 },
@@ -610,20 +615,30 @@ export default class Experience {
     // Mobile only: the cards are 15% taller (width, gap and centring untouched).
     // Both height terms scale, so the 70vh guard still limits the tallest card.
     const height = Math.min(this.vh * 0.7, width / (mobile ? 0.89 : tablet ? 1.73 : 1.67)) * (mobile ? 1.15 : 1);
-    const gap = this.vw * (mobile ? 0.06075 : tablet ? 0.035775 : 0.02175);
+    // Inter-panel spacing: 3.0375 / 1.78875 / 1.0875vw reduced by 35%.
+    // Panel dimensions and centring stay unchanged; the loop period follows
+    // this spacing automatically.
+    const gap = this.vw * (
+      mobile ? 0.01974375 :
+      tablet ? 0.011626875 :
+      0.00706875
+    );
     this.homeMetrics = this.featured.map(() => {
       const metric = { width, height, center: cursor + width / 2 };
       cursor += width + gap;
       this.homeBase.push(metric.center);
       return metric;
     });
-    this.homeTotal = Math.max(1, cursor);
-    this.homeContentHeight = Math.max(1, cursor - gap);
-    this.homeOffset.max = this.homeBase[this.homeBase.length - 1];
+    // The loop period includes the trailing gap, matching the original run.
+    this.homeOffset.period = Math.max(1, cursor);
+    this.homeNavigation.configure(this.homeBase, this.homeOffset.period);
     const selected = Math.max(0, this.featured.findIndex((project) => project.slug === previousSlug));
     if (!this.homeLayoutReady || immediate) {
       const position = this.homePositionForIndex(selected);
       this.homeOffset.current = this.homeOffset.target = position;
+      this.homeNavigation.reset(position);
+      this.homeVelocity = 0;
+      this.homeRawVelocity = 0;
     }
     this.homeLayoutReady = true;
     this.refreshHomeText();
@@ -640,7 +655,7 @@ export default class Experience {
     let best = 0;
     let distance = Infinity;
     this.homeBase.forEach((center, index) => {
-      const d = Math.abs(centeredWrap(center - this.homeOffset.current, this.homeTotal));
+      const d = Math.abs(centeredWrap(center - this.homeOffset.current, this.homeOffset.period));
       if (d < distance) {
         distance = d;
         best = index;
@@ -652,17 +667,29 @@ export default class Experience {
   sheetParams() {
     const velocity = Math.min(1, Math.abs(this.homeVelocity));
     if (this.desktop) {
-      // Blend only the resting shape back into the original sheet as motion
-      // starts; the original velocity-driven twist and depth remain intact.
+      // Two readings of one velocity, no second animation state.
+      //
+      // D/C/S/A feed the FRAGMENT stage only. They keep the source's resting
+      // depth (D = W * 0.2 * (1 + 1.1 * velocity)) because the depth haze and
+      // surface light read it — shadeAt returns 0 below u_sheetD 0.001, so
+      // zeroing it while idle stripped the panels' muted treatment.
+      //
+      // gD/gC/gA feed the VERTEX stage only and keep this gallery's own resting
+      // pose: the drawn sheet joins the surface as motion starts, so panels rest
+      // upright. Above velocity 0.05 both sets agree, leaving the scrolling and
+      // velocity-driven bending exactly as it was.
       const motion = Math.min(1, velocity / 0.05);
       return {
         W: this.frustumW,
-        D: this.frustumW * (0.2 * motion + 0.22 * velocity),
+        D: this.frustumW * 0.2 * (1 + 1.1 * velocity),
         T: 1.15,
-        C: motion,
-        S: 3 - 2 * motion,
-        A: -0.12 * this.frustumW * motion,
+        C: 1,
+        S: 1,
+        A: -0.12 * this.frustumW,
         V: velocity,
+        gD: this.frustumW * (0.2 * motion + 0.22 * velocity),
+        gC: motion,
+        gA: -0.12 * this.frustumW * motion,
       };
     }
     return { W: this.frustumW, D: this.frustumW * 0.18, T: 1, C: 0, S: 0.6, A: 0, V: velocity };
@@ -698,6 +725,10 @@ export default class Experience {
       u.u_shadeS.value = sheet.S;
       u.u_leanA.value = sheet.A;
       u.u_leanW.value = sheet.W;
+      // Drawn pose; callers without a separate geometry set keep one surface.
+      u.u_geoD.value = sheet.gD ?? sheet.D;
+      u.u_geoC.value = sheet.gC ?? sheet.C;
+      u.u_geoA.value = sheet.gA ?? sheet.A;
     } else {
       u.u_arcW.value = 0;
       u.u_arcD.value = 0;
@@ -706,6 +737,9 @@ export default class Experience {
       u.u_sheetV.value = 0;
       u.u_leanA.value = 0;
       u.u_leanW.value = 0;
+      u.u_geoD.value = 0;
+      u.u_geoC.value = 0;
+      u.u_geoA.value = 0;
     }
     if (outerArc) {
       u.u_arcW.value = this.frustumW;
@@ -738,16 +772,46 @@ export default class Experience {
 
   updateHome(dt, force = false) {
     if (!this.homeMetrics?.length || (!force && this.route !== 'home' && !this.returningHome)) return;
+    const previous = this.homeOffset.current;
+    const frameDt = dt || 1 / 60;
+    // The navigation spring only moves the existing target. Panel transforms,
+    // depth, scale, hover and intro animations below are unchanged.
+    this.homeOffset.target = this.homeNavigation.update(frameDt, { reducedMotion: this.reducedMotion });
     if (!this.reducedMotion) {
-      const damping = 1 - Math.exp(-6.3 * (dt || 1 / 60));
+      // A held pointer feels attached; released motion keeps the gallery's
+      // original heavy 6.3 damping so momentum and final snap stay cinematic.
+      const dampingRate = this.drag?.moved ? 24 : 6.3;
+      const damping = 1 - Math.exp(-dampingRate * frameDt);
       this.homeOffset.current += (this.homeOffset.target - this.homeOffset.current) * damping;
-      this.homeOffset.current = Math.round(this.homeOffset.current * 100) / 100;
+      const restingError = Math.abs(this.homeOffset.target - this.homeOffset.current);
+      this.homeOffset.current = (!this.homeNavigation.busy && restingError < 0.5) || restingError < 0.02
+        ? this.homeOffset.target
+        : Math.round(this.homeOffset.current * 100) / 100;
     } else this.homeOffset.current = this.homeOffset.target;
-    // Rebase both offsets together, without changing their relative motion.
-    const cycles = Math.round(this.homeOffset.current / this.homeTotal);
-    this.homeOffset.current -= cycles * this.homeTotal;
-    this.homeOffset.target -= cycles * this.homeTotal;
-    const rawVelocity = Math.tanh((this.homeOffset.target - this.homeOffset.current) / (this.desktop ? 550 : 500));
+
+    // Feed the existing velocity-driven shader treatment from actual rendered
+    // motion. The scale matches the old target-lead signal at the original 6.3
+    // damping rate, but now stays truthful while dragging or coasting.
+    const renderedSpeed = (this.homeOffset.current - previous) / Math.max(frameDt, 1 / 240);
+    // Rebase current, target and spring together by whole loop periods. Wrapped
+    // rendering makes this invisible; doing it after the velocity sample avoids
+    // a fake speed spike. Active drags stay continuous for pointer velocity.
+    const period = this.homeOffset.period;
+    if (period > 0 && !this.drag) {
+      const cycles = Math.round(this.homeOffset.current / period);
+      if (cycles) {
+        const delta = cycles * period;
+        this.homeOffset.current -= delta;
+        this.homeOffset.target -= delta;
+        this.homeNavigation.rebase(delta);
+      }
+    }
+    const rawSignal = this.reducedMotion ? 0 : Math.tanh(renderedSpeed / ((this.desktop ? 550 : 500) * 6.3));
+    this.homeRawVelocity += (rawSignal - this.homeRawVelocity) * (1 - Math.exp(-18 * frameDt));
+    if (!this.homeNavigation.busy && Math.abs(this.homeOffset.target - this.homeOffset.current) < 0.02 && Math.abs(rawSignal) < 0.001) {
+      this.homeRawVelocity = 0;
+    }
+    const rawVelocity = this.homeRawVelocity;
     this.homeVelocity = this.desktop ? rawVelocity * Math.abs(rawVelocity) : rawVelocity;
     const sheet = this.sheetParams();
     const cardSheet = this.desktop ? { ...sheet, arc: this.frustumW * 0.35 } : null;
@@ -757,7 +821,7 @@ export default class Experience {
 
     this.homeCards.forEach((card, index) => {
       const metric = this.homeMetrics[index];
-      const relative = centeredWrap(metric.center - this.homeOffset.current, this.homeTotal);
+      const relative = centeredWrap(metric.center - this.homeOffset.current, this.homeOffset.period);
       // Scale continuously with distance from the viewport center, not the
       // discrete active index; keep narrow-screen previews within view.
       const distance = clamp(Math.abs(relative) / (metric.width + this.vw * 0.029));
@@ -973,8 +1037,12 @@ export default class Experience {
   centerOn(slug, immediate = true) {
     const index = this.featured.findIndex((project) => project.slug === slug);
     if (index < 0 || !this.homeBase.length) return;
-    this.homeOffset.target = this.homeOffset.current + centeredWrap(this.homePositionForIndex(index) - this.homeOffset.current, this.homeTotal);
-    if (immediate) this.homeOffset.current = this.homeOffset.target;
+    const position = this.homePositionForIndex(index);
+    this.homeNavigation.reset(position);
+    this.homeOffset.target = position;
+    if (immediate) this.homeOffset.current = position;
+    this.homeVelocity = 0;
+    this.homeRawVelocity = 0;
     this.activeHomeSlug = slug;
     this.updateHome(0, true);
   }
@@ -993,6 +1061,7 @@ export default class Experience {
   setRoute(route, project = null) {
     const continuingReturn = route === 'home' && this.returningHome;
     const previousRoute = this.route;
+    if (route !== 'home') this.endHomeDrag(null, { fling: false });
     this.route = route;
     if (route === 'project') this.returningHome = false;
     if (this.webgl) {
@@ -1034,6 +1103,7 @@ export default class Experience {
 
   setOverlay(type) {
     this.overlay = type;
+    if (type) this.endHomeDrag(null, { fling: false });
     gsap.killTweensOf(this.hole);
     const open = Boolean(type);
     if (this.reducedMotion) {
@@ -1568,6 +1638,9 @@ export default class Experience {
             u.u_shadeS.value = sheet.S;
             u.u_leanA.value = sheet.A;
             u.u_leanW.value = sheet.W;
+            u.u_geoD.value = sheet.gD ?? sheet.D;
+            u.u_geoC.value = sheet.gC ?? sheet.C;
+            u.u_geoA.value = sheet.gA ?? sheet.A;
           } else {
             u.u_arcW.value = this.frustumW;
             u.u_arcD.value = outerArc.depth;
@@ -1576,6 +1649,9 @@ export default class Experience {
             u.u_sheetV.value = 0;
             u.u_leanA.value = 0;
             u.u_leanW.value = 0;
+            u.u_geoD.value = 0;
+            u.u_geoC.value = 0;
+            u.u_geoA.value = 0;
           }
         } else {
           const rect = {
@@ -1709,7 +1785,7 @@ export default class Experience {
         hero.mesh.quaternion.copy(homeCard.mesh.quaternion);
         const sourceUniforms = homeCard.mesh.material.uniforms;
         const targetUniforms = hero.mesh.material.uniforms;
-        for (const key of ['u_alpha', 'u_shade', 'u_shadeS', 'u_corner', 'u_white', 'u_scrim', 'u_arcW', 'u_arcD', 'u_arcOuterD', 'u_arcOuterStart', 'u_arcEdgeBend', 'u_panelBend', 'u_panelCenter', 'u_panelHalfWidth', 'u_sheetW', 'u_sheetD', 'u_sheetT', 'u_sheetC', 'u_sheetP', 'u_sheetV', 'u_hover', 'u_dent', 'u_leanA', 'u_leanW', 'u_bulgeA', 'u_bulgeH']) {
+        for (const key of ['u_alpha', 'u_shade', 'u_shadeS', 'u_corner', 'u_white', 'u_scrim', 'u_arcW', 'u_arcD', 'u_arcOuterD', 'u_arcOuterStart', 'u_arcEdgeBend', 'u_panelBend', 'u_panelCenter', 'u_panelHalfWidth', 'u_sheetW', 'u_sheetD', 'u_sheetT', 'u_sheetC', 'u_sheetP', 'u_sheetV', 'u_geoD', 'u_geoC', 'u_geoA', 'u_hover', 'u_dent', 'u_leanA', 'u_leanW', 'u_bulgeA', 'u_bulgeH']) {
           if (sourceUniforms[key] && targetUniforms[key]) targetUniforms[key].value = sourceUniforms[key].value;
         }
         targetUniforms.u_texture.value = sourceUniforms.u_texture.value;
@@ -2595,17 +2671,54 @@ export default class Experience {
 
   pushScroll(deltaY, deltaX = 0, event = null) {
     if (!this.interactive || !this.webgl || event?.ctrlKey || this.overlay) return;
-    if (this.route === 'project' && this.projectDrag?.axis === 'x') return;
-    if (this.route === 'home') {
-      this.homeOffset.target += deltaY + (deltaX || 0);
-      if (this.desktop) {
-        const delta = this.homeOffset.target - this.homeOffset.current;
-        this.homeOffset.target = this.homeOffset.current + clamp(delta, -this.vw * 1.5, this.vw * 1.5);
-      }
-    } else if (this.route === 'project') {
-      this.projectOffset.target += deltaY;
-      this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
+    if (this.route !== 'project' || this.projectDrag?.axis === 'x') return;
+    this.projectOffset.target += deltaY;
+    this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
+  }
+
+  homeInputTarget(target) {
+    return target instanceof Element
+      && Boolean(target.closest('.home'))
+      && !target.closest('button, input, textarea, select, summary, audio[controls], video[controls], [data-no-drag], .hud, .full-index');
+  }
+
+  homeSettled() {
+    return !this.homeNavigation.busy
+      && !this.drag
+      && Math.abs(this.homeOffset.target - this.homeOffset.current) < 0.2;
+  }
+
+  stepHome(direction) {
+    if (!this.interactive || !this.webgl || this.overlay || this.route !== 'home' || this.drag) return;
+    this.homeNavigation.step(direction, this.homeOffset.current, { reducedMotion: this.reducedMotion });
+    this.homeOffset.target = this.homeNavigation.position;
+  }
+
+  releaseHomePointerCapture(drag) {
+    if (!drag?.captureTarget?.hasPointerCapture?.(drag.pointerId)) return;
+    try { drag.captureTarget.releasePointerCapture(drag.pointerId); } catch { /* capture may already be lost */ }
+  }
+
+  endHomeDrag(event = null, { fling = true } = {}) {
+    const drag = this.drag;
+    if (!drag) return;
+    const now = event?.timeStamp ?? performance.now();
+    const velocity = fling && drag.moved ? this.homeDragVelocity.value(now) : 0;
+    this.drag = null;
+    this.releaseHomePointerCapture(drag);
+    document.documentElement.classList.remove('grabbing');
+    if (drag.moved) {
+      // Time-box home drag suppression so a release outside the gallery cannot
+      // leave a stale boolean that eats the next unrelated control click.
+      this.homeClickBlockUntil = performance.now() + 350;
     }
+    if (this.route !== 'home' || !this.webgl) {
+      this.homeNavigation.reset(this.homeOffset.current);
+      return;
+    }
+    if (fling) this.homeNavigation.release(this.homeOffset.current, velocity, { reducedMotion: this.reducedMotion });
+    else this.homeNavigation.cancel(this.homeOffset.current, { reducedMotion: this.reducedMotion });
+    this.homeOffset.target = this.homeNavigation.position;
   }
 
   flushScroll(ratio) {
@@ -2635,18 +2748,34 @@ export default class Experience {
 
   bindEvents() {
     this.bound.resize = () => this.resize();
+    this.bound.motionChange = (event) => {
+      this.reducedMotion = event.matches;
+      // Preference changes cancel home momentum immediately rather than letting
+      // an in-flight fling continue after reduced motion is requested.
+      this.endHomeDrag(null, { fling: false });
+      if (this.homeNavigation.busy) {
+        this.homeNavigation.reset(this.homeNavigation.target);
+        this.homeOffset.current = this.homeOffset.target = this.homeNavigation.position;
+        this.homeVelocity = 0;
+        this.homeRawVelocity = 0;
+      }
+    };
     this.bound.wheel = (event) => {
       if (!this.interactive || !this.webgl || event.ctrlKey || this.overlay) return;
       if (this.route !== 'home' && this.route !== 'project') return;
       const input = this.scrollInput;
       const mode = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? this.vh : 1;
       if (this.route === 'home') {
-        if (!event.target.closest?.('.home')) return;
-        // Trackpads can report horizontal deltas as well as vertical ones.
-        // Use the dominant axis rather than counting a diagonal gesture twice.
-        const delta = (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) * mode;
-        input.pending += delta;
-        input.event = event;
+        if (!this.homeInputTarget(event.target)) return;
+        // The gallery owns horizontal/vertical wheel intent while it is the
+        // active surface. Controls, overlays and other routes keep native scroll.
+        event.preventDefault();
+        const { delta, threshold } = normalizeWheelDelta(event, this.vh);
+        const direction = this.homeNavigation.wheel(delta, event.timeStamp, {
+          settled: this.homeSettled(),
+          threshold,
+        });
+        if (direction) this.stepHome(direction);
         return;
       }
       const delta = event.deltaY * mode;
@@ -2658,34 +2787,43 @@ export default class Experience {
       else input.pending += delta * 1.25;
       input.event = event;
     };
+    // Home touch input is handled by the unified pointer drag below. These
+    // legacy touch handlers remain only for the project sheet's vertical run.
     this.bound.touchStart = (event) => {
-      if (this.overlay || (this.route === 'home' && !event.target.closest?.('.home'))) return;
-      if (this.route === 'home') this.suppressClick = false;
+      if (this.overlay || this.route !== 'project') return;
       const touch = event.targetTouches?.[0] || event;
       this.touchScroll = { x: touch.clientX, y: touch.clientY, delta: 0, moved: false };
     };
     this.bound.touchMove = (event) => {
-      if (!this.touchScroll) return;
+      if (!this.touchScroll || this.route !== 'project') return;
       const touch = event.targetTouches?.[0] || event;
-      const dx = this.touchScroll.x - touch.clientX;
       const dy = this.touchScroll.y - touch.clientY;
-      const delta = this.route === 'home' ? dx : dy;
       this.touchScroll.x = touch.clientX;
       this.touchScroll.y = touch.clientY;
-      if (this.route === 'home' && Math.abs(dx) > 2) this.touchScroll.moved = true;
-      this.touchScroll.delta = delta;
-      this.pushScroll(delta * 3.25, 0, event);
+      this.touchScroll.delta = dy;
+      this.pushScroll(dy * 3.25, 0, event);
     };
     this.bound.touchEnd = (event) => {
       if (this.touchScroll?.delta) this.pushScroll(this.touchScroll.delta * 35, 0, event);
-      if (this.route === 'home' && this.touchScroll?.moved) this.suppressClick = true;
       this.touchScroll = null;
     };
     this.bound.touchCancel = () => { this.touchScroll = null; };
     this.bound.keyDown = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || (event.shiftKey && event.key !== ' ')) return;
       const target = event.target;
-      if (target && (target.isContentEditable || /^(input|textarea|select|button|a|summary|audio|video)$/i.test(target.tagName))) return;
+      if (target && (target.isContentEditable || /^(input|textarea|select|button|summary|audio|video)$/i.test(target.tagName))) return;
+      if (this.route === 'home') {
+        if (!this.homeInputTarget(target)) return;
+        let direction = 0;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'PageDown') direction = 1;
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'PageUp') direction = -1;
+        else if (event.key === ' ') direction = event.shiftKey ? -1 : 1;
+        else return;
+        event.preventDefault();
+        if (!event.repeat && this.homeSettled()) this.stepHome(direction);
+        return;
+      }
+      if (target?.tagName === 'A') return;
       const page = this.vh * 0.9;
       let delta = 0;
       if (event.key === 'ArrowDown') delta = 100;
@@ -2694,7 +2832,7 @@ export default class Experience {
       else if (event.key === 'PageUp') delta = -page;
       else if (event.key === ' ') delta = event.shiftKey ? -page : page;
       else return;
-      if (this.route !== 'home' && this.route !== 'project') return;
+      if (this.route !== 'project') return;
       event.preventDefault();
       this.pushScroll(delta, 0, event);
     };
@@ -2778,62 +2916,87 @@ export default class Experience {
         this.showBall(true);
         this.mouse.set(event.clientX / this.vw, 1 - event.clientY / this.vh);
       }
-      if (this.drag && this.route === 'home' && !this.overlay) {
-        const totalX = Math.abs(event.clientX - this.drag.x);
-        const totalY = Math.abs(event.clientY - this.drag.y);
-        const primary = totalX;
-        const cross = totalY;
-        if (!this.drag.moved) {
-          if (primary <= 10 || primary <= cross) return;
-          this.drag.moved = true;
-          this.homeCards.forEach((card) => this.hoverCard(card.project.slug, false));
-          this.drag.lastX = event.clientX;
-          this.drag.lastY = event.clientY;
-          document.documentElement.classList.add('grabbing');
+      const drag = this.drag;
+      if (!drag || event.pointerId !== drag.pointerId || this.route !== 'home' || this.overlay) return;
+      const totalX = event.clientX - drag.x;
+      const totalY = event.clientY - drag.y;
+      if (!drag.axis) {
+        const threshold = drag.pointerType === 'mouse' ? 5 : 8;
+        // Let vertical touch intent fall through to the page instead of locking
+        // the gesture into the horizontal gallery.
+        if (drag.pointerType !== 'mouse' && Math.abs(totalY) > threshold && Math.abs(totalY) > Math.abs(totalX) * 1.15) {
+          drag.axis = 'y';
+          drag.moved = true;
+          this.homeClickBlockUntil = performance.now() + 350;
           return;
         }
-        event.preventDefault();
-        const delta = (this.drag.lastX - event.clientX) * 1.5;
-        this.drag.lastDelta = delta;
-        this.drag.lastTime = event.timeStamp;
-        this.drag.lastX = event.clientX;
-        this.drag.lastY = event.clientY;
-        if (delta) {
-          if (this.desktop) this.pushScroll(0, delta, event);
-          else this.pushScroll(delta, 0, event);
-        }
+        if (Math.abs(totalX) <= threshold || Math.abs(totalX) <= Math.abs(totalY) * 1.15) return;
+        drag.axis = 'x';
+        drag.moved = true;
+        drag.origin = this.homeOffset.current;
+        drag.lastX = event.clientX;
+        drag.lastY = event.clientY;
+        this.homeNavigation.beginDrag(drag.origin);
+        this.homeOffset.target = this.homeNavigation.position;
+        this.homeDragVelocity.maxVelocity = this.homeNavigation.spacing * 6.5;
+        this.homeDragVelocity.reset(drag.origin, event.timeStamp);
+        this.homeCards.forEach((card) => this.hoverCard(card.project.slug, false));
+        document.documentElement.classList.add('grabbing');
+        drag.captureTarget = drag.downTarget.closest('.home-card') || drag.downTarget.closest('.home') || drag.downTarget;
+        try { drag.captureTarget.setPointerCapture?.(drag.pointerId); } catch { /* window listeners still cover release */ }
+        return;
       }
+      if (drag.axis !== 'x') return;
+      event.preventDefault();
+      // One gallery pixel per pointer pixel: no old 1.5x / 3.25x input gain.
+      // The offset is continuous across the loop seam; rendering wraps it.
+      const position = this.homeNavigation.position + (drag.lastX - event.clientX);
+      this.homeNavigation.dragTo(position);
+      this.homeOffset.target = position;
+      this.homeDragVelocity.sample(position, event.timeStamp);
+      drag.lastX = event.clientX;
+      drag.lastY = event.clientY;
     };
     this.bound.pointerDown = (event) => {
-      if (event.button !== 0 || event.pointerType !== 'mouse' || !this.interactive || !this.webgl || this.overlay || this.route !== 'home') return;
-      if (event.target.closest('button, input, textarea, select, .hud, .full-index')) return;
+      if (event.button !== 0 || event.isPrimary === false || !this.interactive || !this.webgl || this.overlay || this.route !== 'home' || this.drag) return;
+      if (!this.homeInputTarget(event.target)) return;
       this.suppressClick = false;
+      // Catching a moving gallery anchors at its rendered position; the existing
+      // damping absorbs the remaining motion instead of jumping to the old target.
+      this.homeNavigation.beginDrag(this.homeOffset.current);
+      this.homeOffset.target = this.homeNavigation.position;
+      this.homeDragVelocity.reset(this.homeOffset.current, event.timeStamp);
       this.drag = {
+        pointerId: event.pointerId,
+        pointerType: event.pointerType,
+        downTarget: event.target,
+        captureTarget: null,
         x: event.clientX,
         y: event.clientY,
         lastX: event.clientX,
         lastY: event.clientY,
-        lastDelta: 0,
-        lastTime: 0,
+        origin: this.homeOffset.current,
+        axis: null,
         moved: false,
       };
     };
-    this.bound.pointerUp = (event, fling = true) => {
-      if (this.drag?.moved) {
-        this.suppressClick = true;
-        if (fling && this.drag.lastDelta && event.timeStamp - this.drag.lastTime < 100) {
-          const delta = this.drag.lastDelta * 12;
-          if (this.desktop) this.pushScroll(0, delta, event);
-          else this.pushScroll(delta, 0, event);
-        }
-      }
-      this.drag = null;
-      document.documentElement.classList.remove('grabbing');
+    this.bound.pointerUp = (event) => {
+      if (this.drag && event.pointerId === this.drag.pointerId) this.endHomeDrag(event, { fling: true });
     };
-    this.bound.pointerCancel = (event) => this.bound.pointerUp(event, false);
+    this.bound.pointerCancel = (event) => {
+      if (this.drag && event.pointerId === this.drag.pointerId) this.endHomeDrag(event, { fling: false });
+    };
+    this.bound.lostPointerCapture = (event) => {
+      if (this.drag && event.pointerId === this.drag.pointerId) this.endHomeDrag(event, { fling: false });
+    };
+    this.bound.windowBlur = () => this.endHomeDrag(null, { fling: false });
+    this.bound.visibilityChange = () => {
+      if (document.visibilityState === 'hidden') this.endHomeDrag(null, { fling: false });
+    };
     this.bound.click = (event) => {
-      if (this.suppressClick) {
+      if (this.suppressClick || performance.now() < this.homeClickBlockUntil) {
         this.suppressClick = false;
+        this.homeClickBlockUntil = 0;
         event.preventDefault();
         event.stopPropagation();
       }
@@ -2843,7 +3006,8 @@ export default class Experience {
       this.lastMouse = null;
     };
     window.addEventListener('resize', this.bound.resize);
-    window.addEventListener('wheel', this.bound.wheel, { passive: true });
+    this.motionQuery.addEventListener?.('change', this.bound.motionChange);
+    window.addEventListener('wheel', this.bound.wheel, { passive: false });
     window.addEventListener('touchstart', this.bound.touchStart, { passive: true });
     window.addEventListener('touchmove', this.bound.touchMove, { passive: true });
     window.addEventListener('touchend', this.bound.touchEnd, { passive: true });
@@ -2857,6 +3021,9 @@ export default class Experience {
     window.addEventListener('pointerdown', this.bound.pointerDown);
     window.addEventListener('pointerup', this.bound.pointerUp);
     window.addEventListener('pointercancel', this.bound.pointerCancel);
+    window.addEventListener('lostpointercapture', this.bound.lostPointerCapture);
+    window.addEventListener('blur', this.bound.windowBlur);
+    document.addEventListener('visibilitychange', this.bound.visibilityChange);
     window.addEventListener('click', this.bound.click, true);
     document.documentElement.addEventListener('pointerleave', this.bound.mouseLeave);
   }
@@ -2943,6 +3110,7 @@ export default class Experience {
     this.destroyed = true;
     cancelAnimationFrame(this.raf);
     window.removeEventListener('resize', this.bound.resize);
+    this.motionQuery.removeEventListener?.('change', this.bound.motionChange);
     window.removeEventListener('wheel', this.bound.wheel);
     window.removeEventListener('touchstart', this.bound.touchStart);
     window.removeEventListener('touchmove', this.bound.touchMove);
@@ -2957,8 +3125,12 @@ export default class Experience {
     window.removeEventListener('pointerdown', this.bound.pointerDown);
     window.removeEventListener('pointerup', this.bound.pointerUp);
     window.removeEventListener('pointercancel', this.bound.pointerCancel);
+    window.removeEventListener('lostpointercapture', this.bound.lostPointerCapture);
+    window.removeEventListener('blur', this.bound.windowBlur);
+    document.removeEventListener('visibilitychange', this.bound.visibilityChange);
     window.removeEventListener('click', this.bound.click, true);
     document.documentElement.removeEventListener('pointerleave', this.bound.mouseLeave);
+    this.endHomeDrag(null, { fling: false });
     gsap.killTweensOf(this.hole);
     gsap.killTweensOf(this.ball);
     this.progressTween?.kill();
