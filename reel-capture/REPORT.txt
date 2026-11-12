@@ -1,0 +1,26 @@
+=== node
+v22.23.4
+=== reachability of live site
+live http=200
+=== install puppeteer
+npm warn deprecated puppeteer@23.11.1: < 24.15.0 is no longer supported
+
+added 164 packages in 12s
+=== run capture
+samples: 275
+css: {"maskBg":"linear-gradient(rgb(0, 0, 0) 3%, rgba(0, 0, 0, 0.8) 19%, rgba(0, 0, 0, 0.35) 36%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.35) 65%, rgba(0, 0, 0, 0.8) 81%, rgb(0, 0, 0) 97%)","maskInset":"0px","maskZ":"10","maskHeight":"76px","marqueeFont":"Inter, Arial, sans-serif","marqueeSize":"20px","marqueeWeight":"500","marqueeTransform":"matrix(1, 0, 0, 1, 0, -48)","slotH":76,"slotOverflow":"hidden","itemH":null,"listH":0,"itemCount":0}
+=== exit=0
+total 412
+drwxr-xr-x  2 runner runner   4096 Nov 12 19:03 .
+drwxr-xr-x 11 runner runner   4096 Nov 12 19:03 ..
+-rw-r--r--  1 runner runner    711 Nov 12 19:03 REPORT.txt
+-rw-r--r--  1 runner runner  12819 Nov 12 19:03 frame-00.png
+-rw-r--r--  1 runner runner  14992 Nov 12 19:03 frame-01.png
+-rw-r--r--  1 runner runner  13783 Nov 12 19:03 frame-02.png
+-rw-r--r--  1 runner runner  11477 Nov 12 19:03 frame-03.png
+-rw-r--r--  1 runner runner  10981 Nov 12 19:03 frame-04.png
+-rw-r--r--  1 runner runner  10982 Nov 12 19:03 frame-05.png
+-rw-r--r--  1 runner runner  10982 Nov 12 19:03 frame-06.png
+-rw-r--r--  1 runner runner   8677 Nov 12 19:03 frame-07.png
+-rw-r--r--  1 runner runner   5623 Nov 12 19:03 frame-08.png
+-rw-r--r--  1 runner runner 289210 Nov 12 19:03 reel.json
