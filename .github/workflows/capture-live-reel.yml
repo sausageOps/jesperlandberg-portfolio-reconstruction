@@ -28,8 +28,15 @@ jobs:
           node -e "console.log('puppeteer ok')"
 
       - name: Capture live reference reel
+        continue-on-error: true
         run: |
           mkdir -p out
+          exec >> out/REPORT.txt 2>&1
+          echo "=== env"; node -v; npm -v
+          echo "=== reachability"
+          curl -s -o /dev/null -m 25 -w 'live http=%{http_code}\n' https://gif.garajedeideas.com/ || echo "curl failed"
+          echo "=== npm install puppeteer"
+          npm i --no-audit --no-fund puppeteer@23 2>&1 | tail -5
           cat > cap.mjs <<'JS'
 import puppeteer from 'puppeteer';
 import fs from 'fs';
@@ -120,10 +127,13 @@ fs.writeFileSync(`${OUT}/live.html`, html);
 await browser.close();
 console.log('samples:', reel.length, 'css:', JSON.stringify(css));
 JS
+          echo "=== run cap.mjs"
           node cap.mjs
+          echo "=== exit=$?"
           ls -la out | head -25
 
       - name: Publish
+        if: always()
         run: |
           git config user.name  "reel-capture-bot"
           git config user.email "reel-capture-bot@users.noreply.github.com"
