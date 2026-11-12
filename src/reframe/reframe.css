@@ -1,0 +1,301 @@
+/* ReframeHK. Palette: ink, paper, one signal orange.
+   main.js sets every colour and font variable below from KIT at runtime; these are the defaults. */
+
+/* Self-hosted faces (Google Fonts, SIL Open Font License), latin subset. */
+@font-face {
+  font-family: "Space Grotesk"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("/assets/reframe/fonts/space-grotesk-latin.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fraunces"; font-style: italic; font-weight: 400; font-display: swap;
+  src: url("/assets/reframe/fonts/fraunces-italic-latin.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/reframe/fonts/space-mono-400-latin.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Mono"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/assets/reframe/fonts/space-mono-700-latin.v1.woff2") format("woff2");
+}
+
+.reframe-scope {
+  --ink: #0f0f0e;
+  --ink-2: #1b1a18;
+  --paper: #ebe8e1;
+  --muted: #8a877f;
+  --signal: #ff4f1a;
+  --muted-paper: #6f6c65; /* secondary text on paper */
+  --ink-soft: #4b4943;    /* small print on paper */
+  --paper-soft: #c9c6be;  /* body text on ink */
+  --hot: #ffffff;         /* brighter than paper */
+  --sans: "Space Grotesk", system-ui, sans-serif;
+  --serif: "Fraunces", Georgia, serif;
+  --mono: "Space Mono", ui-monospace, monospace;
+  --pad: clamp(16px, 2.4vw, 32px);
+}
+
+.reframe-scope *, .reframe-scope *::before, .reframe-scope *::after { box-sizing: border-box; }
+
+.reframe-scope button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.reframe-scope a { color: inherit; }
+.reframe-scope :focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+
+.reframe-scope .page { position: fixed; inset: 0; }
+
+/* ─── stage ──────────────────────────────────────────────────────────── */
+.reframe-scope .stage { position: absolute; inset: 0; cursor: grab; touch-action: none; }
+.reframe-scope .stage canvas { display: block; width: 100%; height: 100%; }
+.reframe-scope .stage.is-dragging { cursor: grabbing; }
+.reframe-scope .stage.is-link { cursor: pointer; }
+
+.reframe-scope .vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--ink) 85%, transparent), transparent 120px),
+    linear-gradient(to top, color-mix(in srgb, var(--ink) 85%, transparent), transparent 110px),
+    radial-gradient(120% 90% at 50% 50%, transparent 60%, color-mix(in srgb, var(--ink) 55%, transparent));
+}
+
+.reframe-scope .cross {
+  position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  pointer-events: none; opacity: 0.55; mix-blend-mode: difference;
+  background:
+    linear-gradient(var(--paper), var(--paper)) center / 1px 100% no-repeat,
+    linear-gradient(var(--paper), var(--paper)) center / 100% 1px no-repeat;
+}
+
+/* Keyboard aim: a small tag just below-right of the crosshair. */
+.reframe-scope .aim {
+  position: absolute; left: 50%; top: 50%; z-index: 3; pointer-events: none;
+  transform: translate(14px, 14px);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+  padding: 6px 9px; border-radius: 4px; background: color-mix(in srgb, var(--ink-2) 82%, transparent); color: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--paper) 16%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  opacity: 0; transition: opacity 0.2s;
+}
+.reframe-scope .aim.is-on { opacity: 1; transition-delay: 0.15s; }
+.reframe-scope .aim b { color: var(--signal); font-weight: 500; margin-right: 4px; }
+
+/* ─── HUD ────────────────────────────────────────────────────────────── */
+.reframe-scope .hud {
+  position: absolute; left: 0; right: 0; z-index: 2;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: var(--pad);
+  pointer-events: none;
+}
+.reframe-scope .hud > * { pointer-events: auto; }
+.reframe-scope .hud--top { top: 0; padding-top: max(var(--pad), env(safe-area-inset-top)); }
+.reframe-scope .hud--bottom { bottom: 0; align-items: flex-end; padding-bottom: max(var(--pad), env(safe-area-inset-bottom)); }
+.reframe-scope .hud--bottom > * { pointer-events: none; }
+
+.reframe-scope .mark {
+  font-family: var(--sans); font-weight: 700; font-size: 26px; letter-spacing: -0.045em; line-height: 1;
+  display: inline-flex; align-items: flex-start;
+}
+.reframe-scope .mark i, .reframe-scope .index h1 i {
+  font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -0.01em;
+  margin-right: 0.02em; color: var(--signal);
+}
+.reframe-scope .mark sup, .reframe-scope .index h1 sup {
+  font-family: var(--mono); font-weight: 500; font-size: 0.36em; letter-spacing: 0.04em;
+  margin-left: 0.25em; padding: 0.15em 0.3em; border: 1px solid currentColor; border-radius: 3px;
+  position: relative; top: 0.1em;
+}
+
+/* An SVG wordmark from KIT.logo: ink = currentColor, data-role="accent" = signal. */
+.reframe-scope .logo-svg { display: inline-block; height: 0.92em; }
+.reframe-scope .mark__word { display: inline-flex; align-items: flex-start; }
+.reframe-scope .mark__symbol { display: none; }
+.reframe-scope .mark__symbol .logo-svg { height: 1.25em; }
+.reframe-scope .index h1 .logo-svg { height: 0.8em; }
+.reframe-scope .logo-svg svg { display: block; width: auto; height: 100%; overflow: visible; }
+/* Logo motion (main.js): pieces turn about their own centre; JS writes transform/opacity
+   (and clip-path on the word / hk groups) only while the logo animates. */
+.reframe-scope .logo-svg [data-piece] { transform-box: fill-box; transform-origin: center; }
+.reframe-scope .logo-svg [data-role~="accent"][fill]:not([fill="none"]), .reframe-scope .logo-svg [data-role~="accent"] [fill]:not([fill="none"]) { fill: var(--signal); }
+.reframe-scope .logo-svg [data-role~="accent"][stroke]:not([stroke="none"]), .reframe-scope .logo-svg [data-role~="accent"] [stroke]:not([stroke="none"]) { stroke: var(--signal); }
+.reframe-scope .logo-svg [data-role~="bg"][fill]:not([fill="none"]), .reframe-scope .logo-svg [data-role~="bg"] [fill]:not([fill="none"]) { fill: var(--ink); }
+.reframe-scope .logo-svg [data-role~="bg"][stroke]:not([stroke="none"]), .reframe-scope .logo-svg [data-role~="bg"] [stroke]:not([stroke="none"]) { stroke: var(--ink); }
+
+.reframe-scope .hud__right { display: flex; gap: 6px; }
+.reframe-scope .hud__nav { display: flex; gap: 6px; }
+.reframe-scope .hud__nav button, .reframe-scope .pill {
+  font-size: 14px; font-weight: 500; letter-spacing: -0.01em;
+  padding: 9px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-2) 72%, transparent); border: 1px solid color-mix(in srgb, var(--paper) 12%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+.reframe-scope .hud__nav button:hover, .reframe-scope .hud__nav button.is-active, .reframe-scope .pill:hover { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+
+/* Sound toggle: four equaliser bars, dancing when on (a GSAP loop in main.js), flat when off. */
+.reframe-scope .sound { display: inline-flex; align-items: center; gap: 8px; }
+.reframe-scope .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.reframe-scope .eq i {
+  display: block; width: 2px; height: 100%; background: currentColor; border-radius: 1px;
+  transform: scaleY(0.18); transform-origin: bottom;
+}
+.reframe-scope .sound.is-on .eq i:first-child { color: var(--signal); }
+@media (prefers-reduced-motion: reduce) {
+  /* GSAP's loop is off: on = still bars at mixed heights */
+  .reframe-scope .eq i { transition: transform 0.3s; }
+  .reframe-scope .sound.is-on .eq i { transform: scaleY(0.9); }
+  .reframe-scope .sound.is-on .eq i:nth-child(2) { transform: scaleY(0.5); }
+  .reframe-scope .sound.is-on .eq i:nth-child(4) { transform: scaleY(0.7); }
+}
+.reframe-scope .hud__count { font-family: var(--mono); font-size: 10px; opacity: 0.6; margin-left: 2px; }
+
+.reframe-scope .hint, .reframe-scope .coords {
+  margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); display: flex; align-items: center; gap: 10px;
+}
+.reframe-scope .hint__pad {
+  width: 22px; height: 22px; border: 1px solid color-mix(in srgb, var(--paper) 35%, transparent); border-radius: 50%;
+  display: grid; place-items: center;
+}
+.reframe-scope .hint__pad span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--signal); /* orbits: GSAP loop in main.js */
+}
+.reframe-scope .coords b { font-weight: 500; color: var(--paper); min-width: 5ch; font-variant-numeric: tabular-nums; }
+.reframe-scope .coords .coords__clock { min-width: 8ch; }
+.reframe-scope .coords__xy { display: contents; }
+
+/* Floating label beside the cursor over a project / contact tile. */
+.reframe-scope .cursor-label {
+  position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 7px 10px; border-radius: 4px; background: var(--paper); color: var(--ink);
+  opacity: 0; transform: translate(-999px, -999px); transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.reframe-scope .cursor-label.is-on { opacity: 1; }
+.reframe-scope .cursor-label b { color: var(--signal); font-weight: 500; }
+
+/* ─── sheet (project / contact detail) ───────────────────────────────── */
+/* Open/close is a GSAP timeline in main.js: it slides the panel, fades the backdrop and
+   sets visibility (hidden only once the slide-out has finished). */
+.reframe-scope .sheet { position: absolute; inset: 0; z-index: 5; visibility: hidden; }
+.reframe-scope .sheet__backdrop {
+  position: absolute; inset: 0; background: color-mix(in srgb, var(--ink) 55%, transparent);
+  opacity: 0;
+}
+.reframe-scope .sheet__panel {
+  position: absolute; top: 12px; right: 12px; bottom: 12px; width: min(480px, calc(100% - 24px));
+  background: var(--paper); color: var(--ink); border-radius: 14px;
+  overflow: auto; overscroll-behavior: contain;
+}
+.reframe-scope .sheet__close {
+  position: sticky; top: 14px; float: right; margin: 14px 14px 0 0; z-index: 1; /* top = the margin, so it keeps its gap while the panel scrolls */
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 12px; border-radius: 999px; background: var(--ink); color: var(--paper);
+}
+.reframe-scope .sheet__body { padding: 22px 28px 32px; }
+.reframe-scope .sheet__media {
+  margin: 44px 0 26px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--ink);
+}
+.reframe-scope .sheet__media video, .reframe-scope .sheet__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.reframe-scope .sheet__kicker {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-paper);
+  margin: 0 0 12px;
+}
+.reframe-scope .sheet h2 {
+  font-size: clamp(34px, 4vw, 46px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.02; margin: 0 0 16px;
+  font-family: var(--sans), "PingFang HK", "Noto Sans HK", sans-serif;
+}
+.reframe-scope .sheet__desc { font-size: 17px; line-height: 1.5; margin: 0 0 26px; max-width: 34em; }
+.reframe-scope .sheet dl { display: grid; grid-template-columns: 7em 1fr; margin: 0 0 30px; border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); }
+.reframe-scope .sheet dt, .reframe-scope .sheet dd { margin: 0; padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); font-size: 15px; }
+.reframe-scope .sheet dt { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-paper); padding-top: 15px; }
+.reframe-scope .sheet__cta {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  font-weight: 600; font-size: 17px; padding: 15px 22px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); transition: background 0.25s;
+}
+.reframe-scope .sheet__cta:hover { background: var(--signal); color: var(--ink); }
+.reframe-scope .sheet__cta span { transition: transform 0.3s; }
+.reframe-scope .sheet__cta:hover span { transform: translate(3px, -3px); }
+
+.reframe-scope .sheet--contact .sheet__panel { width: min(680px, calc(100% - 24px)); bottom: auto; }
+.reframe-scope .sheet--contact h2 { font-size: clamp(34px, 4.4vw, 56px); }
+.reframe-scope .sheet--contact .sheet__body { padding-top: 64px; }
+@media (max-width: 640px) { .reframe-scope .sheet--contact .sheet__panel { width: auto; bottom: 8px; } .reframe-scope .sheet__mail { font-size: 40px; } }
+.reframe-scope .sheet__mail {
+  display: block; font-weight: 600; letter-spacing: -0.05em; line-height: 0.95;
+  font-size: clamp(38px, 4.6vw, 62px); text-decoration: none; margin: 8px 0 28px;
+  background: linear-gradient(var(--signal), var(--signal)) 0 100% / 0 4px no-repeat; transition: background-size 0.5s;
+}
+.reframe-scope .sheet__mail:hover { background-size: 100% 4px; }
+.reframe-scope .copy {
+  position: relative; display: inline-flex; align-items: center; gap: 10px; overflow: hidden;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 13px 18px; border-radius: 999px; border: 1px solid var(--ink);
+}
+.reframe-scope .copy__label { display: inline-grid; }
+/* "Copy" ↔ "Copied" swap and the ink wipe: a GSAP timeline in main.js (copyEmail) */
+.reframe-scope .copy__label > span { grid-area: 1 / 1; }
+.reframe-scope .copy__label > span + span { opacity: 0; color: var(--signal); }
+.reframe-scope .copy__ink {
+  position: absolute; inset: 0; background: var(--ink); transform: scaleX(0); transform-origin: left; z-index: -1;
+}
+.reframe-scope .copy.is-copied { color: var(--paper); }
+.reframe-scope .sheet__small { margin: 28px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.reframe-scope .sheet__privacy { margin: 14px 0 0; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--muted-paper); }
+
+@media (max-width: 640px) {
+  .reframe-scope .mark { font-size: 21px; }
+  /* Phones: the symbol stands in for the wordmark so the nav and sound fit on one row. */
+  .reframe-scope .mark__word { display: none; }
+  .reframe-scope .mark__symbol { display: inline-flex; align-items: center; }
+  .reframe-scope .hud__nav { gap: 4px; }
+  .reframe-scope .hud__nav button { font-size: 13px; padding: 8px 10px; }
+  .reframe-scope .hud__count { display: none; }
+  .reframe-scope .hud__right { gap: 4px; }
+  .reframe-scope .pill { padding: 8px 10px; }
+  .reframe-scope .sound__txt { display: none; }
+  .reframe-scope .coords__xy { display: none; }
+  .reframe-scope .sheet__panel {
+    top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 86svh;
+  }
+  .reframe-scope .sheet__body { padding: 16px 20px 26px; }
+}
+
+/* ─── plain-HTML index: screen readers always, sighted users only as fallback ──
+   (no WebGL: main.js adds .is-fallback; no JavaScript: index.html's <noscript> repeats these rules) */
+.reframe-scope .index {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.reframe-scope .page.is-fallback { position: static; }
+.reframe-scope .page.is-fallback .stage, .reframe-scope .page.is-fallback .vignette, .reframe-scope .page.is-fallback .cross, .reframe-scope .page.is-fallback .hud, .reframe-scope .page.is-fallback .cursor-label, .reframe-scope .page.is-fallback .aim { display: none; }
+.reframe-scope .page.is-fallback .index {
+  position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal;
+  max-width: 760px; margin: 0 auto; padding: 10vh 24px; font-size: 18px; line-height: 1.55;
+}
+.reframe-scope .index h1 { font-size: clamp(56px, 12vw, 120px); letter-spacing: -0.05em; line-height: 1; margin: 0 0 16px; }
+.reframe-scope .index h2 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--signal); margin: 64px 0 8px; }
+.reframe-scope .index h3 { font-size: 30px; letter-spacing: -0.03em; margin: 24px 0 4px; }
+.reframe-scope .index p { margin: 0; color: var(--paper-soft); }
+.reframe-scope .index footer { margin-top: 64px; font-family: var(--mono); font-size: 12px; }
+.reframe-scope .sheet:not(.is-open) { pointer-events: none; } /* the field is usable while the sheet slides out */
+
+/* The home island owns these defaults; no reference document reset leaks into Jesper. */
+.reframe-scope { position: fixed; inset: 0; background: var(--ink); color: var(--paper); font: 400 16px/normal var(--sans); -webkit-font-smoothing: antialiased; }
+.reframe-scope .page { overflow: hidden; }
+.reframe-scope .sheet__panel { line-height: normal; }
+.reframe-scope .index a { text-decoration: underline; }
+/* Keep the A24 dock fixed and preserve wheel/touch scrolling on the fallback. */
+.reframe-scope .page.is-fallback { position: absolute; overflow: auto; inset: 0; }
+.reframe-scope .page.is-fallback .index { padding-bottom: 100px; }
+@media (max-width: 991px) { .reframe-scope .hud--bottom { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); } }
+/* At the A24 desktop breakpoint the centered dock and source HUD would
+   overlap. Move only the flight controls down for this narrow width range. */
+@media (min-width: 992px) and (max-width: 1080px) {
+  .reframe-scope .hud--top .hud__right { transform: translateY(48px); }
+}
+/* The reference itself clips Sound below 320px. Keep both docks usable at
+   narrow viewport widths without changing the established 320px+ layout. */
+@media (max-width: 319px) {
+  body:has(.reframe-page) { min-width: 0; }
+  .reframe-scope .hud__nav button, .reframe-scope .pill { padding-inline: 5px; }
+}

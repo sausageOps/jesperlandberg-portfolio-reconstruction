@@ -66,7 +66,7 @@ const SECTION_HOMES = [
 ];
 
 const CARTER_HOSTS = new Set(['carterogunsola.com', 'www.carterogunsola.com']);
-const JESPER_PREFIXES = ['/myself/', '/routes/', '/projects/'];
+const JESPER_PREFIXES = ['/myself/', '/routes/'];
 
 /**
  * Map an internal Carter href ("/writing/the-personal-starter#credits") to its
