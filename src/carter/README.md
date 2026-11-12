@@ -145,14 +145,13 @@ the first page that needs it:
 
 - **SignatureFx** (signature ink; About and Writing post) → `src/carter/engines/`.
 - **3D helpers** (css3d, studio env, GL warm-up; About deck/card and Writing
-  folders). Jesper's `src/components/writing/shelfHelpers.js` and
-  `src/components/studio/studioEnv.js` are earlier ports to start from.
+  folders). The active versions live in `src/carter/engines/`; Studio retains
+  its own `src/components/studio/studioEnv.js`.
 - **Lenis smooth scroll.** Only Writing scrolls; About and Lab are fixed
   100svh boards. `scroll.lenis` stays `null` until then.
 - **WebGL paper** (`canvas.paper-gl`). Carter's live background, shared by all
   pages. The frame currently renders Carter's CSS fallback (fibre plus animated
-  tooth), with a `.carter[data-paper-gl]` hook ready. This needs a decision on
-  how it should sit alongside Jesper's Experience.
+  tooth), with a `.carter[data-paper-gl]` hook ready.
 - **Global SVG sprite** (Writing only).
 - **Version gaps:** Carter uses three r185 and gsap 3.15; Jesper ships three
   r180 and gsap ^3.13.

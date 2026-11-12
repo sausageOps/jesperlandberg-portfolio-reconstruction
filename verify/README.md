@@ -5,23 +5,6 @@ Paste-Up, Phase 5G ThreeJs Scene). It is **not** part of the app: no
 `src/` module imports it and Vite never bundles it. `jsdom` is installed ad hoc
 for this directory only and is deliberately **not** added to `package.json`.
 
-## Home gallery navigation
-
-`home-gallery-verify.mjs` checks the infinitely looping panel navigation module
-that feeds `Experience.updateHome()` — wheel coalescing/suppression, direction
-reversal, last→first/first→last wrapping, multi-loop drift, pointer velocity,
-slow/fast release projection across the seam, cancelled pointers, reduced
-motion, and 30/60/120 Hz spring settling. It needs only Node:
-
-```bash
-node verify/home-gallery-verify.mjs
-```
-
-Browser interaction/shader checks are run separately against the dev server and
-production preview (wheel, trackpad, mouse/touch drag, loop-seam flicks, outside
-release, vertical touch intent, project-route isolation, active-panel scale,
-reduced motion).
-
 ```bash
 npm i --no-audit --no-fund jsdom@25   # verification only; revert manifests after
 CARTER_REF=/tmp/carter node verify/dial-verify.mjs
@@ -172,3 +155,43 @@ property is still checked directly.
 - No real browser is available in this sandbox (no Chromium system libraries and
   no root to install them), so touch input, real pointer capture, GPU rendering
   and visual fidelity remain unverified.
+
+## Reframe field integration
+
+`reframe-browser.cjs` exercises the original Reframe HUD, all three Reframe sheets and
+CTAs, Contact copy, sound, arrow input, retained A24 presence and the retired
+project URL redirect at one viewport per invocation. With a dev preview running,
+install Playwright and its browser separately (it is not an app dependency), then:
+
+```bash
+node verify/reframe-browser.cjs 1440
+node verify/reframe-browser.cjs 768
+node verify/reframe-browser.cjs 390
+node verify/reframe-browser.cjs 320
+```
+
+`PREVIEW_URL`, `PLAYWRIGHT_PATH`, `CHROMIUM_PATH` and JSON-array `BROWSER_ARGS`
+can override the default preview, optional Playwright installation, browser binary,
+and browser launch flags. This smoke test does not replace real-device or visual QA.
+
+
+### Audit regression checks
+
+`reframe-audit-regression.cjs` exercises the source-versus-target audit fixes.
+With the previews running and optional Playwright configured as above, run one
+scenario per process (use `PREVIEW_URL` to select dev or production):
+
+```bash
+for width in 1440 768 390; do
+  for mode in fallback keyboard nojs blocked; do
+    node verify/reframe-audit-regression.cjs "$width" "$mode"
+  done
+done
+# Against the separately running source checkout on :3000:
+REFERENCE=1 node verify/reframe-audit-regression.cjs 390 fallback
+```
+
+The fallback test checks PageDown, End, Home and target wheel scrolling; the
+keyboard test checks every original HUD button and A24 menu isolation. The no-JS
+and blocked-entry cases cover the static semantic index and its typography.
+Physical touch, audio output and browser-specific behavior still need device QA.

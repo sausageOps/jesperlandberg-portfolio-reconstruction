@@ -1,52 +1,146 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000000" />
-    <style>html,body{margin:0;background:#000}</style>
-    <meta name="description" content="Jesper Landberg, Swedish design engineer, building visually rich, motion-driven websites." />
-    <link rel="icon" type="image/png" href="/assets/favicon.png" />
-    <link rel="preload" href="/assets/fonts/ABCDiatypePlusVariable.woff2" as="font" type="font/woff2" crossorigin />
-    <title>Jesper Landberg</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- Temporary startup-only diagnostic; remove after preview failure is identified. -->
-    <script>
-      (() => {
-        const failures = [];
-        let panel;
-        function report(message) {
-          failures.push(message);
-          if (!panel) {
-            panel = document.createElement('pre');
-            panel.style.cssText = 'position:fixed;z-index:2147483647;top:8px;left:8px;right:8px;max-height:80vh;overflow:auto;margin:0;padding:12px;background:white;color:black;border:2px solid red;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace';
-            document.body.appendChild(panel);
-          }
-          const modules = performance.getEntriesByType('resource').map(entry => entry.name)
-            .filter(name => /\/node_modules\/.*(?:react|chunk-)/i.test(name));
-          const root = document.getElementById('root');
-          panel.textContent = 'TEMPORARY STARTUP DIAGNOSTIC — please screenshot this panel\n' + failures.join('\n') +
-            '\nRoot children: ' + (root ? root.children.length : 'missing') +
-            '\nLoaded React/dependency module URLs:\n' + (modules.join('\n') || '(none recorded)');
-        }
-        window.addEventListener('error', event => {
-          if (event.target === window) {
-            report('JavaScript error: ' + (event.error?.stack || event.message || 'unknown'));
-            setTimeout(() => report('Module list updated after error.'), 1500);
-          }
-        });
-        window.addEventListener('unhandledrejection', event => {
-          report('Unhandled rejection: ' + (event.reason?.stack || String(event.reason)));
-        });
-        window.addEventListener('vite:preloadError', event => report('Dynamic import failed: ' + String(event.payload)));
-        setTimeout(() => {
-          const root = document.getElementById('root');
-          if (!root || !root.children.length) report('Startup check after 15 seconds: application root is empty.');
-        }, 15000);
-      })();
-    </script>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ReframeHK | Hong Kong Web Studio</title>
+  <meta name="description" content="ReframeHK is a Hong Kong web studio. We design, build, host and look after websites, web apps and systems, with real care before and after launch." />
+  <link rel="canonical" href="https://reframehk.com/" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0f0f0e" />
+  <meta name="color-scheme" content="dark" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ReframeHK" />
+  <meta property="og:locale" content="en_HK" />
+  <meta property="og:url" content="https://reframehk.com/" />
+  <meta property="og:title" content="ReframeHK | Hong Kong Web Studio" />
+  <meta property="og:description" content="Websites, made with real care. We design, build, host and look after websites, web apps and systems in Hong Kong." />
+  <meta property="og:image" content="https://reframehk.com/og.v2.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The ReframeHK aperture logo on a field of project tiles." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ReframeHK | Hong Kong Web Studio" />
+  <meta name="twitter:description" content="Websites, made with real care. We design, build, host and look after websites, web apps and systems in Hong Kong." />
+  <meta name="twitter:image" content="https://reframehk.com/og.v2.jpg" />
+  <meta name="twitter:image:alt" content="The ReframeHK aperture logo on a field of project tiles." />
+  <link rel="icon" href="/assets/reframe/favicon.ico" sizes="48x48" />
+  <link rel="icon" href="/assets/reframe/icons/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/reframe/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/reframe/site.webmanifest" />
+  <link rel="preload" href="/assets/reframe/fonts/space-grotesk-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/reframe/fonts/fraunces-italic-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/reframe/fonts/space-mono-400-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/ABCDiatypePlusVariable.woff2" as="font" type="font/woff2" crossorigin />
+  <style>
+    html, body { margin: 0; background: #0f0f0e; }
+    /* Present to assistive technology if the JS entry fails, as in the source. */
+    #reframe-static-index { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    #reframe-static-index[hidden] { display: none; }
+  </style>
+  <noscript><style>
+    @font-face { font-family: "Space Grotesk"; font-style: normal; font-weight: 300 700; font-display: swap; src: url('/assets/reframe/fonts/space-grotesk-latin.v1.woff2') format('woff2'); }
+    @font-face { font-family: "Fraunces"; font-style: italic; font-weight: 400; font-display: swap; src: url('/assets/reframe/fonts/fraunces-italic-latin.v1.woff2') format('woff2'); }
+    @font-face { font-family: "Space Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url('/assets/reframe/fonts/space-mono-400-latin.v1.woff2') format('woff2'); }
+    @font-face { font-family: "Space Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url('/assets/reframe/fonts/space-mono-700-latin.v1.woff2') format('woff2'); }
+    *, *::before, *::after { box-sizing: border-box; }
+    /* Override the host's fixed viewport styles even in the built CSS bundle. */
+    html:has(#reframe-static-index), body:has(#reframe-static-index) { overflow: auto; height: auto; background: #0f0f0e; color: #ebe8e1; font-family: "Space Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased; font-synthesis: auto; text-rendering: auto; }
+    html:has(#reframe-static-index) { font-size: 16px; }
+    body:has(#reframe-static-index) { min-width: 0; }
+    html:has(#reframe-static-index), body:has(#reframe-static-index) { scrollbar-width: auto; }
+    html:has(#reframe-static-index)::-webkit-scrollbar, body:has(#reframe-static-index)::-webkit-scrollbar { display: initial; }
+    #root { display: none; }
+    #reframe-static-index { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; max-width: 760px; margin: 0 auto; padding: 10vh 24px; font-size: 18px; line-height: 1.55; }
+    #reframe-static-index h1 { font-size: clamp(56px, 12vw, 120px); letter-spacing: -0.05em; line-height: 1; margin: 0 0 16px; }
+    #reframe-static-index h1 i { font-family: "Fraunces", Georgia, serif; font-weight: 400; font-style: italic; letter-spacing: -0.01em; margin-right: 0.02em; color: #ff4f1a; }
+    #reframe-static-index h1 sup { font-family: "Space Mono", ui-monospace, monospace; font-weight: 500; font-size: 0.36em; letter-spacing: 0.04em; margin-left: 0.25em; padding: 0.15em 0.3em; border: 1px solid currentColor; border-radius: 3px; position: relative; top: 0.1em; }
+    #reframe-static-index h2 { font-family: "Space Mono", ui-monospace, monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #ff4f1a; margin: 64px 0 8px; }
+    #reframe-static-index h3 { font-size: 30px; letter-spacing: -0.03em; margin: 24px 0 4px; }
+    #reframe-static-index p { margin: 0; color: #c9c6be; }
+    #reframe-static-index a { color: inherit; text-decoration: underline; }
+    #reframe-static-index :focus-visible { outline: 2px solid #ff4f1a; outline-offset: 3px; }
+    #reframe-static-index footer { margin-top: 64px; font-family: "Space Mono", ui-monospace, monospace; font-size: 12px; }
+  </style></noscript>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["Organization", "ProfessionalService"],
+        "@id": "https://reframehk.com/#organization",
+        "name": "ReframeHK",
+        "legalName": "Reframe HK Limited",
+        "url": "https://reframehk.com/",
+        "logo": "https://reframehk.com/icons/icon-512.png",
+        "image": "https://reframehk.com/og.v2.jpg",
+        "description": "A Hong Kong web studio. Design, build, care and transform: websites, web apps and systems, with real care before and after launch.",
+        "email": "info@reframehk.com",
+        "foundingDate": "2026",
+        "address": { "@type": "PostalAddress", "addressLocality": "Hong Kong", "addressCountry": "HK" },
+        "areaServed": { "@type": "Country", "name": "Hong Kong" },
+        "knowsAbout": ["Web design", "UI/UX design", "Brand design", "Website development", "Web applications", "CMS", "WCAG accessibility", "Web hosting", "Website maintenance", "Website redesign", "Website migration"],
+        "makesOffer": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Design", "description": "UI/UX, brand and motion design." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Build", "description": "Websites, web apps and systems: CMS, internal tools, integrations, WCAG accessibility." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Care", "description": "Hosting, maintenance and upgrades." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Transform", "description": "Redesigns, migrations and legacy rebuilds." } }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://reframehk.com/#website",
+        "url": "https://reframehk.com/",
+        "name": "ReframeHK",
+        "inLanguage": "en",
+        "publisher": { "@id": "https://reframehk.com/#organization" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://reframehk.com/#webpage",
+        "url": "https://reframehk.com/",
+        "name": "ReframeHK | Hong Kong Web Studio",
+        "isPartOf": { "@id": "https://reframehk.com/#website" },
+        "about": { "@id": "https://reframehk.com/#organization" },
+        "inLanguage": "en",
+        "primaryImageOfPage": "https://reframehk.com/og.v2.jpg",
+        "hasPart": [
+          { "@type": "CreativeWork", "name": "SmilePP", "url": "https://smilepp.pictures/", "dateCreated": "2025", "creator": { "@id": "https://reframehk.com/#organization" }, "description": "Portfolio site for SmilePP, the brand of Hong Kong director Smile: film showcases and photograph albums." },
+          { "@type": "CreativeWork", "name": "Ruby Law", "url": "https://rubbylaaw.xyz/", "dateCreated": "2026", "description": "Portfolio of a UI/UX and AI-driven product designer, hosted and kept in focus by ReframeHK." },
+          { "@type": "CreativeWork", "name": "英華小學家長教師會 · YWPS PTA", "alternateName": "YWPS PTA", "url": "https://ywpspta.com/", "dateCreated": "2026", "creator": { "@id": "https://reframehk.com/#organization" }, "description": "Official site of the Ying Wa Primary School Parent-Teacher Association." }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <main id="reframe-static-index" class="index" data-index>
+      <h1><i>re</i>frame<sup>HK</sup></h1>
+      <p>Websites, made with real care. A Hong Kong web studio.</p>
+      <section>
+        <h2>Services</h2>
+        <h3>Design</h3><p>UI/UX · Brand · Motion</p>
+        <h3>Build</h3><p>Websites · Web apps · Systems: CMS, internal tools, integrations · WCAG accessibility</p>
+        <h3>Care</h3><p>Hosting · Maintenance · Upgrades</p>
+        <h3>Transform</h3><p>Redesigns · Migrations · Legacy rebuilds</p>
+      </section>
+      <section>
+        <h2>Work</h2>
+        <h3><a href="https://smilepp.pictures/" target="_blank" rel="noopener">SmilePP</a></h3>
+        <p>Portfolio site for SmilePP, the brand of Hong Kong director Smile: film showcases and photograph albums. Design, Build, Care. 2025.</p>
+        <h3><a href="https://rubbylaaw.xyz/" target="_blank" rel="noopener">Ruby Law</a></h3>
+        <p>Portfolio of a UI/UX and AI-driven product designer, hosted and kept in focus. Hosting &amp; care. 2026.</p>
+        <h3><a href="https://ywpspta.com/" target="_blank" rel="noopener">英華小學家長教師會 · YWPS PTA</a></h3>
+        <p>Official site of the Ying Wa Primary School Parent-Teacher Association. Design, Build, Care. 2026.</p>
+      </section>
+      <section>
+        <h2>Contact</h2>
+        <p><a href="mailto:info@reframehk.com">info@reframehk.com</a></p>
+      </section>
+      <footer><p>This reconstruction does not use analytics. No ads, and we never sell your data.</p></footer>
+  </main>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>

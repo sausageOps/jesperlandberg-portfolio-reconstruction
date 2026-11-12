@@ -1,0 +1,13 @@
+{
+  "name": "ReframeHK | Hong Kong Web Studio",
+  "short_name": "ReframeHK",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0f0f0e",
+  "theme_color": "#0f0f0e",
+  "icons": [
+    { "src": "/assets/reframe/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/reframe/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/reframe/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
