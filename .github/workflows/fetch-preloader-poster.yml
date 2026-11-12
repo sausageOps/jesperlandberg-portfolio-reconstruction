@@ -1,0 +1,68 @@
+name: Fetch preloader poster
+
+# Companion to fetch-preloader-media.yml: converts the genuine reference AVIF
+# poster to PNG. Uses a virtualenv because the runner's system Python is
+# PEP-668 externally-managed. Contains no application logic.
+
+on:
+  push:
+    paths: ['.github/workflows/fetch-preloader-poster.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  poster:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download + convert poster
+        run: |
+          mkdir -p _media preloader-poster
+          : > preloader-poster/REPORT.txt
+          URL="https://cdn.prod.website-files.com/6a6c76aa5cb26d967c00a2bc/6aa28bda9935b5d07a54c57c_frame0000.avif"
+
+          code=$(curl -sSL --retry 3 -H 'Accept: image/avif,image/*,*/*' \
+                      -o _media/poster.avif -w '%{http_code} %{size_download} %{content_type}' "$URL")
+          echo "download: $code" >> preloader-poster/REPORT.txt
+
+          python3 -m venv /tmp/venv
+          /tmp/venv/bin/pip install --quiet --upgrade pip
+          /tmp/venv/bin/pip install --quiet pillow pillow-avif-plugin
+
+          /tmp/venv/bin/python - >> preloader-poster/REPORT.txt 2>&1 <<'PY'
+          try:
+              import pillow_avif  # registers the AVIF plugin
+              print("pillow-avif-plugin loaded")
+          except Exception as e:
+              print("avif plugin import failed:", e)
+          from PIL import Image
+          im = Image.open('_media/poster.avif')
+          print("source:", im.format, im.size, im.mode)
+          im.convert("RGB").save('preloader-poster/g-frame.png', optimize=True)
+          out = Image.open('preloader-poster/g-frame.png')
+          print("written:", out.format, out.size, out.mode)
+          PY
+
+          echo "=== files" >> preloader-poster/REPORT.txt
+          ls -la _media preloader-poster >> preloader-poster/REPORT.txt 2>&1
+          cp _media/poster.avif preloader-poster/poster.avif
+          cat preloader-poster/REPORT.txt
+
+      - name: Publish
+        run: |
+          git config user.name  "media-recovery-bot"
+          git config user.email "media-recovery-bot@users.noreply.github.com"
+          git checkout -B media-recovery
+          mkdir -p preloader-media
+          cp preloader-poster/g-frame.png preloader-media/g-frame.png
+          cp preloader-poster/REPORT.txt  preloader-media/POSTER_REPORT.txt
+          cp preloader-poster/poster.avif  preloader-media/poster.avif
+          rm -rf preloader-poster _media
+          git add -f preloader-media
+          git commit -m "chore: genuine reference poster frame (avif -> png)" || echo "nothing to commit"
+          git push --force origin media-recovery
