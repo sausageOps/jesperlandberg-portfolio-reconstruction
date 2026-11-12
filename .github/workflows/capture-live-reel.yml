@@ -1,0 +1,136 @@
+name: Capture live reel
+
+# Records the LIVE reference site's preloader reel animation frame-by-frame:
+# per-item opacity vs position, plus timestamped crops of the reel band.
+# Needed because the dev sandbox cannot reach the reference host over TLS.
+# Analysis helper only - contains no application logic.
+
+on:
+  push:
+    paths: ['.github/workflows/capture-live-reel.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i --no-audit --no-fund puppeteer@23 >/dev/null 2>&1
+          node -e "console.log('puppeteer ok')"
+
+      - name: Capture live reference reel
+        run: |
+          mkdir -p out
+          cat > cap.mjs <<'JS'
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+
+const OUT = 'out';
+const TARGET = process.env.TARGET || 'https://gif.garajedeideas.com/';
+
+const RECORDER = `
+window.__reel = [];
+window.__css = null;
+const t0 = performance.now();
+function rec(){
+  try{
+    const list = document.querySelector('[data-slot-list]');
+    const slot = document.querySelector('[data-slot]');
+    if (list && slot) {
+      const st = slot.getBoundingClientRect().top;
+      const cs = getComputedStyle(list);
+      const items = [...list.children].map(it => {
+        const r = it.getBoundingClientRect();
+        const c = getComputedStyle(it);
+        return { t: it.textContent, y: +(r.top - st).toFixed(1), o: +c.opacity };
+      }).filter(v => v.y > -140 && v.y < 220);
+      window.__reel.push({ ts: Math.round(performance.now()-t0), transform: cs.transform, items });
+      if (!window.__css) {
+        const mask = document.querySelector('.mask-marquee');
+        const marq = document.querySelector('.bottom-marquee');
+        const slotCs = getComputedStyle(slot);
+        window.__css = {
+          maskBg: mask ? getComputedStyle(mask).backgroundImage : null,
+          maskInset: mask ? getComputedStyle(mask).inset : null,
+          maskZ: mask ? getComputedStyle(mask).zIndex : null,
+          marqueeFont: marq ? getComputedStyle(marq).fontFamily : null,
+          marqueeSize: marq ? getComputedStyle(marq).fontSize : null,
+          marqueeWeight: marq ? getComputedStyle(marq).fontWeight : null,
+          marqueeTransform: marq ? getComputedStyle(marq).transform : null,
+          slotH: slot.clientHeight,
+          slotOverflow: slotCs.overflow,
+          itemH: list.children[0] ? list.children[0].getBoundingClientRect().height : null,
+          listH: list.getBoundingClientRect().height,
+          itemCount: list.children.length,
+        };
+      }
+    }
+  }catch(e){}
+  if (performance.now()-t0 < 7000) requestAnimationFrame(rec);
+}
+requestAnimationFrame(rec);
+`;
+
+const browser = await puppeteer.launch({
+  headless: 'new',
+  args: ['--no-sandbox','--disable-dev-shm-usage','--use-gl=swiftshader',
+         '--enable-unsafe-swiftshader','--autoplay-policy=no-user-gesture-required',
+         '--hide-scrollbars','--window-size=1440,900'],
+});
+const page = await browser.newPage();
+await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 2 });
+await page.evaluateOnNewDocument(RECORDER);
+
+await page.goto(TARGET, { waitUntil: 'domcontentloaded', timeout: 90000 });
+
+// Timestamped crops of the reel band across the whole animation.
+for (let i = 0; i < 14; i++) {
+  await new Promise(r => setTimeout(r, i === 0 ? 350 : 300));
+  try {
+    const clip = await page.evaluate(() => {
+      const m = document.querySelector('.bottom-marquee');
+      if (!m) return null;
+      const r = m.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return null;
+      return { x: Math.round(r.x) - 6, y: Math.round(r.y) - 6,
+               width: Math.round(r.width) + 12, height: Math.round(r.height) + 12 };
+    });
+    if (clip) await page.screenshot({ path: `${OUT}/frame-${String(i).padStart(2,'0')}.png`, clip });
+  } catch (e) { /* preloader may already be gone */ }
+}
+
+const reel = await page.evaluate(() => window.__reel || []);
+const css  = await page.evaluate(() => window.__css || null);
+
+fs.writeFileSync(`${OUT}/reel.json`, JSON.stringify({ target: TARGET, css, samples: reel }, null, 1));
+
+// Also keep the live page's own preloader-related markup for reference.
+const html = await page.content();
+fs.writeFileSync(`${OUT}/live.html`, html);
+
+await browser.close();
+console.log('samples:', reel.length, 'css:', JSON.stringify(css));
+JS
+          node cap.mjs
+          ls -la out | head -25
+
+      - name: Publish
+        run: |
+          git config user.name  "reel-capture-bot"
+          git config user.email "reel-capture-bot@users.noreply.github.com"
+          git checkout -B reel-capture
+          rm -rf reel-capture && mkdir -p reel-capture
+          cp out/* reel-capture/ 2>/dev/null || true
+          rm -rf out
+          git add -f reel-capture
+          git commit -m "chore: live reference reel capture" || echo "nothing to commit"
+          git push --force origin reel-capture
