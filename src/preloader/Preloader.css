@@ -1,0 +1,223 @@
+/* ==========================================================================
+   ReframeHK × Garaje Inspiration Fest — preloader styles.
+
+   Ported from the reference implementation:
+     public/vendor/webflow.css  (.loader … .mask-marquee)
+     src/styles/custom.css      (.loader { display: block }, [data-bg-video])
+
+   Only two intentional deviations from the reference source:
+
+   1. SCOPING. Every selector is prefixed with .rj-loader so nothing here can
+      reach the rest of the site. The reference relied on bare global class
+      names (.loader, .loading-bar, …); none of those exist in this codebase,
+      but scoping removes the risk entirely.
+
+   2. ROOT FONT SIZE. The reference sizes this overlay in rem against a 16px
+      root. This site's root font-size is fluid — calc(100vw / 1500 * 10),
+      i.e. ~9.6px at 1440 wide — so inheriting it would shrink every element by
+      ~40%. The overlay therefore pins its own root to the reference's 16px
+      basis, and re-applies the reference's own fluid formula only inside the
+      same 992–1439px band the reference used.
+
+   Everything else — geometry, colours, the marquee gradient mask, the mirrored
+   video box, and the breakpoint table — is copied from the reference.
+   ========================================================================== */
+
+/* The overlay is the first paint of the page: black, full viewport, above all. */
+.rj-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex-flow: column;
+  background-color: #000;
+  background: #000;
+  color: #fff;
+
+  /* Pin the rem basis to the reference's 16px root. */
+  font-size: 16px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Contain the overlay's own effects; never contribute to body scroll. */
+  overflow: hidden;
+  contain: layout paint;
+}
+
+/* Reference: calc(0.625rem + 0.42vw) between 992 and 1439, else 1rem.
+   Keeping the same formula reproduces the reference's continuous rescaling
+   of every rem-based dimension across that band. */
+.rj-loader { --rj-rem: 16px; }
+@media screen and (min-width: 992px) and (max-width: 1439px) {
+  .rj-loader { --rj-rem: calc(0.625 * 16px + 0.42vw); }
+}
+
+/* ---- structure (reference: .inner-loader / .vertical-end-to-end / …) ---- */
+.rj-loader .rj-inner-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.rj-loader .rj-vertical-end-to-end {
+  display: flex;
+  flex-flow: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.rj-loader .rj-empty-div { width: 0; height: 0; }
+
+.rj-loader .rj-vertical-0 {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  place-content: center;
+}
+
+/* ---- the mirrored "G" video (reference: .vid-wrapper / .vid-loader) ---- */
+.rj-loader .rj-vid-wrapper {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  width: calc(12 * var(--rj-rem));
+  height: calc(12 * var(--rj-rem));
+  transform-style: preserve-3d;
+  transform: rotateX(0) rotateY(180deg) rotate(0);
+}
+
+.rj-loader .rj-vid-loader { width: 100%; height: 100%; }
+
+/* Reference: [data-bg-video] + .bg-video__el — full-bleed cover inside the box. */
+.rj-loader .rj-bg-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rj-loader .rj-bg-video__el {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+}
+
+/* ---- progress bar (reference: .loading-bar / .inner-loading) ---- */
+.rj-loader .rj-loading-bar {
+  position: relative;
+  width: 60%;
+  height: calc(0.25 * var(--rj-rem));
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: calc(0.5 * var(--rj-rem));
+  background-color: #202020;
+}
+
+.rj-loader .rj-inner-loading {
+  position: absolute;
+  width: 0%;
+  height: 100%;
+  border-radius: calc(0.5 * var(--rj-rem));
+  background-color: #fff;
+}
+
+/* ---- bottom slot reel (reference: .bottom-marquee …) ---- */
+.rj-loader .rj-bottom-marquee {
+  color: #fff;
+  /* reference: var(--_typography---text-large--size) = 1.25rem desktop,
+     1.125rem at <=991px */
+  font-size: calc(1.25 * var(--rj-rem));
+  font-weight: 500;
+  line-height: 1.4;
+  text-transform: uppercase;
+  transform: translateY(calc(-3 * var(--rj-rem)));
+}
+
+.rj-loader .rj-horizontal-xs {
+  display: flex;
+  grid-column-gap: calc(0.5 * var(--rj-rem));
+}
+
+.rj-loader .rj-h-left-center {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  place-content: center flex-start;
+}
+
+.rj-loader .rj-marquee-content {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  height: calc(4.75 * var(--rj-rem));
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* The reel rows share the container's line box, exactly as the reference does:
+   each freshly-inserted div is one line of the flex column, and the mask hides
+   the neighbours above and below. */
+.rj-loader .rj-slot-list { display: block; }
+.rj-loader .rj-slot-list > div { display: block; }
+
+.rj-loader .rj-mask-marquee {
+  position: absolute;
+  inset: 0%;
+  z-index: 10;
+  background-image: linear-gradient(
+    #000 3%,
+    #000c 19%,
+    #00000059 36%,
+    #0000 40% 50%,
+    #0000 60%,
+    #00000059 65%,
+    #000c 81%,
+    #000 97%
+  );
+}
+
+/* ---- the reference's breakpoint table, verbatim ----------------------------
+   <=991px : vid-wrapper 10rem, loading-bar 7rem x .1875rem, text-large 1.125rem
+   <=767px : vid-wrapper 9rem,  loading-bar 6rem
+   <=479px : vid-wrapper 8rem
+   ------------------------------------------------------------------------- */
+@media screen and (max-width: 991px) {
+  .rj-loader .rj-vid-wrapper {
+    width: calc(10 * var(--rj-rem));
+    height: calc(10 * var(--rj-rem));
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .rj-loader .rj-loading-bar {
+    width: calc(7 * var(--rj-rem));
+    height: calc(0.1875 * var(--rj-rem));
+  }
+  .rj-loader .rj-bottom-marquee { font-size: calc(1.125 * var(--rj-rem)); }
+}
+
+@media screen and (max-width: 767px) {
+  .rj-loader .rj-vid-wrapper {
+    width: calc(9 * var(--rj-rem));
+    height: calc(9 * var(--rj-rem));
+  }
+  .rj-loader .rj-loading-bar { width: calc(6 * var(--rj-rem)); }
+  .rj-loader .rj-horizontal-xs { flex-wrap: wrap; }
+}
+
+@media screen and (max-width: 479px) {
+  .rj-loader .rj-vid-wrapper {
+    width: calc(8 * var(--rj-rem));
+    height: calc(8 * var(--rj-rem));
+  }
+}

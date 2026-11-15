@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import Hud from './components/Hud.jsx';
 import ReframeHome from './reframe/ReframeHome.jsx';
+import Preloader from './preloader/Preloader.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
@@ -33,6 +34,15 @@ export default function App() {
   const carterPage = useMemo(() => resolveCarterPage(path), [path]);
   const route = section ? section.menu.key : path === '/' ? 'home' : 'not-found';
   const activeNav = activeTopLevel(path);
+
+  // The opening preloader plays once per load, over the finished page. `appReady`
+  // is the site's own "page mounted" signal (fonts settled); the overlay holds
+  // until it is true so the homepage can never be revealed half-built. The
+  // homepage's own entrance is then deferred until the overlay has lifted.
+  const [preloaderDone, setPreloaderDone] = useState(false);
+  const appReady = !loading;
+  const homeEntranceReady = appReady && preloaderDone;
+  const finishPreloader = useCallback(() => setPreloaderDone(true), []);
 
   // Keep the static source index available until React has actually mounted.
   // The live home index takes over; internal routes must not expose a duplicate.
@@ -91,16 +101,16 @@ export default function App() {
 
   const routeContent = useMemo(() => {
     if (route === 'home') return null;
-    if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={!loading} />;
-    if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={!loading} />;
+    if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={homeEntranceReady} />;
+    if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={homeEntranceReady} />;
     if (carterPage && section) {
       const placeholder = <Section menu={section.menu} item={section.item} subtitle={section.nested ? formatSegment(section.nested) : undefined} />;
-      return <Suspense fallback={null}><CarterRoute page={carterPage} appReady={!loading} onNavigate={navigate} placeholder={placeholder} /></Suspense>;
+      return <Suspense fallback={null}><CarterRoute page={carterPage} appReady={homeEntranceReady} onNavigate={navigate} placeholder={placeholder} /></Suspense>;
     }
     if (section?.nested) return <Section menu={section.menu} item={section.item} subtitle={formatSegment(section.nested)} />;
     if (route === 'routes' || route === 'myself') return <Section menu={section.menu} item={section.item} />;
     return <main className="not-found"><h1 className="sr-only">Page not found</h1></main>;
-  }, [route, section, carterPage, loading, navigate]);
+  }, [route, section, carterPage, homeEntranceReady, navigate]);
 
   const routeClass = carterPage
     ? ` route-carter${carterPage.key === 'about' ? ' route-about' : ''}`
@@ -109,9 +119,10 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}`}>
+      <Preloader ready={appReady} onComplete={finishPreloader} />
       <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
         <a className="skip-link" href={route === 'home' ? '#reframe-content' : '#main-content'}>Skip to content</a>
-        {route === 'home' && <div className="reframe-host"><ReframeHome /></div>}
+        {route === 'home' && <div className="reframe-host"><ReframeHome entranceReady={homeEntranceReady} /></div>}
         <div id="main-content">{routeContent}</div>
         <Hud navRouteKey={route} activeKey={activeNav} activePath={path} loading={loading} onNavigate={navigate} onHome={goHome} />
       </div>

@@ -3,12 +3,20 @@ import { mountReframe } from './engine.js';
 import './reframe.css';
 
 // The reference document's field and HUD, mounted as a React-owned island.
-export default function ReframeHome() {
+// `entranceReady` is only a gate: the homepage's own entrance (tile reveal +
+// logo assemble) begins when it flips true, so the opening preloader covers the
+// first paint instead of hiding it. Nothing about the entrance itself changes.
+export default function ReframeHome({ entranceReady = true }) {
   const root = useRef(null);
+  const instanceRef = useRef(null);
   useEffect(() => {
     const instance = mountReframe(root.current);
-    return () => instance.destroy();
+    instanceRef.current = instance;
+    return () => { instance.destroy(); instanceRef.current = null; };
   }, []);
+  useEffect(() => {
+    if (entranceReady) instanceRef.current?.startEntrance?.();
+  }, [entranceReady]);
 
   return (
     <div className="reframe-scope">

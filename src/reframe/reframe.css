@@ -41,7 +41,13 @@
 .reframe-scope a { color: inherit; }
 .reframe-scope :focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 
-.reframe-scope .page { position: fixed; inset: 0; }
+/* The field colour lives here, not in the WebGL clear: the canvas clears transparent so
+   this surface — and the animated grain on its ::after — is what shows through the gaps
+   between tiles. Same --ink the engine used to clear to.
+   `isolation` makes this its own stacking context so the grain's negative z-index is
+   scoped to this box (above its background, below the canvas) instead of escaping to the
+   route-level context, where it would fall behind the background and vanish. */
+.reframe-scope .page { position: fixed; inset: 0; background: var(--ink); isolation: isolate; }
 
 /* ─── stage ──────────────────────────────────────────────────────────── */
 .reframe-scope .stage { position: absolute; inset: 0; cursor: grab; touch-action: none; }
@@ -299,3 +305,52 @@
   body:has(.reframe-page) { min-width: 0; }
   .reframe-scope .hud__nav button, .reframe-scope .pill { padding-inline: 5px; }
 }
+
+/* ─── grain ──────────────────────────────────────────────────────────────
+   The Homepage wears the same continuously animated grain as the About page:
+   one shared tile, one shared keyframe, replayed on the home surface. About
+   paints it on `.app.route-about::after`; here it is `.page::after`, so it
+   follows the home page island itself.
+
+   Constants (tile, scale formula, filter, opacity, .6s step-end timing and
+   the breakpoint table) are copied from the About rule so the two surfaces
+   match exactly. Stacking is the one thing that differs, and it is the whole
+   point of this layer's position:
+
+     z-index -1  .page::after   the grain, on the field surface
+     background  .page         the field colour (--ink)
+     (auto)      .stage canvas the tiles, cleared transparent around them
+     (auto)      .vignette     the edge shading
+
+   -1 (not 0): a z-index of 0 would tie with the canvas and lose on tree order,
+   since ::after is the last child; only a negative index paints beneath it.
+
+   The grain belongs to the *field*, so it sits under the canvas rather than
+   over it. That way the gaps between tiles show grain while the project
+   images and videos — drawn opaque into the canvas — stay clean, at their own
+   original grade. Painting it above the canvas instead (as this rule first
+   did, prompted by the canvas having been opaque) was what put background
+   grain across every panel. Because the canvas now clears transparent, the
+   field colour comes from `.page` itself. */
+.reframe-scope .page::after {
+  content: '';
+  position: absolute;
+  inset: -1em;
+  z-index: -1;             /* above .page's field colour, under the canvas */
+  pointer-events: none;
+  opacity: .2;
+  font-size: clamp(8.2667px, .833333vw, 32px);
+  filter: contrast(75%) brightness(70%) invert(1);
+  background: transparent url('/assets/images/a24-grain-substitute.png') 50% / 7.8125em repeat;
+  will-change: transform;
+  animation: a24-about-grain .6s step-end infinite;
+}
+@media (min-width: 992px) and (min-aspect-ratio: 11/5) {
+  .reframe-scope .page::after { font-size: clamp(8.2667px, calc(100dvh * 16 / 9 / 120), 32px); }
+}
+@media (max-width: 991px) { .reframe-scope .page::after { font-size: clamp(12.4px, 1.61453vw, 16px); } }
+@media (max-width: 767px) { .reframe-scope .page::after { font-size: clamp(10.013px, 2.08605vw, 16px); } }
+@media (max-width: 479px) { .reframe-scope .page::after { font-size: clamp(10.689px, 3.34029vw, 16px); } }
+@media (prefers-reduced-motion: reduce) { .reframe-scope .page::after { animation: none; } }
+/* The no-WebGL fallback scrolls and hides the stage; the grain goes with it. */
+.reframe-scope .page.is-fallback::after { display: none; }

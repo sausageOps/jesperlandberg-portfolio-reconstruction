@@ -372,6 +372,7 @@ const fragmentShader = /* glsl */ `
     vec2 q = abs(p) - uSize * 0.5 + uRadius;
     float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uRadius;
     float a = 1.0 - smoothstep(-1.0, 0.5, d);
+
     gl_FragColor = vec4(col, a * uReveal);
   }
 `;
@@ -705,6 +706,23 @@ function init(container, config, kit = KIT) {
     pieces: Array.from({ length: 4 }, () => ({ dist: still ? 0 : config.logoFlyIn, rot: still ? 0 : -config.logoTurn, op: still ? 1 : 0 })),
     word: still ? 1 : 0, hk: still ? 1 : 0,
   };
+  // The opening preloader covers the first paint, so the assemble is gated on it
+  // having lifted: 'hold' until the overlay reports done, then the identical
+  // timeline starts. Timings, easings and values above are untouched.
+  let introGate = 'wait'; // wait → hold → ready
+  let entranceGate = null; // ticker poll while the assemble is held
+  let revealEntrance = null; // set by build(): performs the reveal itself, exactly once
+  let entranceDone = false;
+  const releaseEntrance = () => { if (entranceGate) { gsap.ticker.remove(entranceGate); entranceGate = null; } };
+  // Release the held entrance. Idempotent, and safe to call before build() has
+  // finished: there is nothing to reveal yet then, so build() picks the 'ready'
+  // gate up itself. This is what makes startEntrance() actually start anything.
+  const runEntrance = () => {
+    if (destroyed || !revealEntrance || entranceDone) return;
+    entranceDone = true;
+    releaseEntrance();
+    revealEntrance();
+  };
   const iris = { pulse: 0, hover: 0, speed: 0, open: 0, posed: false };
   let hud = []; // per inline SVG in the HUD mark: { g (its geo), pieces: [{ el, k }], word, hk }
   const clamp01 = gsap.utils.clamp(0, 1);
@@ -867,9 +885,16 @@ function init(container, config, kit = KIT) {
   // Renderer. If WebGL is missing, show the plain HTML index instead.
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    // alpha: true — the field is cleared transparent so the page's own grain, painted on
+    // the surface *behind* this canvas, shows through the gaps between tiles. Clearing
+    // opaque ink here would hide it; clearing opaque ink *and* painting grain above the
+    // canvas (the previous arrangement) put grain on every project image and video.
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance' });
   } catch {
     container.classList.add('is-fallback');
+    // Signal readiness immediately: the fallback has no field to build, and the
+    // opening overlay must never wait on it.
+    container.dataset.homeReady = 'true';
     loadFonts();
     intro.state = 'done'; applyHud(true); // no field, no intro: the static logo
     // The host keeps its viewport fixed for the A24 dock. When nothing has
@@ -895,11 +920,14 @@ function init(container, config, kit = KIT) {
       container.scrollTo({ top, behavior: 'auto' });
     });
     return {
+      startEntrance() {},
       destroy() { destroyed = true; for (const fn of cleanups) fn(); mm.revert(); sound.destroy(); cleanGlobals(); container.classList.remove('is-fallback'); },
     };
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setClearColor(P.ink);
+  // Clear to fully transparent, not to ink: the field colour behind the tiles is supplied
+  // by `.page` (set to the same --ink), which is what carries the animated grain.
+  renderer.setClearColor(0x000000, 0);
   stage.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(); // unused by the shader; render() needs one
@@ -1138,21 +1166,6 @@ function init(container, config, kit = KIT) {
       ], PAD, w - 2 * PAD, h);
       spacing(ctx, 0);
     },
-    // hot = the hover variant (the shader cross-fades to it): title underlined in signal,
-    // year and arrow lit. Same layout, so nothing moves.
-    caption(ctx, w, h, p, hot = false) {
-      paint(ctx, w, h, P.ink);
-      const i = PROJECTS.indexOf(p) + 1;
-      mono(ctx, `0${i}`, CAP_PAD, 40, P.signal);
-      const year = mono(ctx, T('caption.year', { year: p.year }), w - CAP_PAD, 40, hot ? P.signal : P.muted, 'right');
-      const t = w < 600 && p.short ? p.short : p.title;
-      ctx.fillStyle = hot ? P.hot : P.paper;
-      spacing(ctx, -0.6);
-      fit(ctx, t, 600, 26, p.id === 'ywps' ? F.cjk : F.sans, year.x0 - 16 - 52); // clear of the year
-      const b = put(ctx, t, 52, 41);
-      spacing(ctx, 0);
-      if (hot) { ctx.fillStyle = P.signal; ctx.fillRect(b.x0, 49, b.w, 2); }
-    },
     contact(ctx, w, h) {
       const email = T('contact.email');
       paint(ctx, w, h, P.signal);
@@ -1256,16 +1269,19 @@ function init(container, config, kit = KIT) {
   const C = config.colWidth, G = config.gap, C2 = C * 2 + G;
   const vidH = (w) => Math.round((w * 9) / 16);
   const proj = (id) => PROJECTS.find((p) => p.id === id);
+  // A project unit is its media and nothing else. There used to be a second,
+  // stacked caption tile under every panel; it is gone, so no row is reserved
+  // beneath a panel and the gap between units is just `gap` — the same on every
+  // side. (`desc` carries the project to the cursor label, which used to read it
+  // off the caption tile.)
   const videoUnit = (id, cols) => {
-    const w = cols === 2 ? C2 : C, vh2 = vidH(w);
+    const w = cols === 2 ? C2 : C;
     return { cols, items: [
-      { kind: 'video', project: proj(id), x: 0, y: 0, w, h: vh2 },
-      { kind: 'caption', project: proj(id), x: 0, y: vh2 + 6, w, h: 58 },
+      { kind: 'video', project: proj(id), desc: proj(id), x: 0, y: 0, w, h: vidH(w) },
     ] };
   };
   const posterUnit = (id, h = 540) => ({ cols: 1, items: [
-    { kind: 'poster', project: proj(id), x: 0, y: 0, w: C, h },
-    { kind: 'caption', project: proj(id), x: 0, y: h + 6, w: C, h: 58 },
+    { kind: 'poster', project: proj(id), desc: proj(id), x: 0, y: 0, w: C, h },
   ] });
   const one = (kind, h, cols = 1, data) => ({ cols, items: [{ kind, x: 0, y: 0, w: cols === 2 ? C2 : C, h, data }] });
   const svcBlock = { cols: 2, anchor: 'services', items: [
@@ -1276,6 +1292,14 @@ function init(container, config, kit = KIT) {
     { kind: 'service', data: SERVICES[3], x: C + G, y: 600 + G, w: C, h: 500 + G },
   ] };
 
+  // Column heights are kept in step so that two single-column units stacked in one
+  // column always leave exactly `gap` between them. A 2-column unit spans two
+  // columns, so it starts at the lower of the pair and the higher one is left with
+  // a leftover below it. That leftover is either a filler tile (>= 140 + gap) or a
+  // sliver, which is what a stray gap looks like on screen. Total heights above are
+  // chosen so the pinned run leaves no slivers; `posterUnit('ruby', 557)` and
+  // `posterUnit('smilepp', 529)` both pair exactly (see sim in the audit notes).
+  //
   // `col` pins a unit to that column (or pair starting there); the rest go greedy.
   // The first row is pinned so the landing view is fixed: SmilePP large right under
   // the hero, Ruby Law large in the first row and again at the hero's left (its poster
@@ -1286,7 +1310,9 @@ function init(container, config, kit = KIT) {
     pin(one('intro', 557), 2), // as tall as Ruby Law's unit beside it, so Services starts level
     pin(videoUnit('ruby', 2), 3),
     pin(one('clock', 230), 5),
-    pin(posterUnit('ruby'), 6),
+    // 557 matches the intro tile's height, so this poster ends level with the next
+    // column over and the Contact pair below starts on the row, leaving a plain gap.
+    pin(posterUnit('ruby', 557), 6),
     pin(videoUnit('smilepp', 2), 0),
     // Greedy from here. The order was searched (offline) for a packing with no blank
     // slivers: every hole is either a normal gap or tall enough for a filler.
@@ -1296,7 +1322,7 @@ function init(container, config, kit = KIT) {
     videoUnit('smilepp', 2),
     videoUnit('ywps', 2),
     posterUnit('ywps', 500), // lands in column 6, under the pinned Ruby Law poster
-    posterUnit('smilepp'),
+    posterUnit('smilepp', 529), // ends at 1658, level with the 2-col Ruby unit below
     videoUnit('ywps', 1),
     one('email', 200),
     videoUnit('ruby', 1),
@@ -1440,7 +1466,6 @@ function init(container, config, kit = KIT) {
         const t = canvasTile(spec.w, spec.h, spec.kind === 'hero' ? drawHero : (ctx, w, h) => DRAW[spec.kind](ctx, w, h, spec.data ?? spec.project));
         map = t.tex; redraw = t.redraw;
         if (spec.kind === 'hero') heroCanvas = { ...t, w: spec.w, h: spec.h };
-        if (spec.kind === 'caption') map2 = canvasTile(spec.w, spec.h, (ctx, w, h) => DRAW.caption(ctx, w, h, spec.project, true)).tex;
       }
       // One mesh per wrapped copy in view (see place() in tick). Meshes are made on demand
       // and share every uniform object except their own uOffset.
@@ -1461,15 +1486,32 @@ function init(container, config, kit = KIT) {
     // Reveal: tiles fade up outward from the hero, staggered by distance; the logo
     // assembles logoIntroDelay after the hero's own reveal starts.
     if (!still) {
-      const delayOf = (t) => 0.15 + Math.hypot(t.cx - hero.cx, t.cy - hero.cy) / 2600;
-      revealTween = gsap.to(tiles.map((t) => t.u.uReveal), { value: 1, duration: 0.9, ease: 'power2.out', delay: (i) => delayOf(tiles[i]) });
-      if (intro.state === 'wait') introTl = introTimeline(delayOf(hero) + config.logoIntroDelay);
+      if (introGate === 'wait') introGate = 'hold';
+      const reveal = () => {
+        const delayOf = (t) => 0.15 + Math.hypot(t.cx - hero.cx, t.cy - hero.cy) / 2600;
+        revealTween = gsap.to(tiles.map((t) => t.u.uReveal), { value: 1, duration: 0.9, ease: 'power2.out', delay: (i) => delayOf(tiles[i]) });
+        if (intro.state === 'wait') introTl = introTimeline(delayOf(hero) + config.logoIntroDelay);
+        dirty = true;
+      };
+      revealEntrance = reveal;
+      // Starts the moment the opening preloader lifts (or immediately once it has).
+      if (introGate === 'ready') runEntrance();
+      else {
+        entranceGate = () => {
+          if (introGate !== 'ready') return;
+          runEntrance();
+        };
+        gsap.ticker.add(entranceGate);
+      }
     }
     dirty = true;
   }
 
   // Wait for the kit's fonts (and logo art) so the canvases draw with them.
-  Promise.all([loadFonts(), loadArt()]).then(build);
+  Promise.all([loadFonts(), loadArt()]).then(build).then(() => {
+    // The homepage is built and its DOM is in place: it is safe to reveal.
+    container.dataset.homeReady = 'true';
+  });
 
   function makeMesh(tile) {
     const material = new THREE.ShaderMaterial({
@@ -1766,7 +1808,7 @@ function init(container, config, kit = KIT) {
   // last pointer position every frame once it has (nearly) settled. The idle drift counts
   // as settled, so the label tracks a drifting tile.
   let fieldMoving = false;
-  const centreTile = () => { const t = tileAt(vw / 2, vh / 2); return isLink(t) ? t : null; };
+  const centreTile = () => { const t = tileAt(vw / 2, vh / 2); return isLink(t) && labelled(t) ? t : null; };
   // Keyboard aim: at rest, the link tile under the crosshair gets the hover highlight and
   // a "↵ Open" hint (devices with a fine pointer or keyboard only; not while hovering).
   const aimEl = container.querySelector('[data-aim]');
@@ -1780,6 +1822,11 @@ function init(container, config, kit = KIT) {
     if (t) aimEl.innerHTML = aimHtml(t);
   }
   const short = (p) => p.short ?? p.title;
+  // The homepage shows project panels bare: no number, title, year, arrow or any
+  // other label floats over them. The cursor label and the keyboard aim tag are
+  // therefore only for the contact and email tiles. The panels stay fully
+  // interactive — click/tap still opens the project sheet.
+  const labelled = (t) => !!t && !t.project;
   const aimHtml = (t) => `<b>↵</b> ${esc(t.project ? T('aim.project', { title: short(t.project) }) : T('aim.contact'))}`;
   const labelHtml = (t) => (t.project
     ? `${esc(T('cursor.project', { title: short(t.project) }))} <b>${esc(T('cursor.projectTag'))}</b>`
@@ -1787,7 +1834,7 @@ function init(container, config, kit = KIT) {
   function updateHover() {
     if (!ptr || dragging || sheetOpen || fieldMoving) { setHover(null); return; }
     const t = tileAt(ptr.x, ptr.y);
-    setHover(isLink(t) ? t : null, ptr.x, ptr.y);
+    setHover(isLink(t) && labelled(t) ? t : null, ptr.x, ptr.y);
   }
   // The label trails the pointer slightly (quickTo); it jumps into place when it appears,
   // and always with reduced motion.
@@ -2021,8 +2068,16 @@ function init(container, config, kit = KIT) {
   start();
 
   return {
+    // The preloader lifted: release the gated assemble. Used when it finishes
+    // before the kit has built, otherwise the ticker poll above picks it up.
+    // The preloader lifted: release the gated assemble. Works whether the kit has
+    // already built (reveals immediately) or is still building (build() sees
+    // introGate === 'ready' and reveals as soon as the field exists).
+    startEntrance() { if (!destroyed) { introGate = 'ready'; runEntrance(); } },
     destroy() {
       destroyed = true;
+      revealEntrance = null;
+      releaseEntrance();
       stop();
       clearInterval(clockTimer);
       for (const fn of cleanups) fn();
