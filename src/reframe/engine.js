@@ -1,7 +1,7 @@
 // ReframeHK. An endless, pan-anywhere field of tiles (three.js).
 // One "world" of tiles is packed into columns, then wrapped on both axes around the
 // camera, so it repeats seamlessly in every direction. Drag / wheel / touch / arrow keys
-// move the camera with inertia; at rest it drifts. The camera's real velocity drives a
+// move the camera with inertia; at rest it stays still. The camera's real velocity drives a
 // barrel bend in the vertex shader and an RGB split in the fragment shader.
 // GSAP owns time: its ticker drives the frame loop, and every timed motion (flights, tile
 // reveal, logo intro, iris, sheet, copy button, HUD loops) is a GSAP tween or timeline.
@@ -25,8 +25,6 @@ const CONFIG = {
   friction: 0.925,    // velocity kept per 60 fps frame after a fling (0–1)
   wheel: 7,           // wheel delta → px/s of velocity
   keySpeed: 1500,     // px/s top speed from held arrow keys
-  drift: 22,          // px/s ambient drift when idle (0 = still)
-  idleDelay: 1.8,     // s without input before the drift takes over
   bend: 0.11,         // barrel strength per screen/s of speed
   maxBend: 0.2,       // barrel cap (hard limit 0.4 keeps the bend fold-free)
   speedTau: 0.12,     // s, low-pass time constant of the measured speed (drives bend, split, zoom, whoosh)
@@ -63,7 +61,7 @@ const CONFIG = {
   irisPulseDur: 0.6,  // s, the whole open-then-close pulse
   irisHover: 0.5,     // 0–1, open while the pointer is over the HUD mark
   irisHoverDur: 0.35, // s, the hover open/close tween
-  irisSpeedMin: 0.08, // screens/s below which the field speed opens nothing (the idle drift is ~0.01)
+  irisSpeedMin: 0.08, // screens/s below which the field speed opens nothing
   irisSpeedFull: 3,   // screens/s at which the speed-linked open reaches irisSpeedMax
   irisSpeedMax: 0.85, // 0–1, the most the field speed alone opens the iris
   irisSpeedTau: 0.25, // s, low-pass time constant of the speed-linked open (no jitter)
@@ -597,7 +595,7 @@ function createSound(config, { ambient = true } = {}) {
         if (node && cache[k] !== config[k]) { cache[k] = config[k]; if (k !== 'masterVolume' || cache.init) node.gain.setTargetAtTime(config[k], t, 0.1); }
       }
       cache.init = true;
-      const level = Math.min(1, Math.max(0, (speed - 0.06) / 2.5)); // silent at rest and while drifting
+      const level = Math.min(1, Math.max(0, (speed - 0.06) / 2.5)); // silent at rest
       voices.whoosh?.motion?.(level, t);
     },
     tick() { // hover enters a tile
@@ -948,7 +946,7 @@ function init(container, config, kit = KIT) {
   // ─── view state ───
   let vw = 1, vh = 1, zoom = 1, zoomEff = 1, texScale = 1;
   const cam = { x: 0, y: 0 }, vel = { x: 0, y: 0 }, prev = { x: 0, y: 0 };
-  let flight = null, dragging = false, lastInput = -1e9, now = 0, dirty = true; // flight: the running fly-to tween
+  let flight = null, dragging = false, dirty = true; // flight: the running fly-to tween
   const stopFlight = () => { flight?.kill(); flight = null; };
 
   function resize() {
@@ -1554,7 +1552,6 @@ function init(container, config, kit = KIT) {
       ty = Math.min(ty, top + viewH() / 2 - 90 / zoom);
     }
     vel.x = vel.y = 0;
-    lastInput = now;
     const dist = Math.hypot(tx - cam.x, ty - cam.y);
     if (dist > 1) lastHeading = Math.atan2(ty - cam.y, tx - cam.x);
     if (reducedMotion) { cam.x = prev.x = tx; cam.y = prev.y = ty; dirty = true; sound.sweep(0.5); return 0; }
@@ -1683,7 +1680,6 @@ function init(container, config, kit = KIT) {
     sheetBody.querySelector('video')?.pause();
     for (const c of clips.values()) c.wanted = false; // re-evaluated next frame
     lastFocus?.focus?.({ preventScroll: true });
-    lastInput = now;
   }
   function projectHtml(p) {
     const i = PROJECTS.indexOf(p) + 1;
@@ -1758,7 +1754,7 @@ function init(container, config, kit = KIT) {
     down = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: 0 };
     samples.length = 0;
     samples.push({ t: e.timeStamp, x: e.clientX, y: e.clientY });
-    dragging = true; contactCall?.kill(); contactCall = null; stopFlight(); vel.x = vel.y = 0; lastInput = now;
+    dragging = true; contactCall?.kill(); contactCall = null; stopFlight(); vel.x = vel.y = 0;
     stage.classList.add('is-dragging');
     setHover(null);
   });
@@ -1772,7 +1768,6 @@ function init(container, config, kit = KIT) {
     for (const c of e.getCoalescedEvents?.() ?? []) samples.push({ t: c.timeStamp, x: c.clientX, y: c.clientY });
     if (!samples.length || samples[samples.length - 1].t < e.timeStamp) samples.push({ t: e.timeStamp, x: e.clientX, y: e.clientY });
     while (samples.length > 2 && e.timeStamp - samples[0].t > config.flingWindow) samples.shift();
-    lastInput = now;
   });
   // Camera velocity (world px/s) implied by the last ~flingWindow ms of pointer samples;
   // zero if the pointer has been held still. Used for the fling and, while dragging, as
@@ -1805,8 +1800,7 @@ function init(container, config, kit = KIT) {
   on(stage, 'pointerleave', () => { ptr = null; setHover(null); });
 
   // Hover follows the field: cleared while it moves fast or flies, re-evaluated from the
-  // last pointer position every frame once it has (nearly) settled. The idle drift counts
-  // as settled, so the label tracks a drifting tile.
+  // last pointer position every frame once it has (nearly) settled.
   let fieldMoving = false;
   const centreTile = () => { const t = tileAt(vw / 2, vh / 2); return isLink(t) && labelled(t) ? t : null; };
   // Keyboard aim: at rest, the link tile under the crosshair gets the hover highlight and
@@ -1860,7 +1854,7 @@ function init(container, config, kit = KIT) {
     const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1;
     let dx = e.deltaX * k, dy = e.deltaY * k;
     if (e.shiftKey && !dx) { dx = dy; dy = 0; }
-    contactCall?.kill(); contactCall = null; stopFlight(); lastInput = now;
+    contactCall?.kill(); contactCall = null; stopFlight();
     if (reducedMotion) { cam.x += dx / zoomEff; cam.y += dy / zoomEff; dirty = true; return; }
     vel.x += (dx * config.wheel) / zoomEff; vel.y += (dy * config.wheel) / zoomEff;
   }, { passive: false });
@@ -1899,7 +1893,7 @@ function init(container, config, kit = KIT) {
     // Match the source for the Reframe HUD while leaving other interactive UI alone.
     if (!e.target.closest?.('.hud--top') && e.target.closest?.('button, a, input, textarea, select, [contenteditable], [tabindex]')) return;
     e.preventDefault();
-    contactCall?.kill(); contactCall = null; stopFlight(); lastInput = now;
+    contactCall?.kill(); contactCall = null; stopFlight();
     if (reducedMotion) {
       // step a third of a screen per press
       const [dx, dy] = DIRS[e.key];
@@ -1938,7 +1932,7 @@ function init(container, config, kit = KIT) {
     // Clamp both ways: a negative dt would turn friction into exponential growth.
     const t = performance.now();
     const dt = Math.max(0, Math.min(0.05, (t - last) / 1000)); last = Math.max(last, t);
-    now += dt; frame++;
+    frame++;
     if (!tiles.length) { renderer.render(scene, camera); return; }
 
     // drag: apply this frame's pointer movement in one step
@@ -1948,25 +1942,16 @@ function init(container, config, kit = KIT) {
     }
 
     // motion
-    if (flight) {
-      lastInput = now; // the flight tween moves cam; a flight counts as input
-    } else if (!dragging && !reducedMotion) {
+    if (!flight && !dragging && !reducedMotion) {
       // held arrow keys accelerate toward keySpeed
       if (keys.size) {
         let kx = 0, ky = 0;
         for (const k of keys) { kx += DIRS[k][0]; ky += DIRS[k][1]; }
         const a = 1 - 0.0025 ** dt; // ~fast approach
         vel.x += (kx * config.keySpeed - vel.x) * a; vel.y += (ky * config.keySpeed - vel.y) * a;
-        lastInput = now;
       } else {
         const f = config.friction ** (dt * 60);
         vel.x *= f; vel.y *= f;
-      }
-      // idle: ease into a slow wandering drift
-      if (now - lastInput > config.idleDelay && config.drift > 0) {
-        const a = 1 - 0.985 ** (dt * 60);
-        const dx = Math.cos(now * 0.05) * config.drift, dy = Math.sin(now * 0.037 + 1) * config.drift * 0.7;
-        vel.x += (dx - vel.x) * a; vel.y += (dy - vel.y) * a;
       }
       const vmax = 8000; // px/s safety cap
       vel.x = Math.max(-vmax, Math.min(vmax, vel.x)); vel.y = Math.max(-vmax, Math.min(vmax, vel.y));
@@ -2023,7 +2008,7 @@ function init(container, config, kit = KIT) {
       if (tile.u.uReveal.value < 1) animating = true; // revealTween (build) drives uReveal
     }
 
-    // hover: off while the field moves faster than ~the idle drift, or flies
+    // hover: off while the field moves above the hover speed threshold, or flies
     fieldMoving = !!flight || dragging || speedS > 0.05;
     updateHover();
     updateAim();

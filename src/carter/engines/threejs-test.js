@@ -1550,8 +1550,6 @@ export function mountThreeJsTest(host) {
   controls.maxPolarAngle = Math.PI * 0.9;
   controls.enableDamping = !reduced;
   controls.dampingFactor = 0.08;
-  controls.autoRotate = !reduced;
-  controls.autoRotateSpeed = params.spin;
 
   const baker = createMatcapBaker(renderer);
   let finishId = 'studio';
@@ -1879,6 +1877,8 @@ export function mountThreeJsTest(host) {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       stepTransitions(dt);
+      // Spin the exhibit, not the viewport. Manual orbit still uses damping.
+      if (controls.state === STATE.NONE) scene.rotation.y += (TWO_PI / 3600) * params.spin;
       controls.update();
       render();
     };
@@ -1914,7 +1914,6 @@ export function mountThreeJsTest(host) {
   const set = (key, value) => {
     if (key === 'spin') {
       params.spin = Number(value);
-      controls.autoRotateSpeed = params.spin;
     } else if (key === 'pointSize') {
       params.pointSize = Number(value);
       pointsMat.size = params.pointSize;
