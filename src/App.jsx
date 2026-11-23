@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import Hud from './components/Hud.jsx';
-import ReframeHome from './reframe/ReframeHome.jsx';
-import Preloader from './preloader/Preloader.jsx';
+import JesperHome from './jesper/JesperHome.jsx';
+import Loader from './jesper/components/Loader.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
 import Studio from './components/studio/Studio.jsx';
@@ -35,31 +35,14 @@ export default function App() {
   const route = section ? section.menu.key : path === '/' ? 'home' : 'not-found';
   const activeNav = activeTopLevel(path);
 
-  // The opening preloader plays once per load, over the finished page. `appReady`
-  // is the site's own "page mounted" signal (fonts settled); the overlay holds
-  // until it is true so the homepage can never be revealed half-built. The
-  // homepage's own entrance is then deferred until the overlay has lifted.
+  // The reference loader follows the experience's real asset progress and
+  // leaves on the same 650ms schedule. Non-home pages wait for that handoff.
+  const [progress, setProgress] = useState(0);
   const [preloaderDone, setPreloaderDone] = useState(false);
-  const appReady = !loading;
-  const homeEntranceReady = appReady && preloaderDone;
-  const finishPreloader = useCallback(() => setPreloaderDone(true), []);
-
-  // Keep the static source index available until React has actually mounted.
-  // The live home index takes over; internal routes must not expose a duplicate.
-  useEffect(() => {
-    const index = document.getElementById('reframe-static-index');
-    if (index) index.hidden = true;
-    return () => { if (index) index.hidden = false; };
-  }, []);
-
-  // The retained nav and page entrances wait for their font, not the removed
-  // portfolio's project textures/models. Its own original timing is unchanged.
-  useEffect(() => {
-    let mounted = true;
-    const finish = () => { if (mounted) setLoading(false); };
-    const timeout = window.setTimeout(finish, 2500);
-    document.fonts.ready.then(finish, finish);
-    return () => { mounted = false; window.clearTimeout(timeout); };
+  const homeEntranceReady = !loading && preloaderDone;
+  const finishLoading = useCallback(() => {
+    setLoading(false);
+    window.setTimeout(() => setPreloaderDone(true), 650);
   }, []);
 
   useEffect(() => {
@@ -75,7 +58,7 @@ export default function App() {
         ? `${carterPage.label} :: Writing`
         : section
           ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-          : route === 'home' ? 'ReframeHK | Hong Kong Web Studio' : 'Page not found | ReframeHK';
+          : route === 'home' ? 'Jesper Landberg' : 'Page not found | ReframeHK';
   }, [route, section, carterPage]);
 
   useEffect(() => {
@@ -95,7 +78,7 @@ export default function App() {
     setPath(nextPath);
   }, []);
   const goHome = useCallback(() => {
-    if (path === '/') window.dispatchEvent(new Event('reframe:home'));
+    if (path === '/') window.dispatchEvent(new Event('jesper:home'));
     else navigate('/');
   }, [navigate, path]);
 
@@ -119,10 +102,10 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}`}>
-      <Preloader ready={appReady} onComplete={finishPreloader} />
+      {!preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} /></div>}
       <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
-        <a className="skip-link" href={route === 'home' ? '#reframe-content' : '#main-content'}>Skip to content</a>
-        {route === 'home' && <div className="reframe-host"><ReframeHome entranceReady={homeEntranceReady} /></div>}
+        <a className="skip-link" href={route === 'home' ? '#jesper-content' : '#main-content'}>Skip to content</a>
+        {(route === 'home' || !preloaderDone) && <JesperHome active={route === 'home'} onProgress={setProgress} onReady={finishLoading} />}
         <div id="main-content">{routeContent}</div>
         <Hud navRouteKey={route} activeKey={activeNav} activePath={path} loading={loading} onNavigate={navigate} onHome={goHome} />
       </div>

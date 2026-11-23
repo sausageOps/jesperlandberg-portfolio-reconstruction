@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>ReframeHK | Hong Kong Web Studio</title>
+  <title>Jesper Landberg</title>
   <meta name="description" content="ReframeHK is a Hong Kong web studio. We design, build, host and look after websites, web apps and systems, with real care before and after launch." />
   <link rel="canonical" href="https://reframehk.com/" />
   <meta name="robots" content="noindex, nofollow" />
@@ -28,40 +28,8 @@
   <link rel="icon" href="/assets/reframe/icons/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/assets/reframe/apple-touch-icon.png" />
   <link rel="manifest" href="/assets/reframe/site.webmanifest" />
-  <link rel="preload" href="/assets/reframe/fonts/space-grotesk-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/assets/reframe/fonts/fraunces-italic-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/assets/reframe/fonts/space-mono-400-latin.v1.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/ABCDiatypePlusVariable.woff2" as="font" type="font/woff2" crossorigin />
-  <style>
-    html, body { margin: 0; background: #0f0f0e; }
-    /* Present to assistive technology if the JS entry fails, as in the source. */
-    #reframe-static-index { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-    #reframe-static-index[hidden] { display: none; }
-  </style>
-  <noscript><style>
-    @font-face { font-family: "Space Grotesk"; font-style: normal; font-weight: 300 700; font-display: swap; src: url('/assets/reframe/fonts/space-grotesk-latin.v1.woff2') format('woff2'); }
-    @font-face { font-family: "Fraunces"; font-style: italic; font-weight: 400; font-display: swap; src: url('/assets/reframe/fonts/fraunces-italic-latin.v1.woff2') format('woff2'); }
-    @font-face { font-family: "Space Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url('/assets/reframe/fonts/space-mono-400-latin.v1.woff2') format('woff2'); }
-    @font-face { font-family: "Space Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url('/assets/reframe/fonts/space-mono-700-latin.v1.woff2') format('woff2'); }
-    *, *::before, *::after { box-sizing: border-box; }
-    /* Override the host's fixed viewport styles even in the built CSS bundle. */
-    html:has(#reframe-static-index), body:has(#reframe-static-index) { overflow: auto; height: auto; background: #0f0f0e; color: #ebe8e1; font-family: "Space Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased; font-synthesis: auto; text-rendering: auto; }
-    html:has(#reframe-static-index) { font-size: 16px; }
-    body:has(#reframe-static-index) { min-width: 0; }
-    html:has(#reframe-static-index), body:has(#reframe-static-index) { scrollbar-width: auto; }
-    html:has(#reframe-static-index)::-webkit-scrollbar, body:has(#reframe-static-index)::-webkit-scrollbar { display: initial; }
-    #root { display: none; }
-    #reframe-static-index { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; max-width: 760px; margin: 0 auto; padding: 10vh 24px; font-size: 18px; line-height: 1.55; }
-    #reframe-static-index h1 { font-size: clamp(56px, 12vw, 120px); letter-spacing: -0.05em; line-height: 1; margin: 0 0 16px; }
-    #reframe-static-index h1 i { font-family: "Fraunces", Georgia, serif; font-weight: 400; font-style: italic; letter-spacing: -0.01em; margin-right: 0.02em; color: #ff4f1a; }
-    #reframe-static-index h1 sup { font-family: "Space Mono", ui-monospace, monospace; font-weight: 500; font-size: 0.36em; letter-spacing: 0.04em; margin-left: 0.25em; padding: 0.15em 0.3em; border: 1px solid currentColor; border-radius: 3px; position: relative; top: 0.1em; }
-    #reframe-static-index h2 { font-family: "Space Mono", ui-monospace, monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #ff4f1a; margin: 64px 0 8px; }
-    #reframe-static-index h3 { font-size: 30px; letter-spacing: -0.03em; margin: 24px 0 4px; }
-    #reframe-static-index p { margin: 0; color: #c9c6be; }
-    #reframe-static-index a { color: inherit; text-decoration: underline; }
-    #reframe-static-index :focus-visible { outline: 2px solid #ff4f1a; outline-offset: 3px; }
-    #reframe-static-index footer { margin-top: 64px; font-family: "Space Mono", ui-monospace, monospace; font-size: 12px; }
-  </style></noscript>
+  <style>html, body { margin: 0; background: #000; }</style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -116,31 +84,6 @@
 </head>
 <body>
   <div id="root"></div>
-  <main id="reframe-static-index" class="index" data-index>
-      <h1><i>re</i>frame<sup>HK</sup></h1>
-      <p>Websites, made with real care. A Hong Kong web studio.</p>
-      <section>
-        <h2>Services</h2>
-        <h3>Design</h3><p>UI/UX · Brand · Motion</p>
-        <h3>Build</h3><p>Websites · Web apps · Systems: CMS, internal tools, integrations · WCAG accessibility</p>
-        <h3>Care</h3><p>Hosting · Maintenance · Upgrades</p>
-        <h3>Transform</h3><p>Redesigns · Migrations · Legacy rebuilds</p>
-      </section>
-      <section>
-        <h2>Work</h2>
-        <h3><a href="https://smilepp.pictures/" target="_blank" rel="noopener">SmilePP</a></h3>
-        <p>Portfolio site for SmilePP, the brand of Hong Kong director Smile: film showcases and photograph albums. Design, Build, Care. 2025.</p>
-        <h3><a href="https://rubbylaaw.xyz/" target="_blank" rel="noopener">Ruby Law</a></h3>
-        <p>Portfolio of a UI/UX and AI-driven product designer, hosted and kept in focus. Hosting &amp; care. 2026.</p>
-        <h3><a href="https://ywpspta.com/" target="_blank" rel="noopener">英華小學家長教師會 · YWPS PTA</a></h3>
-        <p>Official site of the Ying Wa Primary School Parent-Teacher Association. Design, Build, Care. 2026.</p>
-      </section>
-      <section>
-        <h2>Contact</h2>
-        <p><a href="mailto:info@reframehk.com">info@reframehk.com</a></p>
-      </section>
-      <footer><p>This reconstruction does not use analytics. No ads, and we never sell your data.</p></footer>
-  </main>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

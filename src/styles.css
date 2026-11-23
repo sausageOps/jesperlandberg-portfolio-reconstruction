@@ -136,10 +136,7 @@ input:focus-visible {
     transition-duration: 0.001ms !important;
   }
 }
-/* The field sits beneath the unchanged A24 dock; an open sheet covers it. */
-.reframe-host { position: fixed; inset: 0; z-index: 20; }
 .route-home #main-content { z-index: 20; pointer-events: none; }
-.route-home .reframe-host:has(.sheet.is-open) { z-index: 50; }
 /* The About destination retains its own original textured background. */
 .app:not(.route-home) { background: #000; }
 .app.route-about::before, .app.route-about::after {

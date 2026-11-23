@@ -1,0 +1,580 @@
+/* Homepage, project and loader rules from the reference, scoped away from the retained navigation and routes. */
+.jesper-scope { position: fixed; inset: 0; z-index: 20; }
+.jesper-project-layer { position: fixed; inset: 0; z-index: 20; }
+.jesper-scope.is-inactive { visibility: hidden; pointer-events: none; }
+html.webgl.grabbable .jesper-scope { cursor: grab; }
+html.webgl.grabbing .jesper-scope, html.webgl.grabbing .jesper-scope * { cursor: grabbing; user-select: none; }
+
+
+.jesper-scope .webgl-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.jesper-loader-scope .loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #000000;
+  opacity: 1;
+  transition: opacity 0.55s ease, visibility 0.55s;
+}
+
+.jesper-loader-scope .loader-leaving {
+  visibility: visible;
+  opacity: 1;
+  background: transparent;
+  pointer-events: none;
+  transition: none;
+}
+
+.jesper-loader-scope .loader-leaving .loader-bars {
+  opacity: 0;
+}
+
+.jesper-loader-scope .loader-bars {
+  display: flex;
+  gap: 8px;
+}
+
+.jesper-loader-scope .loader-bar {
+  position: relative;
+  display: block;
+  width: 50px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: #222222;
+}
+
+.jesper-loader-scope .loader-bar > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #ffffff;
+  transform-origin: left center;
+  transition: transform 0.28s ease-out;
+}
+.jesper-scope .home {
+  z-index: 20;
+}
+
+.jesper-scope .card-run {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.jesper-scope .home-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: block;
+  border-radius: 2rem;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  will-change: transform;
+}
+
+html.grabbing .jesper-scope .home-card {
+  cursor: grabbing;
+}
+
+.jesper-scope .home-card-title {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 1.6rem;
+  line-height: 1.4;
+  letter-spacing: -0.05em;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jesper-scope .home-card-arrow {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #000000;
+  opacity: 0;
+  pointer-events: none;
+}
+.jesper-scope .project-page {
+  z-index: 5;
+  touch-action: none;
+}
+
+html.no-webgl .jesper-scope .project-page {
+  touch-action: auto;
+}
+
+.jesper-scope .project-sheet,
+.jesper-scope .related-sheet {
+  position: fixed;
+  border: 0;
+  border-radius: 2rem;
+  background: #ffffff;
+}
+
+html.webgl .jesper-scope .project-sheet,
+html.webgl .jesper-scope .related-sheet {
+  background: transparent;
+}
+
+.jesper-scope .project-sheet {
+  inset: 2rem 5rem;
+  overflow: hidden;
+}
+
+.jesper-scope .related-sheet {
+  inset: 10rem;
+  width: auto;
+  padding: 0;
+  opacity: 0.3;
+}
+
+.jesper-scope .related-previous {
+  transform: translateX(calc((100% + 7.5rem) * -1));
+}
+
+.jesper-scope .related-next {
+  transform: translateX(calc(100% + 7.5rem));
+}
+
+.jesper-scope .project-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10rem;
+  height: 100%;
+  padding: 0 12rem 0 4rem;
+}
+
+.jesper-scope .project-copy {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  align-items: flex-start;
+  align-self: start;
+  padding: 4rem 0 1rem;
+  color: #000000;
+}
+
+.jesper-scope .project-copy h1 {
+  max-width: none;
+  margin: 0;
+  font-size: 4.5rem;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+
+html.webgl .jesper-scope .project-copy h1 {
+  -webkit-text-fill-color: transparent;
+}
+
+.jesper-scope .project-description {
+  width: 40rem;
+  max-width: 40rem;
+  margin-top: 2rem;
+  font-size: 1.6rem;
+  line-height: 1.4;
+  letter-spacing: -0.035em;
+}
+
+.jesper-scope .project-meta {
+  display: flex;
+  width: max-content;
+  gap: 1.2rem;
+  align-items: flex-start;
+  margin-top: 4.5rem;
+}
+
+.jesper-scope .pill {
+  display: inline-flex;
+  height: 2.8rem;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.75rem;
+  border-radius: 999px;
+  color: #000000;
+  background: #eeeeee;
+  white-space: nowrap;
+}
+
+.jesper-scope .pill-round {
+  width: 2.8rem;
+  min-width: 2.8rem;
+  height: 2.8rem;
+  min-height: 2.8rem;
+  padding: 0;
+  color: #ffffff;
+  background: #000000;
+}
+
+.jesper-scope .pill-round svg {
+  transform: rotate(-45deg);
+}
+
+.jesper-scope .project-meta span.pill {
+  pointer-events: none;
+}
+
+html.webgl .jesper-scope .project-meta .pill {
+  background: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+html.webgl .jesper-scope .project-meta .pill svg {
+  opacity: 0;
+}
+
+.jesper-scope .project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  align-items: normal;
+}
+
+.jesper-scope .award-list {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  min-height: 2.8rem;
+}
+
+.jesper-scope .award-placeholder {
+  display: block;
+  width: 4rem;
+  height: 2.8rem;
+}
+
+.jesper-scope .media-viewport {
+  position: relative;
+  flex: 0 0 70rem;
+  width: 70rem;
+  height: 100%;
+  min-height: 0;
+  margin-top: 0;
+  padding-bottom: 8rem;
+}
+
+.jesper-scope .media-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+  padding: 4rem 0 0;
+}
+
+.jesper-scope .project-media {
+  position: relative;
+  flex: none;
+  width: 100%;
+  overflow: hidden;
+}
+
+.jesper-scope .project-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.jesper-scope .project-close {
+  position: absolute;
+  top: 3rem;
+  right: 3rem;
+  bottom: auto;
+  z-index: 35;
+  display: grid;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #000000;
+  transition: color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.jesper-scope .project-close-portal {
+  display: none;
+}
+
+.jesper-scope .project-close:hover {
+  color: #000000;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #000000;
+}
+
+html.webgl .jesper-scope .project-close {
+  opacity: 0 !important;
+  pointer-events: auto;
+  transition: none;
+}
+
+html.webgl .jesper-scope .project-close:hover {
+  transform: none;
+}
+
+.jesper-scope .project-progress {
+  position: absolute;
+  bottom: 3rem;
+  left: 3rem;
+  z-index: 34;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: visible;
+  pointer-events: none;
+  transform: rotate(-90deg);
+}
+
+.jesper-scope .project-progress circle {
+  cx: 50%;
+  cy: 50%;
+  r: calc(50% - 1px);
+  fill: none;
+  stroke-width: 2px;
+}
+
+.jesper-scope .progress-track {
+  stroke: rgba(0, 0, 0, 0.2);
+}
+
+.jesper-scope .progress-value {
+  stroke: #000000;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+html.no-webgl .jesper-scope .webgl-canvas {
+  display: none;
+}
+
+html.no-webgl .jesper-scope .card-run {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  overflow-x: auto;
+  padding: 12rem max(2rem, calc(50vw - 30rem));
+  pointer-events: auto;
+  scroll-snap-type: x mandatory;
+}
+
+html.no-webgl .jesper-scope .home-card {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 auto;
+  width: 60rem;
+  max-width: 80vw;
+  height: auto;
+  aspect-ratio: var(--card-ratio);
+  background-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 45%), var(--card-image);
+  background-position: center;
+  background-size: cover;
+  scroll-snap-align: center;
+  transform: none !important;
+}
+
+html.no-webgl .jesper-scope .project-sheet {
+  overflow-y: auto;
+}
+
+html.no-webgl .jesper-scope .project-content,
+html.no-webgl .jesper-scope .media-viewport,
+html.no-webgl .jesper-scope .media-track {
+  position: relative;
+  height: auto;
+}
+
+html.no-webgl .jesper-scope .project-content {
+  min-height: 100%;
+}
+
+html.no-webgl .jesper-scope .project-media {
+  transform: none !important;
+}
+
+html.no-webgl .jesper-scope .home-card-title,
+html.no-webgl .jesper-scope .home-card-arrow {
+  opacity: 1;
+}
+
+html.no-webgl .jesper-scope .project-media img {
+  opacity: 1;
+}
+
+html.no-webgl .jesper-scope .award-placeholder {
+  border-radius: 35% 35% 45% 45%;
+  background: linear-gradient(120deg, #8b5e16, #f5d67b 45%, #a87521 70%, #f7df8e);
+  clip-path: polygon(50% 0, 63% 30%, 96% 35%, 72% 57%, 79% 91%, 50% 74%, 21% 91%, 28% 57%, 4% 35%, 37% 30%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .jesper-scope .media-viewport {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 649px) {
+
+  .jesper-scope .home-card {
+    border-radius: 1.5rem;
+  }
+
+  .jesper-scope .project-sheet {
+    inset: 1.5rem 2rem;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+  }
+
+  .jesper-scope .project-sheet::-webkit-scrollbar {
+    display: none;
+  }
+
+  .jesper-scope .related-sheet {
+    inset: 10rem;
+    z-index: 6;
+    width: auto;
+    border-radius: 1.5rem;
+  }
+  .jesper-scope .related-sheet::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    pointer-events: auto;
+  }
+
+  .jesper-scope .related-previous {
+    transform: translateX(calc((100% + 9rem) * -1));
+  }
+
+  .jesper-scope .related-previous::before {
+    right: -2.5rem;
+  }
+
+  .jesper-scope .related-next {
+    transform: translateX(calc(100% + 9rem));
+  }
+
+  .jesper-scope .related-next::before {
+    left: -2.5rem;
+  }
+
+  .jesper-scope .project-content {
+    position: relative;
+    display: block;
+    height: auto;
+    min-height: 100%;
+    padding: 0 1rem;
+  }
+
+  .jesper-scope .project-copy {
+    margin-bottom: 4rem;
+    padding: 4rem 1.5rem 0;
+  }
+
+  .jesper-scope .project-copy h1 {
+    max-width: none;
+    font-size: 3.5rem;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .jesper-scope .project-description {
+    width: auto;
+    max-width: 40rem;
+    margin-top: 1.5rem;
+    font-size: 1.4rem;
+  }
+
+  .jesper-scope .project-meta {
+    width: auto;
+    margin-top: 3rem;
+  }
+
+  .jesper-scope .project-tags {
+    gap: 0.4rem;
+  }
+
+  .jesper-scope .media-viewport,
+  .jesper-scope .media-track {
+    position: relative;
+    height: auto;
+  }
+
+  .jesper-scope .media-viewport {
+    flex: none;
+    width: auto;
+    margin-top: 0;
+    padding-bottom: 8rem;
+  }
+
+  .jesper-scope .media-track {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 0;
+  }
+
+  .jesper-scope .project-media {
+    flex: none;
+  }
+
+  .jesper-scope .project-close-inline {
+    display: none;
+  }
+
+  .jesper-scope .project-close-portal {
+    position: fixed;
+    top: auto;
+    right: 3.5rem;
+    bottom: 3rem;
+    display: grid;
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .jesper-scope .project-progress {
+    display: none;
+  }
+
+  html.no-webgl .jesper-scope .card-run {
+    flex-direction: column;
+    gap: 2rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12rem 2rem;
+    scroll-snap-type: y mandatory;
+  }
+
+  html.no-webgl .jesper-scope .home-card {
+    width: 100%;
+    max-width: none;
+  }
+}
