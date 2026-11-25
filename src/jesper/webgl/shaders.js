@@ -158,6 +158,8 @@ export const surfaceFragment = /* glsl */ `
   uniform float u_shade;
   uniform float u_shadeS;
   uniform float u_corner;
+  uniform float u_border;
+  uniform vec3 u_borderColor;
   uniform float u_white;
   uniform vec3 u_wash;
   uniform float u_scrim;
@@ -361,6 +363,12 @@ export const surfaceFragment = /* glsl */ `
       tex.rgb = mix(tex.rgb, vec3(0.0), u_scrim * 0.65 * g * g);
     }
     tex.rgb = mix(tex.rgb, u_wash, u_white);
+    if (u_border > 0.0001) {
+      vec2 sz = vec2(u_res.x / max(u_res.y, 0.0001), 1.0);
+      float d = roundedBox(vUv * sz, sz * 0.5, 0.0);
+      float aa = max(fwidth(d), 0.0001);
+      tex.rgb = mix(tex.rgb, u_borderColor, smoothstep(-u_border - aa, -u_border + aa, d));
+    }
     float alpha = tex.a * u_alpha;
     if (u_corner > 0.0001) {
       vec2 sz = vec2(u_res.x / max(u_res.y, 0.0001), 1.0);
@@ -570,6 +578,9 @@ export const awardFragment = /* glsl */ `
   uniform vec3 u_color;
   uniform vec3 u_light;
   uniform float u_alpha;
+  uniform vec4 u_clip;
+  uniform float u_clipR;
+  uniform float u_clipOn;
   varying vec3 vN;
   void main() {
     vec3 n = normalize(vN);
@@ -580,6 +591,13 @@ export const awardFragment = /* glsl */ `
     float spec = pow(max(dot(n, h), 0.0), 28.0);
     float rim = pow(1.0 - max(n.z, 0.0), 2.5);
     vec3 col = u_color * (0.3 + 0.85 * lam) + u_light * (spec * 1.2 + rim * 0.45);
-    gl_FragColor = vec4(col, u_alpha);
+    float alpha = u_alpha;
+    if (u_clipOn > 0.5) {
+      vec2 q = abs(gl_FragCoord.xy - u_clip.xy - u_clip.zw * 0.5) - (u_clip.zw * 0.5 - u_clipR);
+      float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_clipR;
+      float aa = max(fwidth(d), 0.0001);
+      alpha *= 1.0 - smoothstep(-aa, aa, d);
+    }
+    gl_FragColor = vec4(col, alpha);
   }
 `;

@@ -1,0 +1,9 @@
+# Post-fix normal-WebGL regression summary
+
+The first parallel attempt overloaded software-WebGL Chromium. Its `direct-after-parallel-partial.log`, `full-flows-after-a.log`, `full-flows-after-b.log` and `navigation-after.log` are partial, not full-suite results; these retain the completed 320/390 Full/Featured cases and 320 navigation cases. The subsequent sequential background process `mobile-regression-checks-8a603610` exited 0 after:
+
+- `verify/master-mobile-full-flows.cjs` at 360, 375, 414 and 430: all 8 projects passed both Full and Featured open/close and card restoration. Combined with the 320 and 390 completed cases in the partial parallel logs: 48/48 at each origin across all six widths.
+- `verify/master-mobile-navigation.cjs` at 360, 375, 390, 414 and 430: all 8 projects passed applicable vertical scrolling and next/previous, plus representative bidirectional touch swipes; the script asserts no page errors. Together with 320 in `navigation-after.log`: all eight × six widths.
+- `verify/master-mobile-matrix.cjs`: 8/8 direct projects at each of 320, 360, 375, 390, 414 and 430, no page errors reported; 48/48. The sequential process printed `FINISHED` and exited 0.
+
+`lifecycle-debug2-after.log` shows Studio → home → 800px → 390px returned the correct renderer with one canvas; two console `TypeError: Failed to fetch` errors arose in the existing desktop/tablet renderer on blocked remote requests, not uncaught page errors. `a24-after-partial.log` contains fresh 320, 390 and 800 baseline/target geometry pairs with equal dock rectangles and menu open; the script timed out before the final 1440 target pair. The prior migration report records the completed 1440 comparison. Test servers used offline request interception and software rendering; these results are not a physical-phone or live-Mux assessment.

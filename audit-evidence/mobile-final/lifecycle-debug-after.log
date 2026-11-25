@@ -1,0 +1,57 @@
+before {
+  route: '/',
+  canvas: 1,
+  nav: [
+    { t: '', href: '/' },
+    { t: 'Life', href: '/' },
+    { t: 'Routes4', href: null },
+    { t: 'Lab', href: '/routes/lab' },
+    { t: 'Writing', href: '/routes/writing' },
+    { t: 'Studio', href: '/routes/studio' },
+    { t: 'Art', href: '/routes/art' },
+    { t: 'Myself5', href: null },
+    { t: 'About', href: '/myself/about' },
+    { t: 'Contact', href: '/myself/contact' },
+    { t: 'My toys', href: '/myself/my-toys' },
+    { t: 'My Library', href: '/myself/my-book' },
+    { t: 'Shop', href: '/myself/shop' }
+  ]
+}
+open {
+  open: 'true',
+  visible: [
+    { t: '', h: '/' },
+    { t: 'Life', h: '/' },
+    { t: 'Lab', h: '/routes/lab' },
+    { t: 'Writing', h: '/routes/writing' },
+    { t: 'Studio', h: '/routes/studio' },
+    { t: 'Art', h: '/routes/art' }
+  ]
+}
+outside {
+  path: '/routes/studio',
+  canvas: 1,
+  master: false,
+  router: false,
+  html: ''
+}
+return { path: '/', canvas: 1, master: true, router: true, cards: 8 }
+CONSOLE ERROR [null]
+CONSOLE ERROR [null]
+tablet {
+  path: '/',
+  canvas: 1,
+  master: false,
+  router: false,
+  old: true,
+  html: 'webgl grabbable'
+}
+mobile again {
+  path: '/',
+  canvas: 1,
+  master: true,
+  router: true,
+  cards: 8,
+  old: false
+}
+errors [ 'JSHandle@error', 'JSHandle@error' ]

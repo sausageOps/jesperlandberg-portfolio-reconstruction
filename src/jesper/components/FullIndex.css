@@ -1,0 +1,14 @@
+/* The mobile Full index from DNYapgHJ.js; the reference has no card grid. */
+@media (max-width: 649px) {
+  .app.route-full #main-content { pointer-events: none; }
+  .full-index { position: fixed; inset: 0; z-index: 20; overflow: hidden; }
+  .full-index-outer { position: absolute; inset: 0; }
+  .full-index-cloud { display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center; min-height: 100%; max-width: 42rem; margin: 0 auto; padding: 0 2rem; column-gap: 2.4rem; row-gap: .6rem; }
+  .full-index-item { position: relative; display: flex; }
+  .full-index-name { pointer-events: auto; white-space: nowrap; font-size: 1.8rem; line-height: 1.4; font-weight: 400; letter-spacing: -.05em; }
+  .full-index-item a { cursor: pointer; }
+  .full-index-dot { position: absolute; pointer-events: none; left: 100%; top: 50%; margin-left: 1.2rem; transform: translate(-50%, -50%); font-size: .8rem; line-height: 1.4; }
+  .full-index-name, .full-index-dot { color: transparent; }
+  .full-index-dom .full-index-name, .full-index-dom .full-index-dot { color: white; }
+  .full-index-gl .full-index-name:focus-visible { outline-color: white; }
+}

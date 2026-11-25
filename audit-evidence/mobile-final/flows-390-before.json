@@ -1,0 +1,24 @@
+[
+  {
+    "slug": "griflan",
+    "ok": true,
+    "opened": [
+      {
+        "title": "Griflan",
+        "media": 3
+      },
+      {
+        "title": "Griflan",
+        "media": 3
+      }
+    ],
+    "fullCenter": [
+      "griflan",
+      "griflan"
+    ],
+    "featuredCenter": [
+      "griflan",
+      "griflan"
+    ]
+  }
+]

@@ -10,7 +10,7 @@ function ArrowIcon({ cross = false }) {
   );
 }
 
-export default function Project({ project, featured, experience, transitionFrom, exitTo, onClose, onNavigate }) {
+export default function Project({ project, featured, experience, transitionFrom, exitTo, onClose, onNavigate, avoidDock = false }) {
   const panel = useRef(null);
   const viewport = useRef(null);
   const media = useRef([]);
@@ -19,6 +19,7 @@ export default function Project({ project, featured, experience, transitionFrom,
   const progress = useRef(null);
   const content = useRef(null);
   const [portalRoot, setPortalRoot] = useState(null);
+  const [closeBottom, setCloseBottom] = useState(null);
   const index = featured.findIndex((item) => item.slug === project.slug);
   const previous = featured[(index - 1 + featured.length) % featured.length];
   const next = featured[(index + 1) % featured.length];
@@ -26,6 +27,34 @@ export default function Project({ project, featured, experience, transitionFrom,
   useEffect(() => {
     setPortalRoot(document.querySelector('.jesper-scope'));
   }, []);
+
+  // Keep A24 on screen without blocking the mobile project's Close target.
+  // Lift the portal only when its reference position would intersect the dock;
+  // the WebGL close follows this same DOM target.
+  useLayoutEffect(() => {
+    if (!avoidDock || !portalRoot) return undefined;
+    const dock = document.querySelector('.a24-nav__list');
+    const close = portalRoot.querySelector('.project-close-portal');
+    if (!dock || !close) return undefined;
+    let frame;
+    const update = () => {
+      if (!window.matchMedia('(max-width: 649px)').matches) { setCloseBottom(null); return; }
+      const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
+      const a = close.getBoundingClientRect();
+      const b = dock.getBoundingClientRect();
+      const baseBottom = 3 * root;
+      const overlapX = a.left < b.right && a.right > b.left;
+      const overlapY = window.innerHeight - baseBottom > b.top - 8 && window.innerHeight - baseBottom - a.height < b.bottom;
+      setCloseBottom(overlapX && overlapY ? Math.max(baseBottom, window.innerHeight - b.top + 8) : null);
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
+    const observer = new ResizeObserver(schedule);
+    observer.observe(dock);
+    observer.observe(close);
+    window.addEventListener('resize', schedule);
+    schedule();
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', schedule); };
+  }, [avoidDock, portalRoot]);
 
   useEffect(() => {
     if (!experience) return;
@@ -150,6 +179,7 @@ export default function Project({ project, featured, experience, transitionFrom,
               {project.images.map((image, imageIndex) => (
                 <div
                   className="project-media"
+                  data-outlined={project.outlined || undefined}
                   key={`${project.slug}-${imageIndex}`}
                   ref={(element) => { media.current[imageIndex] = element; }}
                   style={{ aspectRatio: `${image.width} / ${image.height}` }}
@@ -176,6 +206,7 @@ export default function Project({ project, featured, experience, transitionFrom,
       {portalRoot && createPortal(
         <button
           className="project-close project-close-portal"
+          style={avoidDock && closeBottom !== null ? { bottom: `${closeBottom}px` } : undefined}
           aria-label="Close project"
           onClick={onClose}
           onPointerEnter={() => experience?.hoverProjectClose(true)}
