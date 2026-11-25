@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-25",
+  "viewport": [
+    1440,
+    900
+  ],
+  "sites": {
+    "master": {
+      "controlAfterClick": "Close",
+      "ariaExpanded": "true",
+      "socials": [
+        "Instagram",
+        "X",
+        "LinkedIn"
+      ],
+      "email": "jesper@alpacka.studio",
+      "centerScene": "moving dark box/cube fallback"
+    },
+    "local": {
+      "controlAfterClick": "Close",
+      "ariaExpanded": "true",
+      "socials": [
+        "Instagram",
+        "X",
+        "LinkedIn"
+      ],
+      "email": "jesper@alpacka.studio",
+      "centerScene": "moving llama-shaped figures"
+    }
+  },
+  "textAndLinksMatch": true,
+  "screenshots": [
+    "audit-evidence/desktop-migration/profile/master-profile-open-5s.png",
+    "audit-evidence/desktop-migration/profile/local-profile-open-5s.png"
+  ],
+  "networkCaveat": "The profile content text, social links and email matched in the DOM on both runtimes; the observed 3D scene is time-varying.",
+  "status": "Historical profile comparison; superseded for asset-availability inference by profile/model-asset-runtime-results.json.",
+  "historicalInterpretation": "After 5 seconds the profile central WebGL scene still differs: captured master displays box-like geometry while local displays the llama model. Local has public/assets/models/llama.glb (and award.glb); the captured upstream static checkout contains no GLB files. Local Experience code falls back to BoxGeometry when a model is unavailable. Treat this as a confirmed capture-vs-local visual difference, but do not infer canonical live-master behavior from the missing model in the captured snapshot.",
+  "latestConclusion": "The local model is a high-confidence match to the captured original response: HAR status/size match exactly, and the extraction filename SHA-256 prefix matches the local full digest. The master GitHub tree omits the binary itself, and the raw HAR response body is absent, so full 256-bit identity remains unverified. The earlier master-box/local-llama comparison came from a fixture missing the master path. A later copied-file replay showed llama-shaped figures in both, but that replay is not identity evidence. Animation source comparison shows exact parity after normalizing only the local asset URL; unsynchronized Math.random seeds and shared-clock phase explain non-repeatable screenshot placements.",
+  "latestEvidence": "audit-evidence/desktop-migration/profile/model-asset-runtime-results.json",
+  "latestScreenshots": [
+    "audit-evidence/desktop-migration/profile/master-profile-canonical-llama-2s.png",
+    "audit-evidence/desktop-migration/profile/local-profile-canonical-llama-2s.png"
+  ],
+  "historicalMetricsNote": "Previously computed MAE values (full frame 0.0258663 at 1 s and 0.0276772 at 5 s; center crop 0.0157265 and 0.0193802) belong to the earlier unsynchronized fallback-vs-model screenshots and must not be used as current Profile parity metrics.",
+  "assetIdentityEvidence": "audit-evidence/desktop-migration/profile/profile-reference-investigation.json"
+}

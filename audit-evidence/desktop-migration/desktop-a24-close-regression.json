@@ -1,0 +1,876 @@
+{
+  "date": "2026-11-25",
+  "checks": {
+    "desktopA24Initial": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "range": "desktop",
+      "appCount": 1,
+      "nuxtCount": 1,
+      "canvasCount": 1,
+      "session": true,
+      "router": true,
+      "a24Count": 1,
+      "a24Hidden": false,
+      "a24Display": "block",
+      "a24Position": "fixed",
+      "a24ZIndex": "45",
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 62.5
+      },
+      "dockRect": {
+        "x": 575,
+        "y": 24.56,
+        "width": 290,
+        "height": 27.58
+      },
+      "closeCount": 0
+    },
+    "a24PointerOpen": {
+      "expanded": "true",
+      "labVisible": true
+    },
+    "a24EscapeClosed": {
+      "expanded": "false",
+      "focusRestored": true
+    },
+    "a24KeyboardMenu": {
+      "expanded": "true",
+      "focusedHref": "/routes/lab"
+    },
+    "a24Lab": {
+      "path": "/routes/lab",
+      "title": "Lab — Routes",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "range": null,
+      "appCount": 1,
+      "nuxtCount": 0,
+      "canvasCount": 0,
+      "session": false,
+      "router": false,
+      "a24Count": 1,
+      "a24Hidden": false,
+      "a24Display": "block",
+      "a24Position": "fixed",
+      "a24ZIndex": "45",
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 62.5
+      },
+      "dockRect": {
+        "x": 575,
+        "y": 24.56,
+        "width": 290,
+        "height": 27.58
+      },
+      "closeCount": 0,
+      "activeRoutes": "page",
+      "labCurrent": "page"
+    },
+    "a24HistoryBack": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "range": "desktop",
+      "appCount": 1,
+      "nuxtCount": 1,
+      "canvasCount": 1,
+      "session": true,
+      "router": true,
+      "a24Count": 1,
+      "a24Hidden": false,
+      "a24Display": "block",
+      "a24Position": "fixed",
+      "a24ZIndex": "45",
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 62.5
+      },
+      "dockRect": {
+        "x": 575,
+        "y": 24.56,
+        "width": 290,
+        "height": 27.58
+      },
+      "closeCount": 0,
+      "sessionRemounted": true
+    },
+    "a24HistoryForward": {
+      "path": "/routes/lab",
+      "title": "Lab — Routes",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "range": null,
+      "appCount": 1,
+      "nuxtCount": 0,
+      "canvasCount": 0,
+      "session": false,
+      "router": false,
+      "a24Count": 1,
+      "a24Hidden": false,
+      "a24Display": "block",
+      "a24Position": "fixed",
+      "a24ZIndex": "45",
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 62.5
+      },
+      "dockRect": {
+        "x": 575,
+        "y": 24.56,
+        "width": 290,
+        "height": 27.58
+      },
+      "closeCount": 0
+    },
+    "a24LifeReturn": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "range": "desktop",
+      "appCount": 1,
+      "nuxtCount": 1,
+      "canvasCount": 1,
+      "session": true,
+      "router": true,
+      "a24Count": 1,
+      "a24Hidden": false,
+      "a24Display": "block",
+      "a24Position": "fixed",
+      "a24ZIndex": "45",
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 62.5
+      },
+      "dockRect": {
+        "x": 575,
+        "y": 24.56,
+        "width": 290,
+        "height": 27.58
+      },
+      "closeCount": 0
+    },
+    "resizeMatrix": [
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1025,
+          "height": 768
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1025,
+          "height": 54.67
+        },
+        "dockRect": {
+          "x": 385.19,
+          "y": 21.47,
+          "width": 254.63,
+          "height": 24.14
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 55.55
+        },
+        "dockRect": {
+          "x": 511.69,
+          "y": 21.83,
+          "width": 256.61,
+          "height": 24.52
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1366,
+          "height": 59.28
+        },
+        "dockRect": {
+          "x": 562.22,
+          "y": 23.3,
+          "width": 241.56,
+          "height": 26.16
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 62.5
+        },
+        "dockRect": {
+          "x": 576.94,
+          "y": 24.56,
+          "width": 286.11,
+          "height": 27.58
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 69.44
+        },
+        "dockRect": {
+          "x": 638.86,
+          "y": 27.28,
+          "width": 322.28,
+          "height": 30.64
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 83.33
+        },
+        "dockRect": {
+          "x": 766.95,
+          "y": 32.73,
+          "width": 386.08,
+          "height": 36.78
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 649,
+          "height": 844
+        },
+        "range": "mobile",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 784.89,
+          "width": 649,
+          "height": 59.11
+        },
+        "dockRect": {
+          "x": 128.03,
+          "y": 784.89,
+          "width": 392.94,
+          "height": 45.67
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 650,
+          "height": 844
+        },
+        "range": "tablet",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 784.88,
+          "width": 650,
+          "height": 59.13
+        },
+        "dockRect": {
+          "x": 187.53,
+          "y": 784.88,
+          "width": 274.94,
+          "height": 45.69
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "range": "tablet",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 54.67
+        },
+        "dockRect": {
+          "x": 382.02,
+          "y": 21.47,
+          "width": 259.97,
+          "height": 24.14
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      },
+      {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1025,
+          "height": 768
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1025,
+          "height": 54.67
+        },
+        "dockRect": {
+          "x": 384.36,
+          "y": 21.47,
+          "width": 256.28,
+          "height": 24.14
+        },
+        "closeCount": 0,
+        "sameSession": true,
+        "sameRouter": true,
+        "sameCanvas": true
+      }
+    ],
+    "closeSemantics": {
+      "visibleRoleCount": 1,
+      "hiddenInclusiveCount": 1,
+      "isVisible": true,
+      "href": "/",
+      "ariaLabel": "Close project",
+      "implicitRole": "link",
+      "beforeFocus": {
+        "visibility": "visible",
+        "display": "flex",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "x": 1320.015625,
+          "y": 47.984375,
+          "width": 43.1875,
+          "height": 43.1875
+        },
+        "childText": "",
+        "childVisibility": "visible",
+        "tabIndex": 0
+      }
+    },
+    "closeKeyboardFocus": {
+      "tabCount": 2,
+      "focused": {
+        "tag": "A",
+        "ariaLabel": "Close project",
+        "href": "/",
+        "text": "",
+        "className": "invisible relative inline-flex items-center rounded-full h-[2em] aspect-square justify-center px-2 bg-black text-white pointer-events-auto !absolute !bottom-15 s:!bottom-auto s:!top-30 !right-15 s:!right-30 !size-40 s:!size-45 !p-0"
+      },
+      "focus": {
+        "active": true,
+        "focusVisible": true,
+        "visibility": "visible",
+        "outlineStyle": "solid",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(255, 255, 255)",
+        "outlineOffset": "-4px",
+        "boxShadow": "none",
+        "zIndex": "20",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "x": 1320.015625,
+          "y": 47.984375,
+          "width": 43.1875,
+          "height": 43.1875
+        }
+      }
+    },
+    "closeEnterActivation": {
+      "path": "/",
+      "sheetCount": 0,
+      "mounts": {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "range": "desktop",
+        "appCount": 1,
+        "nuxtCount": 1,
+        "canvasCount": 1,
+        "session": true,
+        "router": true,
+        "a24Count": 1,
+        "a24Hidden": false,
+        "a24Display": "block",
+        "a24Position": "fixed",
+        "a24ZIndex": "45",
+        "a24Rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 62.5
+        },
+        "dockRect": {
+          "x": 575,
+          "y": 24.56,
+          "width": 290,
+          "height": 27.58
+        },
+        "closeCount": 0
+      }
+    },
+    "closeEscape": {
+      "path": "/",
+      "sheetCount": 0
+    },
+    "faults": {
+      "pageErrors": [],
+      "consoleErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/lab/vocal-orb/reel-v1.mp4",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "https://assets.carterogunsola.com/lab/vocal-orb/reel-v1.mp4",
+          "error": "net::ERR_FAILED"
+        }
+      ]
+    }
+  },
+  "faults": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/lab/vocal-orb/reel-v1.mp4",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/lab/vocal-orb/reel-v1.mp4",
+        "error": "net::ERR_FAILED"
+      }
+    ]
+  }
+}

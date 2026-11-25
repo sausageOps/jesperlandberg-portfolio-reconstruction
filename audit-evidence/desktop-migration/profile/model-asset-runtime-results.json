@@ -1,0 +1,118 @@
+{
+  "date": "2026-11-25",
+  "assetFiles": {
+    "llama": {
+      "sizeBytes": 143140,
+      "sha256": "c38e354b1457ed14dcd7131951436b6388e129939b68ef601d9053e1ae06a884"
+    },
+    "award": {
+      "sizeBytes": 71776,
+      "sha256": "b599fc26450f78a16208a0e05aa90f1f22a0a59f8a548f53c7a4d4e447cc8f75"
+    }
+  },
+  "sites": {
+    "master": {
+      "expectedModelPath": "/models/llama.glb",
+      "modelResponses": [
+        {
+          "url": "http://127.0.0.1:5174/models/llama.glb",
+          "path": "/models/llama.glb",
+          "status": 200,
+          "mimeType": "model/gltf-binary",
+          "contentLength": "143140",
+          "bodyBytes": 143140,
+          "sha256": "c38e354b1457ed14dcd7131951436b6388e129939b68ef601d9053e1ae06a884"
+        }
+      ],
+      "dom": {
+        "title": "Jesper Landberg",
+        "profile": [
+          {
+            "text": "Close",
+            "expanded": "true"
+          }
+        ],
+        "canvasCount": 1,
+        "profileText": true
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    "local": {
+      "expectedModelPath": "/assets/models/llama.glb",
+      "modelResponses": [
+        {
+          "url": "http://127.0.0.1:4173/assets/models/llama.glb",
+          "path": "/assets/models/llama.glb",
+          "status": 200,
+          "mimeType": "model/gltf-binary",
+          "contentLength": "143140",
+          "bodyBytes": 143140,
+          "sha256": "c38e354b1457ed14dcd7131951436b6388e129939b68ef601d9053e1ae06a884"
+        }
+      ],
+      "dom": {
+        "title": "Jesper Landberg",
+        "profile": [
+          {
+            "text": "Close",
+            "expanded": "true"
+          },
+          {
+            "text": "Routes4",
+            "expanded": "false"
+          },
+          {
+            "text": "Myself5",
+            "expanded": "false"
+          }
+        ],
+        "canvasCount": 1,
+        "profileText": true
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    }
+  },
+  "captureManifest": {
+    "source": "uploads/manifest.json",
+    "entries": [
+      {
+        "index": 93,
+        "url": "https://jesperlandberg.com/models/llama.glb",
+        "status": 200,
+        "mimeType": "model/gltf-binary",
+        "sizeBytes": 143140,
+        "file": "assets/other/jesperlandberg.com/0093_llama.glb__c38e354b14"
+      },
+      {
+        "index": 66,
+        "url": "https://jesperlandberg.com/models/award.glb",
+        "status": 200,
+        "mimeType": "model/gltf-binary",
+        "sizeBytes": 71776,
+        "file": "assets/other/jesperlandberg.com/0066_award.glb__b599fc2645"
+      }
+    ]
+  },
+  "fixtureProvenance": {
+    "masterModelFiles": "The temporary master fixture served copies of the local public/assets/models files from /models/llama.glb and /models/award.glb. This was done after the captured static checkout returned 404 for those paths.",
+    "localModelFiles": "The local Vite site served public/assets/models/llama.glb from /assets/models/llama.glb.",
+    "assetIdentityVerifiedAgainstOriginalHar": false,
+    "whyResponseHashesMatch": "The master fixture files were copied from the local files, so identical response hashes in this probe are expected and do not establish original HAR-body parity.",
+    "originalCaptureManifest": "uploads/manifest.json lists llama.glb (status 200, 143140 bytes, extracted-path name suffix c38e354b14) and award.glb (status 200, 71776 bytes, suffix b599fc2645); the extracted binary files are absent from the workspace uploads tree, so their original bodies could not be independently hashed.",
+    "screenshotTiming": "Screenshots were captured about 1.2 seconds after the model request was observed; animation phase and Math.random state were not synchronized between sites.",
+    "interpretation": "Fixture response hashes still do not prove origin because the master fixture served a local copy. Separately, the independent HAR extraction filename fingerprint and exact length strongly support that local public/assets/models/llama.glb is the original captured response; full-body SHA-256 equality cannot be proven because the original extracted GLB body is missing."
+  },
+  "captureFingerprint": {
+    "manifestEntry": "https://jesperlandberg.com/models/llama.glb",
+    "manifestStatus": 200,
+    "manifestSizeBytes": 143140,
+    "manifestExtractedFilename": "assets/other/jesperlandberg.com/0093_llama.glb__c38e354b14",
+    "localSha256": "c38e354b1457ed14dcd7131951436b6388e129939b68ef601d9053e1ae06a884",
+    "localSizeBytes": 143140,
+    "localSha256StartsWithManifestSuffix": true,
+    "hashNamingCrossCheck": "The README describes extracted names as indexed and hashed. A reproducible scan of 146 local files found 32 manifest rows (18 distinct local body files) matching both size and the 10-hex suffix against local SHA-256 prefixes; the llama and award GLB entries are included.",
+    "confidence": "High-confidence captured-response match; the full raw original body is absent, so full 256-bit identity is not independently verified."
+  }
+}

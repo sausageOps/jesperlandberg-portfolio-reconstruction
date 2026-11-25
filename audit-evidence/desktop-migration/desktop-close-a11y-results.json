@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-25",
+  "viewport": [
+    1440,
+    900
+  ],
+  "sameOnBothSites": true,
+  "element": {
+    "tag": "A",
+    "href": "/",
+    "ariaLabel": "Close project",
+    "classContains": [
+      "invisible",
+      "pointer-events-auto"
+    ],
+    "tabIndex": 0,
+    "computed": {
+      "visibility": "hidden",
+      "display": "flex",
+      "opacity": "1",
+      "pointerEvents": "auto"
+    },
+    "child": {
+      "tag": "SPAN",
+      "classContains": [
+        "visible"
+      ],
+      "ariaHidden": "true",
+      "text": "",
+      "visibility": "visible"
+    },
+    "centerHit": {
+      "tag": "SPAN",
+      "class": "visible absolute inset-0 rounded-[inherit]"
+    }
+  },
+  "keyboardAccessibility": {
+    "visibleRoleLinkCount": 0,
+    "includeHiddenRoleLinkCount": 1,
+    "programmaticFocusAccepted": false,
+    "activeElementAfterFocusAttempt": "BODY"
+  },
+  "pointerBehavior": {
+    "centerClickReturnsHome": {
+      "master": true,
+      "local": true
+    }
+  },
+  "status": "Historical pre-fix baseline; superseded by desktop-a24-close-regression.json.",
+  "historicalInterpretation": "The close icon remains visibly painted through its visible child span and pointer clicking works, but the anchor itself is visibility:hidden and is omitted from the visible accessibility role tree / cannot be focused in the browser probe. This behavior exists in the captured master runtime and local runtime alike; no local-only CSS patch was applied.",
+  "interpretation": "This probe records the captured master and local Close anchor before the desktop-only accessibility CSS adjustment. The current local desktop Close link is visible to the accessibility tree, keyboard focusable, and has a visible inset focus ring; see desktop-a24-close-regression.json and projects/local-close-keyboard-focus-1440x900.png. Tablet/mobile behavior was not changed by that desktop-only rule."
+}

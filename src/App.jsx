@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import Hud from './components/Hud.jsx';
 import JesperHome from './jesper/JesperHome.jsx';
 import MasterPortfolio from './jesper/MasterMobile.jsx';
@@ -14,14 +14,14 @@ import { featured } from './jesper/data/projects.js';
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
 const isMobileViewport = () => window.matchMedia('(max-width: 649px)').matches;
 const isTabletViewport = () => window.matchMedia('(min-width: 650px) and (max-width: 1024px)').matches;
-// Valid portfolio project URLs are owned by the captured runtime on phones
-// and in the explicitly approved tablet band. Outside it, retain the host's
-// original redirect behavior; unknown project slugs still return home.
+// Valid project URLs are owned by the shared captured master runtime at every
+// viewport. Keep the host shell at a stable portfolio route while preserving
+// the actual project pathname for the runtime's single Vue Router/history bridge.
 const readLocation = () => {
   const path = cleanPath(window.location.pathname);
   if (/^\/projects(?:\/|$)/.test(path)) {
     const slug = path.match(/^\/projects\/([^/]+)$/)?.[1];
-    if ((isMobileViewport() || isTabletViewport()) && featured.some((item) => item.slug === slug)) {
+    if (featured.some((item) => item.slug === slug)) {
       return window.history.state?.jesperFullOrigin ? '/full' : '/';
     }
     window.history.replaceState({}, '', '/');
@@ -40,13 +40,13 @@ export default function App() {
   const [path, setPath] = useState(readLocation);
   const [viewportMode, setViewportMode] = useState(() => ({ mobile: isMobileViewport(), tablet: isTabletViewport() }));
   const { mobile, tablet } = viewportMode;
-  const previousTablet = useRef(tablet);
   const [loading, setLoading] = useState(true);
   const section = useMemo(() => resolveSection(path), [path]);
   const carterPage = useMemo(() => resolveCarterPage(path), [path]);
-  const route = section ? section.menu.key : path === '/' ? 'home' : path === '/full' && (mobile || tablet) ? 'full' : 'not-found';
+  const route = section ? section.menu.key : path === '/' ? 'home' : path === '/full' ? 'full' : 'not-found';
   const activeNav = route === 'full' ? 'life' : activeTopLevel(path);
-  const masterPortfolio = (mobile || tablet) && (route === 'home' || route === 'full');
+  const masterPortfolio = route === 'home' || route === 'full';
+  const desktopMasterPortfolio = !mobile && !tablet && masterPortfolio;
 
   const [progress, setProgress] = useState(0);
   const [preloaderDone, setPreloaderDone] = useState(false);
@@ -63,21 +63,9 @@ export default function App() {
   useEffect(() => {
     const mobileQuery = window.matchMedia('(max-width: 649px)');
     const tabletQuery = window.matchMedia('(min-width: 650px) and (max-width: 1024px)');
-    // Read both predicates together so crossing a shared boundary cannot
-    // briefly mount the legacy renderer between the mobile and tablet modes.
-    const changed = () => {
-      const nextMobile = mobileQuery.matches;
-      const nextTablet = tabletQuery.matches;
-      const wasTablet = previousTablet.current;
-      previousTablet.current = nextTablet;
-      // Normalize tablet project URLs before the legacy desktop renderer mounts;
-      // that renderer intentionally redirects desktop project routes to home.
-      if (wasTablet && !nextTablet && !nextMobile && /^\/projects(?:\/|$)/.test(window.location.pathname)) {
-        window.history.replaceState({}, '', '/');
-        setPath('/');
-      }
-      setViewportMode({ mobile: nextMobile, tablet: nextTablet });
-    };
+    // Read both predicates together at each band edge. The captured portfolio
+    // stays mounted while its responsive renderer handles the actual resize.
+    const changed = () => setViewportMode({ mobile: mobileQuery.matches, tablet: tabletQuery.matches });
     mobileQuery.addEventListener('change', changed);
     tabletQuery.addEventListener('change', changed);
     return () => {
@@ -99,8 +87,8 @@ export default function App() {
         ? `${carterPage.label} :: Writing`
         : section
           ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-          : route === 'home' ? 'Jesper Landberg' : route === 'full' ? 'Index — Jesper Landberg' : 'Page not found | ReframeHK';
-  }, [route, section, carterPage]);
+          : route === 'home' ? 'Jesper Landberg' : route === 'full' ? (desktopMasterPortfolio ? 'Index' : 'Index — Jesper Landberg') : 'Page not found | ReframeHK';
+  }, [route, section, carterPage, desktopMasterPortfolio]);
 
   useEffect(() => {
     if (!tablet || !masterPortfolio) return undefined;
@@ -172,11 +160,11 @@ export default function App() {
       ? ` route-${section.item.slug}` : '';
 
   return (
-    <div className={`app route-${route}${routeClass}`}>
+    <div className={`app route-${route}${routeClass}${desktopMasterPortfolio ? ' route-desktop-master' : ''}`}>
       {!masterPortfolio && !preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot} painted={loaderPainted} /></div>}
       <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
         <a className="skip-link" href={route === 'home' || route === 'full' ? '#jesper-content' : '#main-content'}>Skip to content</a>
-        {masterPortfolio ? <MasterPortfolio range={tablet ? 'tablet' : 'mobile'} onReady={finishLoading} onHistory={() => setPath(readLocation())} /> : (route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
+        {masterPortfolio ? <MasterPortfolio range={mobile ? 'mobile' : tablet ? 'tablet' : 'desktop'} onReady={finishLoading} onHistory={() => setPath(readLocation())} /> : (route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
         <div id="main-content">{routeContent}</div>
         <Hud navRouteKey={route} activeKey={activeNav} activePath={path} loading={loading} onNavigate={navigate} onHome={goHome} />
       </div>
