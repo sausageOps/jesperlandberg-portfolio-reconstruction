@@ -137,6 +137,29 @@ input:focus-visible {
   }
 }
 .route-home #main-content { z-index: 20; pointer-events: none; }
+/* The desktop portfolio is hosted before #main-content; its empty fixed shell
+   must not sit above the Full index and intercept project-link input. */
+.route-desktop-master #main-content { pointer-events: none; }
+
+/* The captured portfolio draws its Close pill in WebGL and keeps the mirrored
+   DOM link invisible. Expose that same empty hit target to keyboard and AT only
+   on desktop; suppress its utility-class paint so the canvas appearance stays
+   unchanged. The existing visible child continues to provide the hit area. */
+@media (min-width: 1025px) {
+  .route-desktop-master #__nuxt a[aria-label="Close project"] {
+    visibility: visible;
+    background-color: transparent !important;
+    color: transparent !important;
+  }
+  .route-desktop-master #__nuxt a[aria-label="Close project"]:focus-visible {
+    z-index: 20;
+    /* The project sheet clips overflow; draw the ring inside the existing
+       canvas pill so the keyboard indicator remains visible at its edge. */
+    outline: 2px solid #ffffff;
+    outline-offset: -4px;
+    box-shadow: none;
+  }
+}
 /* The About destination retains its own original textured background. */
 .app:not(.route-home) { background: #000; }
 .app.route-about::before, .app.route-about::after {

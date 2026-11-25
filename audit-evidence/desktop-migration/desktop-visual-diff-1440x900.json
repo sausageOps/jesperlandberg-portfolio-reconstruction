@@ -1,0 +1,139 @@
+{
+  "date": "2026-11-25",
+  "viewport": [
+    1440,
+    900
+  ],
+  "method": "ImageMagick compare MAE/RMSE on full-frame JPEG screenshots captured from paired project routes after transition settling; normalized metrics are the parenthesized values.",
+  "rows": [
+    {
+      "slug": "nathan-riley",
+      "master": "audit-evidence/desktop-migration/projects/master-nathan-riley-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-nathan-riley-1440x900.jpg",
+      "mae": {
+        "raw": "0 (0)",
+        "normalized": 0.0,
+        "value": 0.0
+      },
+      "rmse": {
+        "raw": "0 (0)",
+        "normalized": 0.0,
+        "value": 0.0
+      }
+    },
+    {
+      "slug": "casa-di-solare",
+      "master": "audit-evidence/desktop-migration/projects/master-casa-di-solare-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-casa-di-solare-1440x900.jpg",
+      "mae": {
+        "raw": "0.553727 (8.44933e-06)",
+        "normalized": 8.44933e-06,
+        "value": 0.553727
+      },
+      "rmse": {
+        "raw": "38.9975 (0.000595064)",
+        "normalized": 0.000595064,
+        "value": 38.9975
+      }
+    },
+    {
+      "slug": "the-lookback",
+      "master": "audit-evidence/desktop-migration/projects/master-the-lookback-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-the-lookback-1440x900.jpg",
+      "mae": {
+        "raw": "0.156857 (2.39349e-06)",
+        "normalized": 2.39349e-06,
+        "value": 0.156857
+      },
+      "rmse": {
+        "raw": "16.3816 (0.000249968)",
+        "normalized": 0.000249968,
+        "value": 16.3816
+      }
+    },
+    {
+      "slug": "book-of-happiness",
+      "master": "audit-evidence/desktop-migration/projects/master-book-of-happiness-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-book-of-happiness-1440x900.jpg",
+      "mae": {
+        "raw": "0.455236 (6.94646e-06)",
+        "normalized": 6.94646e-06,
+        "value": 0.455236
+      },
+      "rmse": {
+        "raw": "34.7718 (0.000530584)",
+        "normalized": 0.000530584,
+        "value": 34.7718
+      }
+    },
+    {
+      "slug": "dogelon-mars",
+      "master": "audit-evidence/desktop-migration/projects/master-dogelon-mars-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-dogelon-mars-1440x900.jpg",
+      "mae": {
+        "raw": "0.353639 (5.39619e-06)",
+        "normalized": 5.39619e-06,
+        "value": 0.353639
+      },
+      "rmse": {
+        "raw": "28.012 (0.000427436)",
+        "normalized": 0.000427436,
+        "value": 28.012
+      }
+    },
+    {
+      "slug": "gil-huybrecht",
+      "master": "audit-evidence/desktop-migration/projects/master-gil-huybrecht-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-gil-huybrecht-1440x900.jpg",
+      "mae": {
+        "raw": "0.91424 (1.39504e-05)",
+        "normalized": 1.39504e-05,
+        "value": 0.91424
+      },
+      "rmse": {
+        "raw": "73.8923 (0.00112752)",
+        "normalized": 0.00112752,
+        "value": 73.8923
+      }
+    },
+    {
+      "slug": "discoveryland",
+      "master": "audit-evidence/desktop-migration/projects/master-discoveryland-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-discoveryland-1440x900.jpg",
+      "mae": {
+        "raw": "0 (0)",
+        "normalized": 0.0,
+        "value": 0.0
+      },
+      "rmse": {
+        "raw": "0 (0)",
+        "normalized": 0.0,
+        "value": 0.0
+      }
+    },
+    {
+      "slug": "griflan",
+      "master": "audit-evidence/desktop-migration/projects/master-griflan-1440x900.jpg",
+      "local": "audit-evidence/desktop-migration/projects/local-griflan-1440x900.jpg",
+      "mae": {
+        "raw": "0.808876 (1.23427e-05)",
+        "normalized": 1.23427e-05,
+        "value": 0.808876
+      },
+      "rmse": {
+        "raw": "66.1092 (0.00100876)",
+        "normalized": 0.00100876,
+        "value": 66.1092
+      }
+    }
+  ],
+  "additionalComparison": {
+    "slug": "full-index",
+    "master": "audit-evidence/desktop-migration/routes/master-full-1440x900.jpg",
+    "local": "audit-evidence/desktop-migration/routes/local-full-1440x900.jpg",
+    "mae": {
+      "value": 13.8558,
+      "normalized": 0.000211426
+    }
+  }
+}

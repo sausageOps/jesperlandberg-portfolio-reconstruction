@@ -1,0 +1,889 @@
+{
+  "date": "2026-11-25",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "sites": {
+    "master": [
+      {
+        "slug": "nathan-riley",
+        "path": "/projects/nathan-riley/",
+        "title": "Nathan Riley",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "nathan-riley",
+          "title": "Nathan Riley",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 384.56
+          },
+          "pillCount": 3,
+          "awardLabels": [],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "casa-di-solare",
+        "path": "/projects/casa-di-solare",
+        "title": "Casa Di Solare",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "casa-di-solare",
+          "title": "Casa Di Solare",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 395.06
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "4 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "the-lookback",
+        "path": "/projects/the-lookback",
+        "title": "The Lookback",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "the-lookback",
+          "title": "The Lookback",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 387.06
+          },
+          "pillCount": 5,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "book-of-happiness",
+        "path": "/projects/book-of-happiness",
+        "title": "Book of Happiness",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "book-of-happiness",
+          "title": "Book of Happiness",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 365.53
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "4 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "dogelon-mars",
+        "path": "/projects/dogelon-mars",
+        "title": "Dogelon Mars",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "dogelon-mars",
+          "title": "Dogelon Mars",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 440
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "gil-huybrecht",
+        "path": "/projects/gil-huybrecht",
+        "title": "Gil Huybrecht",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "gil-huybrecht",
+          "title": "Gil Huybrecht",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 404.55
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "1 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "discoveryland",
+        "path": "/projects/discoveryland",
+        "title": "Discoveryland",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "discoveryland",
+          "title": "Discoveryland",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 504
+          },
+          "pillCount": 4,
+          "awardLabels": [],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "griflan",
+        "path": "/projects/griflan",
+        "title": "Griflan",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "griflan",
+          "title": "Griflan",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 416.38
+          },
+          "pillCount": 3,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      }
+    ],
+    "local": [
+      {
+        "slug": "nathan-riley",
+        "path": "/projects/nathan-riley",
+        "title": "Nathan Riley",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "nathan-riley",
+          "title": "Nathan Riley",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 384.56
+          },
+          "pillCount": 3,
+          "awardLabels": [],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "casa-di-solare",
+        "path": "/projects/casa-di-solare",
+        "title": "Casa Di Solare",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "casa-di-solare",
+          "title": "Casa Di Solare",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 395.06
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "4 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "the-lookback",
+        "path": "/projects/the-lookback",
+        "title": "The Lookback",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "the-lookback",
+          "title": "The Lookback",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 387.06
+          },
+          "pillCount": 5,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "book-of-happiness",
+        "path": "/projects/book-of-happiness",
+        "title": "Book of Happiness",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "book-of-happiness",
+          "title": "Book of Happiness",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 365.53
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "4 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "dogelon-mars",
+        "path": "/projects/dogelon-mars",
+        "title": "Dogelon Mars",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "dogelon-mars",
+          "title": "Dogelon Mars",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 4,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 440
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "gil-huybrecht",
+        "path": "/projects/gil-huybrecht",
+        "title": "Gil Huybrecht",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "gil-huybrecht",
+          "title": "Gil Huybrecht",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 404.55
+          },
+          "pillCount": 4,
+          "awardLabels": [
+            "1 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "discoveryland",
+        "path": "/projects/discoveryland",
+        "title": "Discoveryland",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "discoveryland",
+          "title": "Discoveryland",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 504
+          },
+          "pillCount": 4,
+          "awardLabels": [],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      },
+      {
+        "slug": "griflan",
+        "path": "/projects/griflan",
+        "title": "Griflan",
+        "rootFontPx": "9.60005px",
+        "project": {
+          "slug": "griflan",
+          "title": "Griflan",
+          "rect": {
+            "x": 48,
+            "y": 19.19,
+            "width": 1344,
+            "height": 861.63
+          },
+          "mediaCount": 3,
+          "firstMedia": {
+            "x": 604.81,
+            "y": 57.58,
+            "width": 672,
+            "height": 416.38
+          },
+          "pillCount": 3,
+          "awardLabels": [
+            "3 awards"
+          ],
+          "close": {
+            "x": 1320.02,
+            "y": 47.98,
+            "width": 43.19,
+            "height": 43.19
+          }
+        }
+      }
+    ]
+  },
+  "masterFaults": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": []
+  },
+  "localFaults": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": []
+  },
+  "comparisons": [
+    {
+      "slug": "nathan-riley",
+      "title": [
+        "Nathan Riley",
+        "Nathan Riley"
+      ],
+      "mediaCount": [
+        4,
+        4
+      ],
+      "pillCount": [
+        3,
+        3
+      ],
+      "awardLabels": [
+        [],
+        []
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "casa-di-solare",
+      "title": [
+        "Casa Di Solare",
+        "Casa Di Solare"
+      ],
+      "mediaCount": [
+        3,
+        3
+      ],
+      "pillCount": [
+        4,
+        4
+      ],
+      "awardLabels": [
+        [
+          "4 awards"
+        ],
+        [
+          "4 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "the-lookback",
+      "title": [
+        "The Lookback",
+        "The Lookback"
+      ],
+      "mediaCount": [
+        4,
+        4
+      ],
+      "pillCount": [
+        5,
+        5
+      ],
+      "awardLabels": [
+        [
+          "3 awards"
+        ],
+        [
+          "3 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "book-of-happiness",
+      "title": [
+        "Book of Happiness",
+        "Book of Happiness"
+      ],
+      "mediaCount": [
+        4,
+        4
+      ],
+      "pillCount": [
+        4,
+        4
+      ],
+      "awardLabels": [
+        [
+          "4 awards"
+        ],
+        [
+          "4 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "dogelon-mars",
+      "title": [
+        "Dogelon Mars",
+        "Dogelon Mars"
+      ],
+      "mediaCount": [
+        4,
+        4
+      ],
+      "pillCount": [
+        4,
+        4
+      ],
+      "awardLabels": [
+        [
+          "3 awards"
+        ],
+        [
+          "3 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "gil-huybrecht",
+      "title": [
+        "Gil Huybrecht",
+        "Gil Huybrecht"
+      ],
+      "mediaCount": [
+        3,
+        3
+      ],
+      "pillCount": [
+        4,
+        4
+      ],
+      "awardLabels": [
+        [
+          "1 awards"
+        ],
+        [
+          "1 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "discoveryland",
+      "title": [
+        "Discoveryland",
+        "Discoveryland"
+      ],
+      "mediaCount": [
+        3,
+        3
+      ],
+      "pillCount": [
+        4,
+        4
+      ],
+      "awardLabels": [
+        [],
+        []
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    },
+    {
+      "slug": "griflan",
+      "title": [
+        "Griflan",
+        "Griflan"
+      ],
+      "mediaCount": [
+        3,
+        3
+      ],
+      "pillCount": [
+        3,
+        3
+      ],
+      "awardLabels": [
+        [
+          "3 awards"
+        ],
+        [
+          "3 awards"
+        ]
+      ],
+      "rectDeltas": {
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "firstMedia": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "close": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "maxAbsoluteRectDelta": 0
+    }
+  ]
+}

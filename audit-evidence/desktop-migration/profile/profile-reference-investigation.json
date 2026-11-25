@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-25",
+  "reference": {
+    "repository": "sausageOps/httpsjesperlandberg.com",
+    "mainCommit": "7155cbb62d4f0ea8c8be6f98c1aed4c6b1dd3d56",
+    "githubTreeEntryCount": 82,
+    "githubTreeTruncated": false,
+    "trackedGlbOrModelPaths": [],
+    "compiledProfileModule": "site_build/_nuxt/CHzWqGxK.js",
+    "compiledProfileModuleSha256": "c9bc27de014e2fec020f93b8a727a4bed9a48ccc7faced6a6e59387750fccb80",
+    "compiledProfileModuleBytes": 4789,
+    "modelRequest": "/models/llama.glb",
+    "fallbackGeometry": "THREE.BoxGeometry(1, 1, 1.6)",
+    "normalization": "Take the first mesh geometry after world transforms; center its bounds; scale height to 1; compute normals if absent."
+  },
+  "captureEvidence": {
+    "manifest": "uploads/manifest.json",
+    "originalRequest": "https://jesperlandberg.com/models/llama.glb",
+    "status": 200,
+    "mimeType": "model/gltf-binary",
+    "sizeBytes": 143140,
+    "extractedFileName": "assets/other/jesperlandberg.com/0093_llama.glb__c38e354b14",
+    "captureTime": "2026-10-31T05:40:24.511Z",
+    "rawExtractedBodyAvailableInWorkspace": false,
+    "filenameHashConvention": "The extraction README says filenames are indexed and hashed. A reproducible scan of 146 local files found 32 manifest rows (18 distinct local body files) with both matching byte length and a filename suffix equal to the first 10 SHA-256 hex characters; the llama and award GLB entries are among them.",
+    "interpretation": "Independent capture fingerprint: exact byte length plus a matching 40-bit SHA-256 filename prefix. This is not the later fixture replay's copied-response hash. It is strong evidence that the local GLB is the captured master response, but the absent raw response prevents a full independent 256-bit digest comparison."
+  },
+  "localAsset": {
+    "path": "public/assets/models/llama.glb",
+    "sizeBytes": 143140,
+    "sha256": "c38e354b1457ed14dcd7131951436b6388e129939b68ef601d9053e1ae06a884",
+    "matchesCaptureSize": true,
+    "sha256StartsWithCaptureFileSuffix": true,
+    "glbVersion": 2,
+    "generator": "glTF-Transform v4.4.2",
+    "meshNode": "Alpaca_Alpaca_0",
+    "modelName": "Alpaca"
+  },
+  "assetConclusion": {
+    "classification": "high-confidence match to the original captured response; not full-byte independently verified",
+    "substitutionEvidence": false,
+    "action": "Preserve the current model. Do not replace it based on screenshot appearance."
+  },
+  "fixtureReplayCaveat": {
+    "masterFixtureServed": "A copy of the local GLB was placed at the master's expected /models/llama.glb path for the replay.",
+    "sameResponseHashesFromReplay": "Expected because the fixture intentionally served the local file; not used as asset identity evidence."
+  },
+  "localDesktopRuntime": {
+    "component": "src/jesper/MasterMobile.jsx (MasterPortfolio, range=desktop)",
+    "bundle": "public/mobile-master/_nuxt/CHzWqGxK.js",
+    "localModelRequest": "/assets/models/llama.glb",
+    "runtimeEvidence": "The final 1440x900 home probe observed masterRange=desktop, one #__nuxt canvas, one master session, and one router. The legacy Experience.js renderer is not mounted for this desktop portfolio route."
+  },
+  "profileAnimationSourceComparison": {
+    "masterModuleUrlConstant": "/models/llama.glb",
+    "localModuleUrlConstant": "/assets/models/llama.glb",
+    "masterModuleSha256AfterOnlyUrlRewrite": "0cb217578959be0ea3820ed33dd6d8716b7eefb50bb67782f86baae750c02f40",
+    "localModuleSha256": "0cb217578959be0ea3820ed33dd6d8716b7eefb50bb67782f86baae750c02f40",
+    "wholeProfileRainModuleEqualAfterUrlRewrite": true,
+    "rainClassBytes": 3948,
+    "rainClassSha256": "b36f45a3ee91fc71e9e9ca1ab25674946c05150a8f23138b3413b24c3a69c4c4",
+    "masterAndLocalProfileComponentEqual": true,
+    "profileComponentBytes": 2581,
+    "profileComponentSha256": "b1895d33c7de0e0b080066c986168c3e8c7e62493b9163b8ceb0d716cfae976c",
+    "coreContextChecks": {
+      "cameraSetupAndPositionContextsEqual": true,
+      "sharedTimeUniformContextsEqual": true,
+      "openHoleTransitionContextsEqual": true,
+      "note": "The targeted camera setup/position, shared-clock, and openHole contexts match; unrelated sections of the larger DZ bundle are not asserted byte-identical."
+    }
+  },
+  "verifiedAnimationBehavior": {
+    "initialState": "The portfolio dynamically imports and warms the Rain controller after initial boot. It adds its mesh pair to the overlay only while shared Profile-hole progress is at least 0.01; it uses six instances, four behind and two in front.",
+    "instanceMotion": "Each instance falls, sways laterally, yaws, and rocks. Instances are reseeded after vertical position falls below -1.4.",
+    "randomizedParameters": {
+      "baseFall": 0.4,
+      "behindDepthRange": "0 to -9",
+      "frontDepthRange": "2 to 5",
+      "baseScale": 0.38,
+      "baseYawSpeed": 0.7,
+      "baseRockAmplitude": 0.22,
+      "initialVerticalDistribution": "golden-ratio spacing with per-instance random jitter"
+    },
+    "camera": {
+      "type": "PerspectiveCamera",
+      "fovDegrees": 53.4,
+      "near": 0.1,
+      "far": 2000,
+      "positionZ": 41.18,
+      "movement": "The camera is not moved by the llama Rain controller; positions are projected from the shared camera and resized aspect."
+    },
+    "clockAndShader": "Instance updates receive the shared frame delta and use the shared post-process time, radius, center, aspect, breath, and wave uniforms. The fragment shader clips to the animated radial hole and applies the same sheen/chromatic-light calculation in both bundles.",
+    "pointerInteraction": "Rain itself does not read pointer coordinates or attach pointer handlers. The Profile component's outside-click/link behavior and the shared hole/cursor system remain in the captured runtime and match the master component block.",
+    "transitions": "The Profile route watcher binds or retargets the hole, opens it, and reveals Profile text; closing hides it or retargets to the prior News state. The watcher/component code matches exactly.",
+    "cleanup": "Below the closed threshold, the Rain controller detaches its mesh pair from the overlay. It defines a dispose() method for geometry/material cleanup; the compiled Folio lifecycle does not directly call llamaRain.dispose(). MasterPortfolio unmounts the Nuxt app and drains registered cleanup callbacks, and A24 lifecycle probes observed the portfolio canvas/session unmount and remount on navigation."
+  },
+  "visualComparisonLimit": "The two screenshots were not synchronized for Math.random seeds or shared clock phase. Different instance placements, orientation, and apparent visible count are therefore expected between independent runs and are not evidence of a code mismatch.",
+  "noDesktopAnimationChangeMade": true
+}

@@ -1,0 +1,142 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "home": {
+    "path": "/",
+    "title": "Jesper Landberg",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "range": "mobile",
+    "canvasCount": 1,
+    "cardCount": 8,
+    "project": null,
+    "a24Visible": true,
+    "profileExpanded": "false"
+  },
+  "cardTap": {
+    "slug": "nathan-riley",
+    "opened": {
+      "path": "/projects/nathan-riley",
+      "title": "Nathan Riley",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 8,
+      "project": {
+        "slug": "nathan-riley",
+        "title": "Nathan Riley",
+        "mediaCount": 4,
+        "close": {
+          "x": 315.05,
+          "y": 741.05,
+          "width": 39.98,
+          "height": 39.98
+        }
+      },
+      "a24Visible": true,
+      "profileExpanded": "false"
+    },
+    "back": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 8,
+      "project": null,
+      "a24Visible": true,
+      "profileExpanded": "false"
+    },
+    "forward": {
+      "path": "/projects/nathan-riley",
+      "title": "Nathan Riley",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 8,
+      "project": {
+        "slug": "nathan-riley",
+        "title": "Nathan Riley",
+        "mediaCount": 4,
+        "close": {
+          "x": 315.05,
+          "y": 741.05,
+          "width": 39.98,
+          "height": 39.98
+        }
+      },
+      "a24Visible": true,
+      "profileExpanded": "false"
+    },
+    "afterTouchClose": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 8,
+      "project": null,
+      "a24Visible": true,
+      "profileExpanded": "false"
+    }
+  },
+  "directProject": {
+    "opened": {
+      "path": "/projects/casa-di-solare",
+      "title": "Casa Di Solare",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 0,
+      "project": {
+        "slug": "casa-di-solare",
+        "title": "Casa Di Solare",
+        "mediaCount": 3,
+        "close": {
+          "x": 315.05,
+          "y": 741.05,
+          "width": 39.98,
+          "height": 39.98
+        }
+      },
+      "a24Visible": true,
+      "profileExpanded": "false"
+    },
+    "afterTouchClose": {
+      "path": "/",
+      "title": "Jesper Landberg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "range": "mobile",
+      "canvasCount": 1,
+      "cardCount": 8,
+      "project": null,
+      "a24Visible": true,
+      "profileExpanded": "false"
+    }
+  },
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedRequests": []
+}

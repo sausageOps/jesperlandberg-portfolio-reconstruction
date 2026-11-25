@@ -26,8 +26,10 @@ const loadBundle = () => {
   return bundlePromise;
 };
 
-/** A direct Vue mount in the host document, not a separate browsing context. */
-export default function MasterMobile({ onReady, onHistory }) {
+/** Mount the captured portfolio runtime in the host document, not an iframe.
+ * The same bridge serves the frozen mobile band and the explicit tablet band.
+ */
+export default function MasterPortfolio({ onReady, onHistory, range = 'mobile' }) {
   const callbacks = useRef({ onReady, onHistory });
   const [unavailable, setUnavailable] = useState(false);
   callbacks.current = { onReady, onHistory };
@@ -191,5 +193,5 @@ export default function MasterMobile({ onReady, onHistory }) {
     };
   }, []);
 
-  return <div id="jesper-content" tabIndex={-1}><div id="__nuxt" className="master-mobile-root" hidden={unavailable} />{unavailable && <MasterFallback onHistory={onHistory} />}</div>;
+  return <div id="jesper-content" data-master-range={range} tabIndex={-1}><div id="__nuxt" className="master-mobile-root" hidden={unavailable} />{unavailable && <MasterFallback onHistory={onHistory} />}</div>;
 }

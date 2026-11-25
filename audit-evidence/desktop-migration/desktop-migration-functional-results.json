@@ -1,0 +1,881 @@
+{
+  "date": "2026-11-25",
+  "masterSource": {
+    "repository": "sausageOps/httpsjesperlandberg.com",
+    "commit": "7155cbb62d4f0ea8c8be6f98c1aed4c6b1dd3d56",
+    "tree": "compiled Nuxt application, static routes, payloads, CSS and assets; no Vue/TS/JSX/shader authoring files in the repository tree"
+  },
+  "localBuild": "production Vite preview on :4173",
+  "viewports": {},
+  "interactions": {
+    "master": {
+      "preloader": {
+        "seen": true,
+        "barCount": 3,
+        "rootCount": 1,
+        "canvasCount": 1,
+        "barRect": {
+          "x": 640.328125,
+          "y": 447.59375,
+          "width": 48,
+          "height": 4.796875
+        },
+        "observedDuringNavigation": true
+      },
+      "home": {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "masterRange": null,
+        "rootFontPx": "9.60005px",
+        "fonts": "loaded",
+        "htmlClass": "grabbable",
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 900,
+          "scrollX": 0,
+          "scrollY": 0
+        },
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "canvasPixels": {
+          "width": 1440,
+          "height": 900
+        },
+        "cards": {
+          "count": 8,
+          "items": [
+            {
+              "slug": "nathan-riley",
+              "title": "Nathan Riley",
+              "rect": {
+                "x": -306.67,
+                "y": 254.25,
+                "width": 684.11,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "casa-di-solare",
+              "title": "Casa Di Solare",
+              "rect": {
+                "x": 387.03,
+                "y": 254.25,
+                "width": 665.94,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "the-lookback",
+              "title": "The Lookback",
+              "rect": {
+                "x": 1062.56,
+                "y": 254.25,
+                "width": 679.69,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "book-of-happiness",
+              "title": "Book of Happiness",
+              "rect": {
+                "x": 1751.85,
+                "y": 254.25,
+                "width": 719.73,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "dogelon-mars",
+              "title": "Dogelon Mars",
+              "rect": {
+                "x": 2481.17,
+                "y": 254.25,
+                "width": 597.92,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "gil-huybrecht",
+              "title": "Gil Huybrecht",
+              "rect": {
+                "x": 3088.69,
+                "y": 254.25,
+                "width": 650.31,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "discoveryland",
+              "title": "Discoveryland",
+              "rect": {
+                "x": 3748.6,
+                "y": 254.25,
+                "width": 522,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "griflan",
+              "title": "Griflan",
+              "rect": {
+                "x": 4280.19,
+                "y": 254.25,
+                "width": 631.83,
+                "height": 391.5
+              }
+            }
+          ]
+        },
+        "navigation": {
+          "text": "FEATURED / FULL",
+          "rect": {
+            "x": 76.8,
+            "y": 848.19,
+            "width": 91.63,
+            "height": 13.42
+          }
+        },
+        "profileButton": true,
+        "a24": null,
+        "project": null,
+        "fullIndex": {
+          "links": 14,
+          "featuredLinks": 8,
+          "visible": true
+        },
+        "session": false,
+        "router": false,
+        "nuxtRootCount": 1,
+        "appCount": 0
+      },
+      "profile": {
+        "exists": true,
+        "opened": true
+      },
+      "full": {
+        "path": "/full",
+        "title": "Index",
+        "links": 23,
+        "featuredLinks": 8,
+        "visible": true,
+        "firstProject": "the-lookback",
+        "closePath": "/"
+      },
+      "projectSequence": [
+        "the-lookback",
+        "book-of-happiness",
+        "dogelon-mars",
+        "gil-huybrecht",
+        "discoveryland",
+        "griflan",
+        "nathan-riley",
+        "casa-di-solare"
+      ],
+      "fullHistory": {
+        "backFromProject": "/full",
+        "forwardToProject": "/projects/the-lookback"
+      },
+      "homeCardClick": {
+        "slug": "the-lookback",
+        "projectPath": "/projects/the-lookback",
+        "backToHome": "/",
+        "forwardToClickedProject": "/projects/the-lookback",
+        "previous": "casa-di-solare",
+        "next": "book-of-happiness",
+        "keyboardEscapeClosed": true
+      },
+      "homeWheel": {
+        "before": "casa-di-solare",
+        "after": "the-lookback",
+        "changed": true
+      },
+      "projectMediaScroll": {
+        "slug": "the-lookback",
+        "before": {
+          "media": {
+            "x": 604.8125,
+            "y": 57.578125,
+            "width": 672,
+            "height": 387.0625
+          },
+          "scrollY": 0,
+          "transform": "matrix(1, 0, 0, 1, 0, 0)"
+        },
+        "after": {
+          "media": {
+            "x": 604.8125,
+            "y": 1976.9483642578125,
+            "width": 672,
+            "height": 387.0623779296875
+          },
+          "scrollY": 0,
+          "transform": "matrix(1, 0, 0, 1, 0, 1919.37)"
+        },
+        "documentStayedFixed": true
+      }
+    },
+    "local": {
+      "preloader": {
+        "seen": true,
+        "barCount": 3,
+        "rootCount": 1,
+        "canvasCount": 1,
+        "barRect": {
+          "x": 640.328125,
+          "y": 447.59375,
+          "width": 48,
+          "height": 4.796875
+        },
+        "observedDuringNavigation": true
+      },
+      "home": {
+        "path": "/",
+        "title": "Jesper Landberg",
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "masterRange": "desktop",
+        "rootFontPx": "9.60005px",
+        "fonts": "loaded",
+        "htmlClass": "master-mobile grabbable",
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 900,
+          "scrollX": 0,
+          "scrollY": 0
+        },
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "canvasPixels": {
+          "width": 1440,
+          "height": 900
+        },
+        "cards": {
+          "count": 8,
+          "items": [
+            {
+              "slug": "nathan-riley",
+              "title": "Nathan Riley",
+              "rect": {
+                "x": -306.67,
+                "y": 254.25,
+                "width": 684.11,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "casa-di-solare",
+              "title": "Casa Di Solare",
+              "rect": {
+                "x": 387.03,
+                "y": 254.25,
+                "width": 665.94,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "the-lookback",
+              "title": "The Lookback",
+              "rect": {
+                "x": 1062.56,
+                "y": 254.25,
+                "width": 679.69,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "book-of-happiness",
+              "title": "Book of Happiness",
+              "rect": {
+                "x": 1751.85,
+                "y": 254.25,
+                "width": 719.73,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "dogelon-mars",
+              "title": "Dogelon Mars",
+              "rect": {
+                "x": 2481.17,
+                "y": 254.25,
+                "width": 597.92,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "gil-huybrecht",
+              "title": "Gil Huybrecht",
+              "rect": {
+                "x": 3088.69,
+                "y": 254.25,
+                "width": 650.31,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "discoveryland",
+              "title": "Discoveryland",
+              "rect": {
+                "x": 3748.6,
+                "y": 254.25,
+                "width": 522,
+                "height": 391.5
+              }
+            },
+            {
+              "slug": "griflan",
+              "title": "Griflan",
+              "rect": {
+                "x": 4280.19,
+                "y": 254.25,
+                "width": 631.83,
+                "height": 391.5
+              }
+            }
+          ]
+        },
+        "navigation": {
+          "text": "FEATURED / FULL",
+          "rect": {
+            "x": 76.8,
+            "y": 814.59,
+            "width": 91.63,
+            "height": 13.42
+          }
+        },
+        "profileButton": true,
+        "a24": {
+          "count": 1,
+          "hidden": false,
+          "display": "block",
+          "motion": "initial-reveal",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 62.5
+          },
+          "dock": {
+            "x": 631.42,
+            "y": 23.69,
+            "width": 177.14,
+            "height": 29.31
+          }
+        },
+        "project": null,
+        "fullIndex": {
+          "links": 14,
+          "featuredLinks": 8,
+          "visible": true
+        },
+        "session": true,
+        "router": true,
+        "nuxtRootCount": 1,
+        "appCount": 1
+      },
+      "profile": {
+        "exists": true,
+        "opened": true
+      },
+      "full": {
+        "path": "/full",
+        "title": "Index",
+        "links": 23,
+        "featuredLinks": 8,
+        "visible": true,
+        "firstProject": "the-lookback",
+        "closePath": "/"
+      },
+      "projectSequence": [
+        "the-lookback",
+        "book-of-happiness",
+        "dogelon-mars",
+        "gil-huybrecht",
+        "discoveryland",
+        "griflan",
+        "nathan-riley",
+        "casa-di-solare"
+      ],
+      "fullHistory": {
+        "backFromProject": "/full",
+        "forwardToProject": "/projects/the-lookback"
+      },
+      "homeCardClick": {
+        "slug": "the-lookback",
+        "projectPath": "/projects/the-lookback",
+        "backToHome": "/",
+        "forwardToClickedProject": "/projects/the-lookback",
+        "previous": "casa-di-solare",
+        "next": "book-of-happiness",
+        "keyboardEscapeClosed": true
+      },
+      "homeWheel": {
+        "before": "casa-di-solare",
+        "after": "the-lookback",
+        "changed": true
+      },
+      "projectMediaScroll": {
+        "slug": "the-lookback",
+        "before": {
+          "media": {
+            "x": 604.8125,
+            "y": 57.578125,
+            "width": 672,
+            "height": 387.0625
+          },
+          "scrollY": 0,
+          "transform": "matrix(1, 0, 0, 1, 0, 0)"
+        },
+        "after": {
+          "media": {
+            "x": 604.8125,
+            "y": 1976.9483642578125,
+            "width": 672,
+            "height": 387.0623779296875
+          },
+          "scrollY": 0,
+          "transform": "matrix(1, 0, 0, 1, 0, 1919.37)"
+        },
+        "documentStayedFixed": true
+      }
+    }
+  },
+  "directRoutes": {
+    "masterFull": {
+      "path": "/full/",
+      "title": "Index",
+      "totalLinks": 23,
+      "featuredLinks": 8
+    },
+    "localFull": {
+      "path": "/full",
+      "title": "Index",
+      "totalLinks": 23,
+      "featuredLinks": 8
+    },
+    "master": [
+      {
+        "slug": "nathan-riley",
+        "path": "/projects/nathan-riley/",
+        "title": "Nathan Riley",
+        "sheet": 1
+      },
+      {
+        "slug": "casa-di-solare",
+        "path": "/projects/casa-di-solare/",
+        "title": "Casa Di Solare",
+        "sheet": 1
+      },
+      {
+        "slug": "the-lookback",
+        "path": "/projects/the-lookback/",
+        "title": "The Lookback",
+        "sheet": 1
+      },
+      {
+        "slug": "book-of-happiness",
+        "path": "/projects/book-of-happiness/",
+        "title": "Book of Happiness",
+        "sheet": 1
+      },
+      {
+        "slug": "dogelon-mars",
+        "path": "/projects/dogelon-mars/",
+        "title": "Dogelon Mars",
+        "sheet": 1
+      },
+      {
+        "slug": "gil-huybrecht",
+        "path": "/projects/gil-huybrecht/",
+        "title": "Gil Huybrecht",
+        "sheet": 1
+      },
+      {
+        "slug": "discoveryland",
+        "path": "/projects/discoveryland/",
+        "title": "Discoveryland",
+        "sheet": 1
+      },
+      {
+        "slug": "griflan",
+        "path": "/projects/griflan/",
+        "title": "Griflan",
+        "sheet": 1
+      }
+    ],
+    "local": [
+      {
+        "slug": "nathan-riley",
+        "path": "/projects/nathan-riley",
+        "title": "Nathan Riley",
+        "sheet": 1
+      },
+      {
+        "slug": "casa-di-solare",
+        "path": "/projects/casa-di-solare",
+        "title": "Casa Di Solare",
+        "sheet": 1
+      },
+      {
+        "slug": "the-lookback",
+        "path": "/projects/the-lookback",
+        "title": "The Lookback",
+        "sheet": 1
+      },
+      {
+        "slug": "book-of-happiness",
+        "path": "/projects/book-of-happiness",
+        "title": "Book of Happiness",
+        "sheet": 1
+      },
+      {
+        "slug": "dogelon-mars",
+        "path": "/projects/dogelon-mars",
+        "title": "Dogelon Mars",
+        "sheet": 1
+      },
+      {
+        "slug": "gil-huybrecht",
+        "path": "/projects/gil-huybrecht",
+        "title": "Gil Huybrecht",
+        "sheet": 1
+      },
+      {
+        "slug": "discoveryland",
+        "path": "/projects/discoveryland",
+        "title": "Discoveryland",
+        "sheet": 1
+      },
+      {
+        "slug": "griflan",
+        "path": "/projects/griflan",
+        "title": "Griflan",
+        "sheet": 1
+      }
+    ]
+  },
+  "breakpoints": [
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "range": "tablet",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 54.671875
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 1025,
+        "height": 768
+      },
+      "range": "desktop",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1025,
+        "height": 54.671875
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 650,
+        "height": 844
+      },
+      "range": "tablet",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 784.875,
+        "width": 650,
+        "height": 59.125
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 649,
+        "height": 844
+      },
+      "range": "mobile",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 784.890625,
+        "width": 649,
+        "height": 59.109375
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 650,
+        "height": 844
+      },
+      "range": "tablet",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 784.875,
+        "width": 650,
+        "height": 59.125
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "range": "tablet",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 54.671875
+      },
+      "a24Expected": 1
+    },
+    {
+      "viewport": {
+        "width": 1025,
+        "height": 768
+      },
+      "range": "desktop",
+      "path": "/projects/casa-di-solare",
+      "project": "casa-di-solare",
+      "canvasCount": 1,
+      "nuxtCount": 1,
+      "appCount": 1,
+      "sameSession": true,
+      "sameRouter": true,
+      "a24Count": 1,
+      "a24Visible": true,
+      "a24Rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1025,
+        "height": 54.671875
+      },
+      "a24Expected": 1
+    }
+  ],
+  "a24": {
+    "route": {
+      "path": "/routes/lab",
+      "title": "Lab — Routes",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1
+      },
+      "masterRange": null,
+      "rootFontPx": "9.6px",
+      "fonts": "loaded",
+      "htmlClass": "",
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 900,
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "canvas": null,
+      "canvasPixels": null,
+      "cards": {
+        "count": 0,
+        "items": []
+      },
+      "navigation": null,
+      "profileButton": false,
+      "a24": {
+        "count": 1,
+        "hidden": false,
+        "display": "block",
+        "motion": "idle",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 62.5
+        },
+        "dock": {
+          "x": 575.23,
+          "y": 24.56,
+          "width": 289.52,
+          "height": 27.58
+        }
+      },
+      "project": null,
+      "fullIndex": {
+        "links": 36,
+        "featuredLinks": 0,
+        "visible": false
+      },
+      "session": false,
+      "router": false,
+      "nuxtRootCount": 0,
+      "appCount": 1
+    },
+    "routesLink": 1,
+    "menuOpened": "true",
+    "labPath": "/routes/lab",
+    "backPath": "/routes",
+    "forwardPath": "/routes/lab",
+    "masterSessionAfterNavigate": false,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/live-cursors/poster-r3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dial/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/polka-dots/poster-v2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/heart/poster-v3.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/threejs-test/poster.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/dynamic-scrollbar/poster-r2.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/rotating-gallery/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/paste-up/poster-nc.jpg",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "url": "https://assets.carterogunsola.com/cdn-cgi/image/width=960,quality=86,format=auto/lab/vocal-orb/poster-v1.jpg",
+        "error": "net::ERR_FAILED"
+      }
+    ]
+  },
+  "runtimeFaults": {
+    "master": [
+      {
+        "viewport": "1440x900-interactions",
+        "pageErrors": [],
+        "consoleErrors": [],
+        "failedRequests": []
+      },
+      {
+        "viewport": "direct-routes-1440x900",
+        "pageErrors": [],
+        "consoleErrors": [],
+        "failedRequests": []
+      }
+    ],
+    "local": [
+      {
+        "viewport": "1440x900-interactions",
+        "pageErrors": [],
+        "consoleErrors": [],
+        "failedRequests": []
+      },
+      {
+        "viewport": "direct-routes-1440x900",
+        "pageErrors": [],
+        "consoleErrors": [],
+        "failedRequests": [
+          {
+            "url": "http://127.0.0.1:4173/assets/images/techspeed-0.jpg",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      {
+        "viewport": "breakpoint-resize",
+        "pageErrors": [],
+        "consoleErrors": [],
+        "failedRequests": []
+      }
+    ]
+  },
+  "viewportComparison": []
+}
