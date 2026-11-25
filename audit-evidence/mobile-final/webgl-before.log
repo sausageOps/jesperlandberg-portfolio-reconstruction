@@ -1,0 +1,4 @@
+unavailable {"title":null,"alert":"Portfolio unavailable\n\nThe portfolio needs WebGL to display. You can still use the navigation below.","nav":"idle","router":false,"canvas":0,"old":false,"lost":null,"path":"/projects/the-lookback"} []
+init-failure {"title":null,"alert":"Portfolio unavailable\n\nThe portfolio needs WebGL to display. You can still use the navigation below.","nav":"idle","router":false,"canvas":0,"old":false,"lost":null,"path":"/projects/the-lookback"} ["console: THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.","console: [master mobile] JSHandle@error","console: [master mobile] JSHandle@error","page: [nuxt] instance unavailable"]
+trigger true
+context-loss {"title":"The Lookback","alert":null,"nav":"idle","router":true,"canvas":1,"old":false,"lost":true,"path":"/projects/the-lookback"} []

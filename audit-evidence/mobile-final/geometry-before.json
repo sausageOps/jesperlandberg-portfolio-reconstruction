@@ -1,0 +1,296 @@
+320: 8/8 geometry comparisons passed
+360: 8/8 geometry comparisons passed
+375: 8/8 geometry comparisons passed
+390: 8/8 geometry comparisons passed
+414: 8/8 geometry comparisons passed
+430: 8/8 geometry comparisons passed
+[
+  {
+    "width": 320,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 320,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 360,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 375,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 390,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 414,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "nathan-riley",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "casa-di-solare",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "the-lookback",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "book-of-happiness",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "dogelon-mars",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "gil-huybrecht",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "discoveryland",
+    "status": "PASS",
+    "max": 0
+  },
+  {
+    "width": 430,
+    "slug": "griflan",
+    "status": "PASS",
+    "max": 0
+  }
+]

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import Hud from './components/Hud.jsx';
 import JesperHome from './jesper/JesperHome.jsx';
+import MasterMobile from './jesper/MasterMobile.jsx';
 import Loader from './jesper/components/Loader.jsx';
 import Section from './components/Section.jsx';
 import Contact from './components/contact/Contact.jsx';
@@ -40,6 +41,7 @@ export default function App() {
   const carterPage = useMemo(() => resolveCarterPage(path), [path]);
   const route = section ? section.menu.key : path === '/' ? 'home' : path === '/full' && mobile ? 'full' : 'not-found';
   const activeNav = route === 'full' ? 'life' : activeTopLevel(path);
+  const masterMobile = mobile && (route === 'home' || route === 'full');
 
   const [progress, setProgress] = useState(0);
   const [preloaderDone, setPreloaderDone] = useState(false);
@@ -88,6 +90,18 @@ export default function App() {
 
   const navigate = useCallback((to, { replace = false } = {}) => {
     const nextPath = cleanPath(to);
+    // The fallback shares the host's URLs/history and exists only when the
+    // mobile master renderer cannot run.
+    if (window.__masterFallbackNavigate && (nextPath === '/' || nextPath === '/full')) {
+      window.__masterFallbackNavigate(nextPath, { replace });
+      return;
+    }
+    // The master router owns only portfolio transitions while mounted; all of
+    // its browser writes are delegated back to the host's single history.
+    if (window.__masterRouter && (nextPath === '/' || nextPath === '/full')) {
+      window.__masterRouter[replace ? 'replace' : 'push'](nextPath);
+      return;
+    }
     if (replace) window.history.replaceState({}, '', nextPath);
     else window.history.pushState({}, '', nextPath);
     setPath(nextPath);
@@ -117,10 +131,10 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}`}>
-      {!preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot} painted={loaderPainted} /></div>}
+      {!masterMobile && !preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot} painted={loaderPainted} /></div>}
       <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
         <a className="skip-link" href={route === 'home' || route === 'full' ? '#jesper-content' : '#main-content'}>Skip to content</a>
-        {(route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
+        {masterMobile ? <MasterMobile onReady={finishLoading} onHistory={() => setPath(readLocation())} /> : (route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
         <div id="main-content">{routeContent}</div>
         <Hud navRouteKey={route} activeKey={activeNav} activePath={path} loading={loading} onNavigate={navigate} onHome={goHome} />
       </div>

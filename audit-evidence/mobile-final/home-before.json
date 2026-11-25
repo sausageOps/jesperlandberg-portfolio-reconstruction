@@ -1,0 +1,176 @@
+[
+  {
+    "width": 320,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      32.8125,
+      812.015625,
+      78.203125,
+      11.484375
+    ],
+    "targetNav": [
+      32.8125,
+      783.2977294921875,
+      78.203125,
+      11.484375
+    ],
+    "dock": [
+      56.421875,
+      792,
+      207.140625,
+      40
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  },
+  {
+    "width": 360,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      36.921875,
+      808.015625,
+      88.03125,
+      12.921875
+    ],
+    "targetNav": [
+      36.921875,
+      775.7079467773438,
+      88.03125,
+      12.921875
+    ],
+    "dock": [
+      63.046875,
+      792,
+      233.90625,
+      40
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  },
+  {
+    "width": 375,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      38.453125,
+      806.515625,
+      91.75,
+      13.453125
+    ],
+    "targetNav": [
+      38.453125,
+      772.86181640625,
+      91.75,
+      13.453125
+    ],
+    "dock": [
+      119.765625,
+      791.609375,
+      135.453125,
+      40.390625
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  },
+  {
+    "width": 390,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      39.984375,
+      805.015625,
+      95.328125,
+      14
+    ],
+    "targetNav": [
+      39.984375,
+      770.0156860351562,
+      95.328125,
+      14
+    ],
+    "dock": [
+      68.5,
+      789.625,
+      252.984375,
+      42.015625
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  },
+  {
+    "width": 414,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      42.453125,
+      802.625,
+      101.296875,
+      14.84375
+    ],
+    "targetNav": [
+      42.453125,
+      765.47119140625,
+      101.296875,
+      14.84375
+    ],
+    "dock": [
+      76.21875,
+      787.65625,
+      261.546875,
+      43.53125
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  },
+  {
+    "width": 430,
+    "cardMaxDiff": 0,
+    "fontMaxDiff": 0,
+    "referenceNav": [
+      44.09375,
+      801,
+      105.203125,
+      15.4375
+    ],
+    "targetNav": [
+      44.09375,
+      762.4102783203125,
+      105.203125,
+      15.4375
+    ],
+    "dock": [
+      84.21875,
+      787.65625,
+      261.546875,
+      43.53125
+    ],
+    "referenceFont": "sans, sans-serif",
+    "targetFont": "sans, sans-serif",
+    "loaded": [
+      true,
+      true
+    ]
+  }
+]
