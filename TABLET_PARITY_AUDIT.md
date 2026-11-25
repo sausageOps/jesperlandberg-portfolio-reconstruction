@@ -1,23 +1,27 @@
-# Tablet parity audit and proposed migration plan — 2026-11-25
+# Tablet parity audit and implementation report — 2026-11-25
 
-## Status and recommendation
+## Status and implementation summary
 
-**Audit only. No application source or configuration was changed, and implementation has not started.** This report and the selected PNGs in `audit-evidence/tablet-parity/` are the only proposed deliverables from this audit turn. The tracked source tree was clean before these audit artifacts were added; `npm run build` passed during the audit.
+**Approved implementation complete for the 650–1024 CSS px tablet band, inclusive.** The integrated application now reuses the captured portfolio runtime at tablet widths. The phone band below 650px and legacy desktop renderer above 1024px remain the non-tablet paths. The legacy renderer is retained; no captured runtime internals, assets, shaders, stylesheets, project data, A24 navigation, HUD, or shared navigation files were rewritten.
 
-**Recommended direction, pending approval:** route the tablet portfolio island through the captured upstream runtime that is already integrated for mobile (`MasterMobile` + `public/mobile-master/`), rather than first trying to tune the legacy React/Three.js port. A browser-only probe at CSS viewports **768×1024** and **1024×768** forced the existing runtime to mount without changing repository files. Its root sizing, homepage-card geometry, project-sheet geometry, media anchors, direct `/full` and project routes, and Back behavior matched the captured upstream measurements. The local A24 dock remained present. This is strong feasibility evidence, not yet a production change or a test of resizing across the runtime boundary.
+Source changes are limited to `src/App.jsx` and `src/jesper/MasterMobile.jsx`. `App.jsx` adds separate mobile/tablet predicates, tablet routing, tablet-only project-route normalization when resizing into desktop, and a tablet-only home-title sync after Full→Home transitions. The existing runtime wrapper was generalized and tagged with `data-master-range`; it still uses the existing bridge, data adapter, history owner, WebGL fallback, and teardown lifecycle. The pre-implementation audit checkpoint remains commit `1cb362c`; implementation changes are in the current working tree.
 
-The recommended initial tablet gate is **650–1024 CSS px inclusive**. Keep the existing phone route/runtime below 650px and the current non-tablet implementation above 1024px unless approval sets a different range. Validate the 1024/1025 transition explicitly before shipping.
+**Final production build:** `npm run build` passes. Vite still reports its existing large-chunk advisory (>1200 kB); chunking was not changed as part of this tablet-only task.
+
+**Integrated verification summary:** Playwright exercised the actual Vite application with captured project records and locally mapped assets—not only the earlier forced-mount prototype. The loader-to-home handoff, all eight featured projects, direct project paths, `/full`, keyboard close, browser Back/Forward and project transitions, A24 Routes→Lab navigation, both tablet orientations, all four requested breakpoint edges, and a live tablet-project→desktop resize were checked. No app page errors occurred in the portfolio flows. Geometry checks against the original master were exact at the measured DOM anchors across all eight projects in both orientations. Remaining limitations and small differences are listed in [Remaining discrepancies and verification limits](#remaining-discrepancies-and-verification-limits).
 
 ## Scope and method
 
 - Compared local Vite preview (`5173`) with the captured upstream static build (`5174`), extracted from `sausageOps/httpsjesperlandberg.com` at `7155cbb62d4f0ea8c8be6f98c1aed4c6b1dd3d56`.
 - Main viewports were **768×1024** and **1024×768**. The prior responsive sweep sampled 649, 650, 651, 767, 768, 834, 991, 992, 1023, 1024, 1099, 1100, 1194, 1299, 1300, 1399, and 1400px widths.
 - Panel runs used the captured project records as a GraphQL fixture and mapped upstream image URLs to the existing local assets. Mux video requests were intentionally blocked; video playback and live DatoCMS/network behavior are not parity verdicts here.
-- All eight featured panels were sampled at both tablet orientations. Isolated touch and wheel actions were also exercised on home and in the Dogelon Mars project panel, with screenshots saved for review. Home gestures used a stable-ready check; project screenshots are temporal captures of an animated WebGL scene, so the accompanying DOM positions are the primary numeric evidence.
-- The tablet-runtime feasibility probe overrode only the app's `(max-width: 649px)` match in Playwright while preserving the actual CSS viewport at 768px or 1024px. That made the current `MasterMobile` integration mount; the captured runtime's own resize/layout code still saw the real tablet dimensions. This did **not** edit source, alter the live preview, or prove resize handoff at 649/650 or 1024/1025.
-- Final panel, gesture, routing, and runtime probes recorded **zero page errors**. The few console `ERR_FAILED` messages in the runtime probe were from the deliberately blocked Mux requests.
+- The original baseline audit sampled all eight featured panels at both tablet orientations and exercised touch/wheel actions against the legacy port and upstream master. Those old-port gesture deltas explain the migration decision; they are not a verdict on the new integrated runtime. Project-media swipes remain timing-sensitive under synthetic headless input.
+- The first tablet-runtime feasibility probe overrode only `(max-width: 649px)` in Playwright at 768px/1024px. That prototype was not integrated-app verification; its role is superseded by the post-implementation tests below.
+- After implementation, the actual integrated app was checked in both the Vite dev server and a production `vite preview` build. Boundary/resize tests covered 649, 650, 768, 1024, and 1025px; project/history/A24 flows used the captured GraphQL fixture and local images. No application `pageerror`s were recorded. Live Mux and some Carter Lab poster requests were blocked/unavailable and are listed as limitations.
 
 ## Findings
+
+The baseline comparison below describes the **legacy tablet renderer before migration** unless explicitly marked otherwise. The final captured-runtime implementation results are recorded in [Integrated acceptance results](#integrated-acceptance-results).
 
 ### 1. Responsive home layout and root sizing
 
@@ -80,21 +84,21 @@ The extracted upstream scroll implementation and local `Experience.js` use the s
 
 Landscape before/after touch captures: [upstream before](audit-evidence/tablet-parity/reference-dogelon-landscape-before-touch.png) · [upstream after](audit-evidence/tablet-parity/reference-dogelon-landscape-after-touch.png) · [legacy before](audit-evidence/tablet-parity/legacy-dogelon-landscape-before-touch.png) · [legacy after](audit-evidence/tablet-parity/legacy-dogelon-landscape-after-touch.png).
 
-### 4. Routes, history, `/full`, and A24 navigation
+### 4. Pre-migration route behavior and shared A24 baseline
 
 - **Normal legacy tablet path:** opening Nathan Riley stores `history.state.jesperHomeProject` and keeps the URL `/`; ArrowRight updates modal state to Casa Di Solare but keeps `/`. Two browser Back calls returned to home, and Forward restored Nathan Riley. The project modal therefore has state-history entries, but tablet project URLs are not used.
 - **Direct project routes:** upstream `/projects/nathan-riley` loads Nathan Riley (normalizes to a trailing slash on direct navigation). Legacy local at tablet replaces `/projects/nathan-riley` with `/` and returns to home.
 - **`/full`:** upstream `/full/` displays the Index with eight featured project links. Legacy local at tablet displays its not-found route (`Page not found | ReframeHK`).
 - **Captured runtime feasibility:** with `MasterMobile` mounted at actual 768×1024, the runtime opened a direct `/projects/nathan-riley` route. A separate tablet probe loaded `/full` (title `Index`, eight links), then direct Nathan Riley, and Back returned to `/full`. No page errors were recorded.
-- **Frozen shared A24 navigation:** on the current legacy tablet page, Routes opens its dropdown, the Lab link is `/routes/lab`, and selecting it navigates to `/routes/lab` with title `Lab — Routes`. In the forced-runtime portrait probe the A24 nav remained rendered at **[0, 964.19, 768, 59.81]**, matching the legacy measurement **[0, 964.20, 768, 59.80]**. The shared `A24Nav`, `Hud`, and navigation data are out of scope and must remain unchanged.
+- **Frozen shared A24 navigation baseline:** before migration, the legacy tablet page opened the Routes dropdown, exposed the Lab link at `/routes/lab`, and navigated there with title `Lab — Routes`. In the forced-runtime portrait probe the A24 nav remained rendered at **[0, 964.19, 768, 59.81]**, matching the legacy measurement **[0, 964.20, 768, 59.80]**. The integrated post-migration A24 test is recorded below. The shared `A24Nav`, `Hud`, and navigation data remained unchanged.
 
 ### 5. Data and remaining visual detail
 
 The local and upstream catalogues contain the same 23 records in the same order and the same eight featured projects; featured labels/previous-next ordering match. All 43 unique local project-image paths resolve. No catalogue rewrite is indicated. The screenshots also show a lower-priority award-shape difference on the legacy path (cup/model versus the reference’s cone-like award). The captured runtime naturally uses the reference asset/geometry. Videos were blocked, so live video fidelity remains unverified.
 
-### 6. Feasibility of reusing the captured runtime
+### 6. Initial forced-mount feasibility probe (superseded by integrated verification)
 
-The browser-only forced mount produced these measurements:
+Before implementation, the browser-only forced mount produced these measurements:
 
 | Viewport | Root | Home Casa card | Project sheet | First project media |
 |---|---:|---|---|---|
@@ -103,44 +107,58 @@ The browser-only forced mount produced these measurements:
 
 These are the captured upstream values to measurement precision. The screenshot evidence for the forced runtime is in [portrait home](audit-evidence/tablet-parity/tablet-runtime-home-768x1024.png), [portrait project](audit-evidence/tablet-parity/tablet-runtime-project-768x1024.png), and [landscape project](audit-evidence/tablet-parity/tablet-runtime-project-1024x768.png). The trial changes no file; it demonstrates that the existing captured bundle and local project-record adapter already render tablet dimensions and project routes.
 
-## Prioritized file-level migration plan — approval pending
+## Implemented tablet route boundary
 
-### P0 — Add an explicit tablet portfolio route boundary
+- **`src/App.jsx`:** keeps the frozen phone predicate `(max-width: 649px)` separate from the tablet predicate `(min-width: 650px) and (max-width: 1024px)`. The existing portfolio runtime owns home, `/full`, and valid `/projects/:slug` routes on phones/tablets; unknown project slugs still return home. Desktop stays on the legacy renderer and retains its existing route behavior.
+- **`src/jesper/MasterMobile.jsx`:** the existing wrapper is generalized as `MasterPortfolio` with a `range` prop and `data-master-range` marker. It still loads the same `public/mobile-master/bridge.js`, project adapter, router/history bridge, WebGL fallback, stylesheet, cleanup, and runtime teardown. There is one portfolio runtime and one host-owned browser history; no runtime fork was made.
+- **Resize handoff:** when leaving tablet for desktop with a project open, the media-query handler replaces the project URL with `/` and clears tablet-only history metadata *before* the legacy `JesperHome` mounts. At 1025px the legacy home renderer then presents its eight cards, without the stale tablet project. Re-entry at 1024px remounts one tablet runtime; the `master-mobile` class, master stylesheet, router globals, and master canvas are removed on desktop and restored on re-entry.
+- **Title handoff:** a tablet-only title observer corrects the captured runtime's stale `Index — Jesper Landberg` title after a Full-origin project closes to `/`. It only enforces `Jesper Landberg` at the tablet home URL; project and `/full` titles remain runtime-owned. A direct comparison against the upstream Full→Home transition now returns the same title.
+- **Frozen scope:** no changes were made to A24/HUD/navigation source, master CSS/bundle, project data, shaders, project pages, legacy renderer, or global input scalars.
 
-**`src/App.jsx`**
+## Integrated acceptance results
 
-- Add a tablet-portfolio predicate separate from the existing `mobile` flag; do not widen `mobile` for unrelated host routes or the shared nav.
-- For the approved tablet band, mount the existing captured portfolio runtime on home and `/full`, and allow valid `/projects/:slug` paths to reach its router rather than running the current tablet `replaceState('/', …)` redirect.
-- Keep unknown project slugs and all non-portfolio host routes on their current behavior. Keep the shared `Hud`/A24 component outside the portfolio island.
-- Preserve one browser-history owner. Reuse the existing `window.__masterRouter`/`__masterWriteHistory` bridge rather than adding a second router.
+All tests below used the actual integrated React/Vite app. The project catalogue was fixture-backed and remote image URLs were mapped to existing local assets; tests did not rely on live DatoCMS or Mux. The boundary and resize smoke was also repeated against the built app through `vite preview`.
 
-**`src/jesper/MasterMobile.jsx`**
+### Breakpoints, preloader, and home
 
-- Generalize the integration boundary for the approved tablet range (rename only if useful; no need to fork the captured runtime).
-- Preserve `localRecord`, `window.__masterData`, router/history delegation, WebGL fallback, cleanup, and the `master-mobile` class lifecycle. Test resize/unmount so the global class, stylesheet, route owner, and canvas do not leak when crossing into or out of the tablet band.
-- The forced mount already proves root sizing, home/project geometry, direct project URLs, `/full`, and Back are available. Do not edit the captured bundle or `master.css` unless a post-approval regression test identifies a concrete blocker.
+| CSS viewport | Integrated renderer | Observed result |
+|---|---|---|
+| 649×1024 | frozen `mobile` runtime | 8 cards; loader bars appeared then cleared |
+| 650×1024 | `tablet` runtime | lower tablet edge; 8 cards; loader cleared |
+| 768×1024 | `tablet` runtime | portrait; 8 cards; loader cleared |
+| 1024×768 | `tablet` runtime | inclusive upper edge, landscape; 8 cards; loader cleared |
+| 1025×768 | legacy renderer | tablet bundle not mounted; 8 legacy cards |
 
-### P1 — Lock the acceptance matrix before any visual refinements
+The **650×1024** integrated home card exactly matched upstream at **[−53.85, 289.28, 757.69, 445.44]**. At **768×1024**, root size was **13.5621px** and Casa measured **[5.15, 289.28, 757.69, 445.44]**; at **1024×768**, root size was **6.8267px** and Casa measured **[227.86, 216.96, 568.27, 334.08]**. The 650px edge was separately compared with upstream and matched exactly. Each tablet home run observed the preloader bars before settling at eight cards and one WebGL canvas.
 
-**New repeatable browser test (not present yet):** the repository has no Playwright/Vitest/Jest setup; `package.json` only defines `dev`, `build`, and `preview`. After approval, add a small Playwright parity/smoke script or test and a command to run it. Use the captured fixture and local assets, not live DatoCMS or Mux.
+The production-preview boundary run passed at all five widths with no page errors or unmatched fixture requests. Its portrait and landscape screenshots are [integrated home 768×1024](audit-evidence/tablet-parity/integrated-home-768x1024.png) and [integrated home 1024×768](audit-evidence/tablet-parity/integrated-home-1024x768.png).
 
-Test at 649/650/651, 768, 991/992, 1023/1024/1025, then the upstream container edges 1099/1100, 1299/1300, and 1399/1400. At 768×1024 and 1024×768 test: home layout; all eight project panels; isolated touch and wheel; ArrowRight/Left; Back/Forward; direct `/projects/:slug`; `/full`; close/Escape; A24 Routes→Lab; and resize/unmount cleanup. Include WebGL-unavailable fallback and a production-preview smoke.
+### All eight projects and visual geometry
 
-### P2 — Keep the legacy tablet renderer untouched unless reuse is rejected
+The actual integrated app opened all eight featured projects directly at **768×1024** and **1024×768**. Master-vs-integrated measurements matched exactly at sampled DOM anchors: **0px maximum delta** for the project sheet and every media rectangle in both orientations, with media counts matching for every project. The integrated screenshots are [Dogelon Mars portrait](audit-evidence/tablet-parity/integrated-dogelon-project-768x1024.png) and [Dogelon Mars landscape](audit-evidence/tablet-parity/integrated-dogelon-project-1024x768.png).
 
-For the recommended route-boundary approach, **do not** first modify `src/styles.css`, `src/jesper/JesperHome.jsx`, `src/jesper/webgl/Experience.js`, `src/jesper/components/Project.jsx`, `src/jesper/components/Loader.jsx`, or `src/jesper/jesper.css`; they remain the non-tablet path/fallback. Avoid changing `src/jesper/data/projects.js`, which already matches the captured catalogue and supplies the local media adapter.
+The separate integrated panel run also opened all eight projects, navigated through the featured sequence with ArrowRight and wrapped from Griflan back to Nathan Riley. A two-direction keyboard check passed in both orientations (Nathan Riley ←→ Griflan). Screenshots and geometry logs were checked against the same captured upstream build. Screenshot-level pixel comparison of Dogelon remains close but not literally pixel-identical: with A24 visible, changed pixels were **0.499%** at 768×1024 (mean RGB delta **1.139**) and **0.267%** at 1024×768 (mean delta **0.749**). With A24 hidden, the respective results were **0.394% / 0.581** and **0.298% / 1.035**. WebGL frame timing, antialiasing, and the retained host dock can affect these captures; no structural geometry discrepancy was found.
 
-If runtime reuse is not approved, the larger alternative is a legacy port: exact tablet root sizing in `src/styles.css`; home/project geometry and gesture/scroll behavior in `Experience.js`; panel/overflow markup and styles in `Project.jsx` and `jesper.css`; route/history and `/full` handling in `App.jsx`/`JesperHome.jsx`; then loader and award refinements. This is a materially larger and riskier path, and changing the document root there needs care because the shared A24 UI uses the same page.
+### Direct routes, Full mode, history, and transitions
 
-### Frozen files / explicit non-goals
+- Direct `/projects/:slug` routes loaded the correct project. All eight were exercised at both orientations; the dedicated host-flow run also covered direct `/projects/griflan`. An unknown project slug redirected to `/` and returned to the eight-card home.
+- `/full` opened the Index with eight featured links. Opening a project from Full, moving to the next project, browser Back to the prior project, then Back to Full all passed. The Full-origin Escape close settled to Featured with no project sheet and eight cards; its final title now matches upstream.
+- From home, opening Nathan Riley, ArrowRight to Casa Di Solare, Back to Nathan Riley, Back to home, and Forward to Nathan Riley passed after waiting for the visible route to settle. Escape and the project close link also returned to a settled home state in portrait and landscape.
+- Direct project URLs in the local host bridge omit the final slash (`/projects/nathan-riley`); the upstream static preview redirects to a slash-suffixed path (`/projects/nathan-riley/`). Both resolve to the same project and history flows work, but this URL-string difference remains; see below.
 
-Do not modify `src/components/A24Nav.jsx`, `src/components/A24Nav.css`, `src/components/Hud.jsx`, or `src/data/navigation.js`. Do not replace project catalogue/media, tune shared nav spacing, or adjust global input scalars before the tablet runtime boundary and controlled gesture tests are approved.
+### A24/HUD integration and resize cleanup
 
-## Caveats and requested decision
+At both tablet orientations, A24 remained present, the Routes menu exposed Lab/Writing/Studio/Art, and choosing Lab navigated to `/routes/lab` with title `Lab — Routes`. The master runtime, stylesheet, router globals, and root class were removed on that non-portfolio route; A24 remained. The shared A24/HUD source was not edited.
 
-- Live DatoCMS, Mux video, and remote font behavior were not measured; tests used captured records/local images and blocked video requests.
-- Headless SwiftShader readiness at 1024px varied; final home gesture checks waited for the loader to leave and the card position to settle. The 1.2-second project gesture readings remain animation-sensitive. Recheck on the target device/browser after the runtime boundary is approved.
-- The A24/HUD layer is intentionally retained, not compared as a replaceable asset. Its successful menu route and measured geometry are recorded above.
-- This report does not assert pixel-perfect parity for every animated frame or video. It does establish a very strong, measured path to reuse the already-captured runtime for the tested tablet geometries.
+Live resize sequences passed in both dev and production-preview runs: tablet home **1024→1025→1024→649→650** selected legacy desktop, tablet, mobile, and tablet runtimes at the correct edges. With Nathan Riley open at 1024px, resizing to 1025px normalized the URL to `/`, unmounted the tablet runtime, and rendered all eight legacy desktop cards. A production-preview direct project load at 1025px also retained the original desktop behavior: it replaced the project URL with `/` and rendered eight legacy cards. No duplicate canvas, stale router, CSS class, stylesheet, or page errors remained.
 
-**Approval requested:** approve the recommended captured-runtime tablet band (**650–1024px inclusive**) and the P0/P1 scope above, or specify a different breakpoint/legacy-port preference. I will wait for approval before modifying application source or beginning implementation.
+## Remaining discrepancies and verification limits
+
+1. **Direct-route slash canonicalization:** the upstream static preview returns `/projects/<slug>/`; the integrated Vite host bridge retains `/projects/<slug>`. Project content, direct navigation, Back/Forward, and project transitions all work. This is the only route-string difference observed; it was not changed because the bridge is shared with frozen mobile behavior and the existing tablet acceptance criteria require working routes, not a different history protocol.
+2. **Touch/swipe parity is not a definitive verdict:** earlier synthetic touch/wheel probes against the legacy port were timing-sensitive. Tablet now uses the same captured interaction runtime as upstream and no gesture constants were changed, but a controlled on-device swipe comparison remains unverified. Do not infer a new tablet mismatch from the old legacy-port deltas in sections 2–3.
+3. **Live media/network coverage:** DatoCMS was represented by captured fixture data; Mux playback requests were intentionally blocked. Live video playback and live CMS responses were not verified. The A24→Lab route itself passed, but Carter Lab poster URLs failed in this sandbox (`ERR_CONNECTION_CLOSED`), so those remote posters were not visually verified. These are environment/data coverage limits, not tablet-runtime page errors.
+4. **Small screenshot deltas:** the low pixelmatch/mean-RGB differences above remain across temporal WebGL captures even though measured layout anchors match. They are not evidence of a known static layout mismatch; exact frame-to-frame pixel parity is not claimed.
+5. **Legacy scope above 1024px:** the pre-migration award-shape difference noted in section 5 belongs to the intentionally retained legacy renderer and is outside this tablet-only change. No tablet discrepancy was found there because the captured runtime uses the upstream award asset/geometry.
+6. **Test harness persistence:** the integrated Playwright scripts and JSON logs were temporary under `/tmp/jesper-tablet-audit-browser/`; this repository has no configured browser-test framework. The report and four integrated screenshots are retained here. `npm run build` and the production-preview boundary/resize smoke passed; the full project/history/A24 matrix ran against the Vite dev app.
+
+The audit establishes the approved 650–1024px migration and verifies the requested tablet flows in the integrated application. The legacy renderer remains available outside that band; A24, HUD, and navigation remain frozen.
