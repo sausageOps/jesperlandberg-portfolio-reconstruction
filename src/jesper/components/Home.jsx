@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { featured, site } from '../data/projects.js';
 
-export default function Home({ experience, onOpen }) {
+export default function Home({ experience, onOpen, inert = false }) {
   const cards = useRef([]);
 
   useEffect(() => {
@@ -10,7 +10,7 @@ export default function Home({ experience, onOpen }) {
   }, [experience]);
 
   return (
-    <main id="jesper-content" tabIndex={-1} className="home route-layer" aria-label="Featured work">
+    <main id="jesper-content" tabIndex={-1} className="home route-layer" aria-label="Featured work" inert={inert || undefined}>
       <div className="sr-only">
         <h1>{site.name} — {site.role.toLowerCase()}</h1>
         <p>{site.summary}</p>

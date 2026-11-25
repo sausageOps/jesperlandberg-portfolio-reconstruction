@@ -194,6 +194,8 @@ export default class Experience {
     this.tick(performance.now());
     this.loadModels();
 
+    if (this.callbacks.mobileHomeBoot) return this.initMobileHomeBoot(projects);
+
     const assets = [...new Set(projects.map((project) => project.asset))];
     let completed = 0;
     let cursor = 0;
@@ -232,6 +234,104 @@ export default class Experience {
     }
     this.callbacks.onReady?.();
     return this;
+  }
+
+  // The reference clips three white card planes to accumulated preload
+  // progress, then flies them into place. These boot meshes use the same
+  // anchors and hand their positions to the existing home card flights.
+  async initMobileHomeBoot(projects) {
+    // Home registers its targets in a React effect after the experience mounts.
+    await Promise.race([new Promise((resolve) => requestAnimationFrame(resolve)), new Promise((resolve) => setTimeout(resolve, 3000))]);
+    if (this.destroyed) return this;
+    if (this.webgl) this.createMobileBootBars();
+    // Do not uncover the canvas until it has had a chance to render.
+    await Promise.race([new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))), new Promise((resolve) => setTimeout(resolve, 3000))]);
+    if (this.destroyed) return this;
+    this.callbacks.onLoaderPaint?.();
+
+    const assets = [...new Set(projects.map((project) => project.asset).filter(Boolean))];
+    let cursor = 0;
+    let completed = 0;
+    let acceptingProgress = true;
+    const updateProgress = (value) => {
+      this.progressTween?.kill();
+      this.progressTween = gsap.to(this.bootProgress, {
+        p: value, duration: this.reducedMotion ? 0 : 0.8, ease: 'power3.out',
+        onUpdate: () => this.callbacks.onProgress?.(this.bootProgress.p),
+      });
+    };
+    const worker = async () => {
+      while (!this.destroyed && acceptingProgress && cursor < assets.length) {
+        await this.loadTexture(assets[cursor++]);
+        if (!this.destroyed && acceptingProgress) updateProgress(++completed / assets.length);
+      }
+    };
+    const started = performance.now();
+    let timeout;
+    const loading = Promise.all(Array.from({ length: Math.min(6, assets.length) }, worker));
+    const timedOut = await Promise.race([loading.then(() => false), new Promise((resolve) => { timeout = setTimeout(() => resolve(true), 12000); })]);
+    clearTimeout(timeout);
+    if (this.destroyed) return this;
+    acceptingProgress = false;
+    const quick = performance.now() - started < 1000;
+    if (timedOut || !assets.length) updateProgress(1);
+    if (this.progressTween) await this.progressTween;
+    if (this.destroyed) return this;
+    if (quick && !this.reducedMotion) await new Promise((resolve) => setTimeout(resolve, 500));
+    if (this.destroyed) return this;
+    this.callbacks.onProgress?.(1);
+    // Bind the preloaded textures to the home cards only at release; starting
+    // every featured request during registration would bypass the six workers.
+    for (const card of this.homeCards) this.applyTexture(card.mesh.material, card.project.asset, card.project);
+    this.clearMobileBootBars();
+    this.ready = true;
+    this.interactive = true;
+    if (this.homeElements.length) {
+      this.layoutHome(true);
+      this.playHomeIntro(false);
+    }
+    this.callbacks.onReady?.();
+    return this;
+  }
+
+  createMobileBootBars() {
+    const bars = [...document.querySelectorAll('.loader-mobile-home .loader-bar')];
+    this.mobileBootBars = bars.map((el, index) => {
+      const project = this.featured.find((item) => item.slug === this.mobileBootSlugs?.[index]);
+      if (project) this.loadTexture(project.asset);
+      const material = this.makeSurface(this.blank, { width: 1, height: 1 });
+      material.uniforms.u_white.value = 1;
+      material.uniforms.u_shade.value = 0;
+      material.uniforms.u_sheetP.value = 0;
+      material.uniforms.u_corner.value = 0.5;
+      const mesh = new THREE.Mesh(this.quadGeometry, material);
+      this.homeGroup.add(mesh);
+      gsap.to(material.uniforms.u_alpha, { value: 1, duration: this.reducedMotion ? 0 : 0.4, ease: 'power1.out' });
+      return { el, mesh };
+    });
+  }
+
+  updateMobileBootBars() {
+    const count = this.mobileBootBars?.length || 0;
+    this.mobileBootBars?.forEach(({ el, mesh }, index) => {
+      const rect = el.getBoundingClientRect();
+      this.applyPose(mesh, rect);
+      const fill = Math.min(1, Math.max(0, this.bootProgress.p * count - index));
+      const uniforms = mesh.material.uniforms;
+      const dpr = this.renderer.getPixelRatio();
+      uniforms.u_clipOn.value = fill < 1 ? 1 : 0;
+      uniforms.u_clip.value.set(rect.left * dpr, (this.vh - rect.bottom) * dpr, rect.width * fill * dpr, rect.height * dpr);
+      uniforms.u_clipR.value = 0;
+    });
+  }
+
+  clearMobileBootBars() {
+    for (const { mesh } of this.mobileBootBars || []) {
+      gsap.killTweensOf(mesh.material.uniforms.u_alpha);
+      this.homeGroup.remove(mesh);
+      mesh.material.dispose();
+    }
+    this.mobileBootBars = null;
   }
 
   setupRenderer() {
@@ -280,6 +380,33 @@ export default class Experience {
     this.sky.renderOrder = -100;
     this.sky.frustumCulled = false;
     this.scene.add(this.sky);
+
+    // Reference Folio's phone-only screen-edge veil (DZyj3ghP.js, mountEnv).
+    // It is a WebGL layer above captions, not a gradient baked into the cards.
+    this.homeVeil = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.ShaderMaterial({
+        vertexShader: fullscreenVertex,
+        fragmentShader: /* glsl */ `
+          varying vec2 vUv;
+          uniform float u_alpha;
+          void main() {
+            float g = smoothstep(0.74, 1.0, vUv.y);
+            g = max(g, smoothstep(0.26, 0.0, vUv.y));
+            g *= g;
+            gl_FragColor = vec4(vec3(0.0), u_alpha * g);
+          }
+        `,
+        uniforms: { u_alpha: { value: 0 } },
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    this.homeVeil.renderOrder = 3.5;
+    this.homeVeil.frustumCulled = false;
+    this.homeVeil.visible = false;
+    this.scene.add(this.homeVeil);
 
     const floorGeometry = new THREE.PlaneGeometry(1, 1, 48, 24);
     floorGeometry.rotateX(-Math.PI / 2);
@@ -419,6 +546,8 @@ export default class Experience {
         u_shade: { value: textMode ? 0 : 1 },
         u_shadeS: { value: 1 },
         u_corner: { value: 0 },
+        u_border: { value: 0 },
+        u_borderColor: { value: new THREE.Color('#d9d9d9') },
         u_white: { value: 0 },
         u_wash: { value: new THREE.Color(0xffffff) },
         u_scrim: { value: 0 },
@@ -481,7 +610,7 @@ export default class Experience {
     this.clearHomeMeshes();
     this.homeCards = this.featured.map((project, index) => {
       const material = this.makeSurface(this.blank, project);
-      this.applyTexture(material, project.asset, project);
+      if (!this.callbacks.mobileHomeBoot || this.ready) this.applyTexture(material, project.asset, project);
       const mesh = new THREE.Mesh(this.quadGeometry, material);
       mesh.renderOrder = 0;
       this.homeGroup.add(mesh);
@@ -544,7 +673,7 @@ export default class Experience {
 
   layoutHome(immediate = false) {
     if (!this.featured?.length) return;
-    const previousSlug = this.getNearestHomeSlug() || this.activeHomeSlug || this.featured[1]?.slug;
+    let previousSlug = this.getNearestHomeSlug() || this.activeHomeSlug;
     this.homeBase = [];
     let cursor = 0;
     let gap = this.root;
@@ -581,6 +710,18 @@ export default class Experience {
     this.homeTotal = Math.max(1, cursor);
     this.homeContentHeight = Math.max(1, cursor - gap);
     this.homeOffset.max = Math.max(0, this.homeContentHeight - this.vh);
+    if (!this.homeLayoutReady && !this.desktop) {
+      // Reference bootTargets chooses the three unscrolled card centres nearest
+      // the viewport centre, orders them vertically, then centres the middle.
+      const targets = this.homeMetrics
+        .map((metric, index) => ({ index, center: metric.center }))
+        .sort((a, b) => Math.abs(a.center - this.vh / 2) - Math.abs(b.center - this.vh / 2))
+        .slice(0, 3)
+        .sort((a, b) => a.center - b.center);
+      this.mobileBootSlugs = targets.map(({ index }) => this.featured[index].slug);
+      previousSlug = this.mobileBootSlugs[Math.floor((targets.length - 1) / 2)] || previousSlug;
+    }
+    previousSlug ||= this.featured[1]?.slug;
     const selected = Math.max(0, this.featured.findIndex((project) => project.slug === previousSlug));
     if (!this.homeLayoutReady || immediate) {
       const position = this.homePositionForIndex(selected);
@@ -804,8 +945,23 @@ export default class Experience {
     const ordered = [...this.homeCards].sort((a, b) => {
       const ar = this.homeRects.get(a.project.slug);
       const br = this.homeRects.get(b.project.slug);
+      if (!this.desktop) {
+        return Math.abs((ar?.y || 0) + (ar?.height || 0) / 2 - this.vh / 2) - Math.abs((br?.y || 0) + (br?.height || 0) / 2 - this.vh / 2);
+      }
       return Math.abs((ar?.x || 0) + (ar?.width || 0) / 2 - this.vw / 2) - Math.abs((br?.x || 0) + (br?.width || 0) / 2 - this.vw / 2);
     });
+    // Reference slideIn staggers titles in vertical order starting at the
+    // first title whose top is in the phone viewport.
+    const mobileTitles = !this.desktop ? [...this.homeCards].sort((a, b) => {
+      const ar = this.homeRects.get(a.project.slug);
+      const br = this.homeRects.get(b.project.slug);
+      return (ar?.y || 0) - (br?.y || 0);
+    }) : [];
+    const firstMobileTitle = Math.max(0, mobileTitles.findIndex((card) => {
+      const rect = this.homeRects.get(card.project.slug);
+      const top = rect ? rect.y + rect.height - this.root - card.titleDims.height : 0;
+      return top > -1 && top < this.vh;
+    }));
     const barElements = [...document.querySelectorAll('.loader-bar')];
     const fallbackBars = [0, 1, 2].map((index) => ({
       x: this.vw / 2 - 79 + index * 58,
@@ -818,11 +974,13 @@ export default class Experience {
       return rect?.width ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : fallbackBars[index];
     });
     const bootCards = !returning && !this.reducedMotion
-      ? ordered.slice(0, 3).sort((a, b) => {
-          const ar = this.homeRects.get(a.project.slug);
-          const br = this.homeRects.get(b.project.slug);
-          return (ar?.x || 0) - (br?.x || 0);
-        })
+      ? !this.desktop && this.mobileBootSlugs?.length
+        ? this.mobileBootSlugs.map((slug) => this.homeCards.find((card) => card.project.slug === slug)).filter(Boolean)
+        : ordered.slice(0, 3).sort((a, b) => {
+            const ar = this.homeRects.get(a.project.slug);
+            const br = this.homeRects.get(b.project.slug);
+            return (ar?.x || 0) - (br?.x || 0);
+          })
       : [];
     let riseOrder = 0;
 
@@ -872,17 +1030,24 @@ export default class Experience {
           gsap.to(uniforms.u_alpha, { value: 1, duration: 0.7, delay: 0.05 + order * 0.05, ease: 'power1.out' });
         } else {
           const rect = this.homeRects.get(card.project.slug);
-          const direction = Math.sign((rect?.x || 0) + (rect?.width || 0) / 2 - this.vw / 2) || 1;
-          card.ox = direction * this.frustumW * 0.5;
-          const delay = 1.15 + riseOrder++ * 0.06;
-          gsap.to(card, { ox: 0, duration: 1.25, delay, ease: 'expo.out' });
-          gsap.to(uniforms.u_alpha, { value: 1, duration: 0.625, delay, ease: 'power1.out' });
+          if (!this.desktop && rect && !this.isRectVisible(rect)) {
+            // The reference leaves non-flight cards outside the viewport ready
+            // to appear when scrolled into view rather than animating them in.
+            uniforms.u_alpha.value = 1;
+          } else {
+            const direction = Math.sign((rect?.x || 0) + (rect?.width || 0) / 2 - this.vw / 2) || 1;
+            card.ox = this.desktop ? direction * this.frustumW * 0.5 : 0;
+            const delay = 1.15 + riseOrder++ * 0.06;
+            gsap.to(card, { ox: 0, duration: 1.25, delay, ease: 'expo.out' });
+            gsap.to(uniforms.u_alpha, { value: 1, duration: 0.625, delay, ease: 'power1.out' });
+          }
         }
       }
+      const titleOrder = this.desktop ? order : Math.max(0, mobileTitles.indexOf(card) - firstMobileTitle);
       gsap.to(card, {
         titleAlpha: 1,
         duration: 1.25,
-        delay: (returning ? 0.125 : 0.75) + order * 0.06,
+        delay: (returning ? 0.125 : 0.75) + titleOrder * 0.06,
         ease: returning ? 'power1.out' : 'expo.out',
       });
     });
@@ -942,6 +1107,12 @@ export default class Experience {
     const continuingReturn = route === 'home' && this.returningHome;
     const previousRoute = this.route;
     this.route = route;
+    // Home and project updates stop when their route leaves. Pause cached
+    // media on phone transitions; the destination's visibility pass resumes
+    // only what is actually on screen. Full has no touch preview.
+    if (!this.desktop && previousRoute !== route && (route === 'full' || route === 'project')) {
+      for (const video of this.videoCache.values()) this.playVideo(video, false);
+    }
     if (route === 'project') this.returningHome = false;
     if (this.webgl) {
       this.homeGroup.visible = route === 'home' || this.returningHome;
@@ -1636,6 +1807,17 @@ export default class Experience {
     this.setProjectSurfaceRest(prevSurface, rects.prev, 'prev', rects.prevEl);
     this.setProjectSurfaceRest(nextSurface, rects.next, 'next', rects.nextEl);
 
+    // Touch selection from the reference index grows the white project sheet
+    // from a centred five-percent seed; no mouse preview exists to hand off.
+    if (!this.desktop && transitionFrom?.fromFull) {
+      const size = Math.min(this.vw, this.vh) * 0.05;
+      const source = { left: (this.vw - size) / 2, top: (this.vh - size) / 2, width: size, height: size };
+      this.setProjectSurfaceRest(hero, source, 'hero', null);
+      hero.mesh.material.uniforms.u_corner.value = 0;
+      this.flyProjectSurface(hero, source, rects.panel, 'hero', rects.panelEl);
+      return;
+    }
+
     const source = transitionFrom && !direction
       ? transitionFrom.sourceRect || (transitionFrom.width ? transitionFrom : null)
       : null;
@@ -1708,7 +1890,7 @@ export default class Experience {
     });
   }
 
-  setupProjectTitle() {
+  setupProjectTitle(transitionFrom = null) {
     if (!this.webgl || !this.projectDom?.title) return;
     const material = this.makeSurface(this.blank, { width: 1, height: 1 }, true);
     material.uniforms.u_shade.value = 0;
@@ -1724,9 +1906,18 @@ export default class Experience {
       padY: 0,
       rasterW: 0,
       rasterH: 0,
+      flight: null,
     };
     this.projectTitle = item;
     this.rasterizeProjectTitle(item);
+    const source = transitionFrom?.fromFull && transitionFrom.sourceTitleRect;
+    if (!this.desktop && source?.width && source?.height && !this.reducedMotion) {
+      item.flight = { source, v: 0 };
+      gsap.to(item.flight, {
+        v: 1, duration: 1, ease: 'none',
+        onComplete: () => { if (this.projectTitle === item) { item.flight = null; this.syncProjectTitle(); } },
+      });
+    }
     this.syncProjectTitle();
     document.fonts?.ready.then(() => {
       if (this.projectTitle === item && item.el.isConnected) this.rasterizeProjectTitle(item);
@@ -1792,11 +1983,20 @@ export default class Experience {
     if (Math.abs(rect.width - item.rasterW) > 0.5 || Math.abs(rect.height - item.rasterH) > 0.5) {
       this.rasterizeProjectTitle(item);
     }
+    const progress = item.flight ? holeFlightEase(item.flight.v) : 1;
+    const from = item.flight?.source;
+    const mix = (a, b) => a + (b - a) * progress;
+    const flightRect = from ? {
+      left: mix(from.left, rect.left), top: mix(from.top, rect.top),
+      width: mix(from.width, rect.width), height: mix(from.height, rect.height),
+    } : rect;
+    const padX = item.padX * flightRect.width / rect.width;
+    const padY = item.padY * flightRect.height / rect.height;
     const titleRect = {
-      x: rect.left - item.padX,
-      y: rect.top - item.padY,
-      width: rect.width + item.padX * 2,
-      height: rect.height + item.padY * 2,
+      x: flightRect.left - padX,
+      y: flightRect.top - padY,
+      width: flightRect.width + padX * 2,
+      height: flightRect.height + padY * 2,
     };
     this.applyPose(item.mesh, titleRect, null, 0);
     const opacity = (node) => {
@@ -1809,7 +2009,9 @@ export default class Experience {
     const panelRect = panel.getBoundingClientRect();
     const dpr = this.renderer.getPixelRatio();
     const uniforms = item.mesh.material.uniforms;
-    uniforms.u_alpha.value = alpha;
+    uniforms.u_alpha.value = item.flight ? 1 : alpha;
+    uniforms.u_white.value = item.flight ? 1 - progress : 0;
+    uniforms.u_clipOn.value = item.flight ? 0 : 1;
     uniforms.u_clip.value.set(
       panelRect.left * dpr,
       (this.vh - panelRect.bottom) * dpr,
@@ -1817,12 +2019,13 @@ export default class Experience {
       panelRect.height * dpr,
     );
     uniforms.u_clipR.value = (parseFloat(getComputedStyle(panel).borderRadius) || 0) * dpr;
-    item.mesh.visible = this.route === 'project' && alpha > 0.001 && this.isRectVisible(titleRect, 100);
+    item.mesh.visible = this.route === 'project' && (item.flight || alpha > 0.001) && this.isRectVisible(titleRect, 100);
   }
 
   cleanupProjectTitle() {
     const item = this.projectTitle;
     if (!item) return;
+    if (item.flight) gsap.killTweensOf(item.flight);
     this.projectGroup?.remove(item.mesh);
     const texture = item.mesh.material.uniforms.u_texture.value;
     item.mesh.material.dispose();
@@ -1864,7 +2067,7 @@ export default class Experience {
     });
     this.buildAwards();
     this.setupProjectSurfaces(project, transitionFrom);
-    this.setupProjectTitle();
+    this.setupProjectTitle(transitionFrom);
     this.setupProjectPills();
     this.setupProjectClose();
     requestAnimationFrame(() => this.layoutProject(true, true));
@@ -2115,8 +2318,15 @@ export default class Experience {
   }
 
   buildAwards() {
-    if (!this.webgl || !this.awardGeometry || !this.projectDom || !this.project?.awards) return;
+    if (!this.webgl || !this.projectDom || !this.project?.awards) return;
+    // The deployed reference uses a six-sided procedural cone on project
+    // pages; retain the existing model on desktop and tablet.
+    if (!this.desktop && !this.mobileAwardGeometry) this.mobileAwardGeometry = normalizeGeometry(new THREE.ConeGeometry(0.4, 1, 6));
+    const geometry = this.desktop ? this.awardGeometry : this.mobileAwardGeometry;
+    if (!geometry) return;
     for (const old of this.projectAwards) {
+      gsap.killTweensOf(old);
+      gsap.killTweensOf(old.mesh.material.uniforms.u_alpha);
       this.projectGroup.remove(old.mesh);
       old.mesh.material.dispose();
     }
@@ -2131,13 +2341,16 @@ export default class Experience {
           u_color: { value: new THREE.Color('#d9a441') },
           u_light: { value: new THREE.Color('#fff2cc') },
           u_alpha: { value: this.reducedMotion ? 1 : 0 },
+          u_clip: { value: new THREE.Vector4() },
+          u_clipR: { value: 0 },
+          u_clipOn: { value: 0 },
         },
         transparent: true,
         depthTest: false,
         depthWrite: false,
         side: THREE.DoubleSide,
       });
-      const mesh = new THREE.Mesh(this.awardGeometry, material);
+      const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 5;
       this.projectGroup.add(mesh);
       const item = { mesh, el: elements[i], enter: this.reducedMotion ? 1 : 0 };
@@ -2195,6 +2408,7 @@ export default class Experience {
       pose.pos.y -= (1 - item.p) * this.frustumH * 0.5;
       item.mesh.position.copy(pose.pos);
       item.mesh.material.uniforms.u_alpha.value = item.p;
+      item.mesh.material.uniforms.u_border.value = !this.desktop && this.project.outlined && rect.height ? 1 / rect.height : 0;
       item.mesh.material.uniforms.u_clip.value.set(
         panelRect.left * dpr,
         (this.vh - panelRect.bottom) * dpr,
@@ -2213,6 +2427,10 @@ export default class Experience {
       award.mesh.position.copy(pose.pos);
       award.mesh.scale.setScalar(Math.max(0.0001, pose.scale.y * award.enter));
       award.mesh.rotation.y = this.clock * 0.6 + velocity * 4;
+      const u = award.mesh.material.uniforms;
+      u.u_clipOn.value = this.desktop ? 0 : 1;
+      u.u_clip.value.set(panelRect.left * dpr, (this.vh - panelRect.bottom) * dpr, panelRect.width * dpr, panelRect.height * dpr);
+      u.u_clipR.value = 1.5 * this.root * dpr;
     }
   }
 
@@ -2222,11 +2440,13 @@ export default class Experience {
     this.cleanupProjectPills();
     for (const item of this.projectMedia) {
       gsap.killTweensOf(item);
+      if (!this.desktop && item.image.video) this.playVideo(this.videoCache.get(item.image.video), false);
       this.projectGroup?.remove(item.mesh);
       item.mesh.material.dispose();
     }
     for (const award of this.projectAwards) {
       gsap.killTweensOf(award);
+      gsap.killTweensOf(award.mesh.material.uniforms.u_alpha);
       this.projectGroup?.remove(award.mesh);
       award.mesh.material.dispose();
     }
@@ -2313,10 +2533,10 @@ export default class Experience {
       });
       try {
         this.awardGeometry = normalizeGeometry(parts.length > 1 ? mergeGeometries(parts) : parts[0]);
-        this.buildAwards();
+        if (this.desktop || !this.mobileAwardGeometry) this.buildAwards();
       } catch {
         this.awardGeometry = normalizeGeometry(new THREE.CylinderGeometry(0.3, 0.45, 1, 8));
-        this.buildAwards();
+        if (this.desktop || !this.mobileAwardGeometry) this.buildAwards();
       }
     });
     loader.load('/assets/models/llama.glb', (gltf) => {
@@ -2763,6 +2983,7 @@ export default class Experience {
   }
 
   resize() {
+    const wasDesktop = this.desktop;
     this.vw = Math.max(1, window.innerWidth);
     this.vh = Math.max(1, window.innerHeight);
     this.root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
@@ -2788,6 +3009,7 @@ export default class Experience {
     }
     this.layoutHome(true);
     this.layoutProject(true);
+    if (wasDesktop !== undefined && wasDesktop !== this.desktop && this.projectDom) this.buildAwards();
   }
 
   tick = (now) => {
@@ -2801,10 +3023,20 @@ export default class Experience {
 
     this.flushScroll(elapsed / (1000 / 60));
     this.updateHome(dt);
+    if (this.webgl && this.mobileBootBars) this.updateMobileBootBars();
     this.syncProjectScrub(elapsed / (1000 / 60));
     this.updateProject(dt);
     if (this.ready) this.attachHomeVideos();
     if (!this.webgl) return;
+
+    if (this.homeVeil) {
+      const show = !this.desktop && this.route === 'home' && this.ready && this.homeCards.length > 0;
+      this.homeVeil.visible = show;
+      const alpha = this.homeVeil.material.uniforms.u_alpha;
+      if (!show) alpha.value = 0;
+      else if (this.reducedMotion) alpha.value = 1;
+      else alpha.value += (1 - alpha.value) * ease(dt, 8);
+    }
 
     this.syncBall(dt);
     this.stepTrail(dt);
@@ -2861,6 +3093,7 @@ export default class Experience {
     gsap.killTweensOf(this.hole);
     gsap.killTweensOf(this.ball);
     this.progressTween?.kill();
+    this.clearMobileBootBars();
     this.clearHomeMeshes();
     this.cancelProjectScrub();
     this.cleanupProject();
@@ -2877,6 +3110,9 @@ export default class Experience {
     for (const target of this.trail || []) target.dispose();
     this.floor?.material.dispose();
     this.sky?.material.dispose();
+    this.homeVeil?.geometry.dispose();
+    this.homeVeil?.material.dispose();
+    this.mobileAwardGeometry?.dispose();
     this.renderer?.dispose();
     // This GSAP instance belongs only to the homepage. Stop any remaining
     // flights and its ticker when the retained router leaves the island.

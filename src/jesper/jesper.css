@@ -545,6 +545,9 @@ html.no-webgl .jesper-scope .award-placeholder {
   .jesper-scope .project-media {
     flex: none;
   }
+  html.no-webgl .jesper-scope .project-media[data-outlined='true']::after {
+    content: ''; position: absolute; inset: 0; border: 1px solid #d9d9d9; pointer-events: none;
+  }
 
   .jesper-scope .project-close-inline {
     display: none;
@@ -577,4 +580,19 @@ html.no-webgl .jesper-scope .award-placeholder {
     width: 100%;
     max-width: none;
   }
+}
+
+/* Reference phone boot: invisible DOM targets under WebGL, with a black
+   first-paint cover. The DOM fills remain available for the no-WebGL path. */
+@media (max-width: 649px) {
+  .route-home .jesper-loader-scope .loader-mobile-home .loader-bars { gap: .8rem; }
+  .route-home .jesper-loader-scope .loader-mobile-home .loader-bar {
+    width: 5rem; height: .5rem; background: transparent;
+  }
+  .route-home .jesper-loader-scope .loader-mobile-home .loader-bar > span { transition: none; }
+  html.webgl .route-home .jesper-loader-scope .loader-mobile-home .loader-bar > span { visibility: hidden; }
+  /* Keep the cover above the host UI while exposing the already-painted GL
+     canvas. The cover continues to block input until the boot is released. */
+  html.webgl .route-home:has(.loader-mobile-home.loader-painted:not(.loader-leaving)) .jesper-scope { z-index: 101; pointer-events: none; }
+  html.webgl .route-home:has(.loader-mobile-home.loader-painted:not(.loader-leaving)) .jesper-scope .home-card { pointer-events: none; }
 }

@@ -3,23 +3,34 @@ import Experience from './webgl/Experience.js';
 import { featured, projects } from './data/projects.js';
 import Home from './components/Home.jsx';
 import Project from './components/Project.jsx';
+import MobileHud from './components/MobileHud.jsx';
+import FullIndex from './components/FullIndex.jsx';
 import './jesper.css';
 
-// Keep the reference experience inside the existing app. Project details are
-// local to this island because the host deliberately redirects /projects/*.
-export default function JesperHome({ active, onProgress, onReady }) {
+// The host keeps its original desktop routing. On phones, the pathname itself
+// identifies a project even on a fresh load; history records its entry view.
+const selectedProject = () => {
+  const mobile = window.matchMedia('(max-width: 649px)').matches;
+  const slug = mobile ? window.location.pathname.match(/^\/projects\/([^/]+)\/?$/)?.[1] : null;
+  return featured.find((item) => item.slug === (slug || window.history.state?.jesperHomeProject)) || null;
+};
+
+export default function JesperHome({ active, mode = 'home', onNavigateView, onProgress, onReady, onLoaderPaint, mobileHomeBoot, ready }) {
   const canvas = useRef(null);
   const [experience, setExperience] = useState(null);
-  const [project, setProject] = useState(() => featured.find((item) => item.slug === window.history.state?.jesperHomeProject) || null);
+  const [project, setProject] = useState(selectedProject);
   const [transitionFrom, setTransitionFrom] = useState(null);
   const [exitTo, setExitTo] = useState(null);
-  const callbacks = useRef({ onProgress, onReady });
-  callbacks.current = { onProgress, onReady };
+  const [profileOpen, setProfileOpen] = useState(false);
+  const callbacks = useRef({ onProgress, onReady, onLoaderPaint });
+  callbacks.current = { onProgress, onReady, onLoaderPaint };
 
   useEffect(() => {
     const instance = new Experience(canvas.current, {
       onProgress: (value) => callbacks.current.onProgress(value),
       onReady: () => callbacks.current.onReady(),
+      onLoaderPaint: () => callbacks.current.onLoaderPaint?.(),
+      mobileHomeBoot,
     });
     setExperience(instance);
     instance.init({ projects, featured });
@@ -27,44 +38,80 @@ export default function JesperHome({ active, onProgress, onReady }) {
   }, []);
 
   useEffect(() => {
-    if (experience) experience.setRoute(active ? (project ? 'project' : 'home') : 'inactive', project);
-  }, [experience, active, project]);
+    if (experience) experience.setRoute(active ? (project ? 'project' : mode) : 'inactive', project);
+  }, [experience, active, project, mode]);
+
+  useEffect(() => {
+    if (!active || !window.matchMedia('(max-width: 649px)').matches) return undefined;
+    // Let the host's route title update settle on a fresh direct load first.
+    const timer = window.setTimeout(() => { document.title = project?.title || (mode === 'full' ? 'Index — Jesper Landberg' : 'Jesper Landberg'); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [active, mode, project]);
+
+  // The island stays mounted while switching Full and Featured. An A24 Home
+  // navigation creates a fresh history entry, so discard a Full project that
+  // would otherwise remain visible over the newly selected homepage. A pop to
+  // a project entry must retain that entry's selection instead.
+  useEffect(() => {
+    if (selectedProject()) return;
+    setProject(null);
+    setTransitionFrom(null);
+    setExitTo(null);
+  }, [mode]);
 
   const openProject = useCallback((slug, rect) => {
     const selected = featured.find((item) => item.slug === slug);
     if (!selected) return;
-    window.history.pushState({ ...window.history.state, jesperHomeProject: slug }, '', window.location.href);
+    const url = window.matchMedia('(max-width: 649px)').matches ? `/projects/${slug}` : window.location.href;
+    window.history.pushState({ ...window.history.state, jesperHomeProject: slug }, '', url);
     setExitTo(null);
     setTransitionFrom(rect ? { ...rect, image: selected.asset } : null);
     setProject(selected);
   }, []);
 
+  const openFullProject = useCallback((slug, sourceTitleRect) => {
+    const selected = featured.find((item) => item.slug === slug);
+    if (!selected) return;
+    window.history.pushState({ ...window.history.state, jesperHomeProject: slug, jesperFullOrigin: true }, '', `/projects/${slug}`);
+    setExitTo(null);
+    setTransitionFrom({ fromFull: true, sourceTitleRect });
+    setProject(selected);
+  }, []);
+
   const finishClose = useCallback(() => {
-    if (window.location.pathname === '/' && window.history.state?.jesperHomeProject) {
-      const { jesperHomeProject, ...state } = window.history.state;
-      window.history.pushState(state, '', window.location.href);
+    const state = window.history.state || {};
+    const isMobileProject = window.matchMedia('(max-width: 649px)').matches && /^\/projects\//.test(window.location.pathname);
+    if (state.jesperFullOrigin && isMobileProject) {
+      // Full projects still close to Featured in the reference. Use the host
+      // navigation so its route state changes alongside the URL; the project
+      // entry remains in history for Back and Forward.
+      onNavigateView('/');
+    } else if (isMobileProject || (state.jesperHomeProject && (window.location.pathname === '/' || state.jesperFullOrigin))) {
+      const { jesperHomeProject, jesperFullOrigin, ...rest } = state;
+      window.history.pushState(rest, '', jesperFullOrigin ? '/full' : '/');
     }
     setExitTo(null);
     setTransitionFrom(null);
     setProject(null);
-  }, []);
+  }, [onNavigateView]);
 
   const closeProject = useCallback(() => {
     if (exitTo || !project) return;
     experience?.cancelProjectScrub();
-    if (experience?.reducedMotion || !experience?.webgl) return finishClose();
+    if (mode === 'full' || experience?.reducedMotion || !experience?.webgl) return finishClose();
     const rect = experience.getCenteredCardRect(project.slug);
     if (!rect) return finishClose();
     setExitTo(rect);
     experience.startProjectClose(rect, finishClose);
-  }, [project, experience, exitTo, finishClose]);
+  }, [project, experience, exitTo, finishClose, mode]);
 
   const navigateProject = useCallback((slug, direction, sourceRect = null) => {
     if (exitTo) return;
     const selected = featured.find((item) => item.slug === slug);
     if (!selected) return;
     experience?.prepareProjectNavigation();
-    window.history.pushState({ ...window.history.state, jesperHomeProject: slug }, '', window.location.href);
+    const url = window.matchMedia('(max-width: 649px)').matches ? `/projects/${slug}` : window.location.href;
+    window.history.pushState({ ...window.history.state, jesperHomeProject: slug }, '', url);
     setTransitionFrom({ direction, ...(sourceRect ? { sourceRect } : {}) });
     setExitTo(null);
     setProject(selected);
@@ -76,8 +123,8 @@ export default function JesperHome({ active, onProgress, onReady }) {
 
   useEffect(() => {
     const pop = () => {
-      if (window.location.pathname !== '/') return;
-      const selected = featured.find((item) => item.slug === window.history.state?.jesperHomeProject) || null;
+      if (window.location.pathname !== '/' && window.location.pathname !== '/full' && !/^\/projects\//.test(window.location.pathname)) return;
+      const selected = selectedProject();
       setProject(selected);
       setTransitionFrom(null);
       setExitTo(null);
@@ -109,10 +156,11 @@ export default function JesperHome({ active, onProgress, onReady }) {
     <div className={`jesper-scope${active ? '' : ' is-inactive'}`}>
       <canvas ref={canvas} className="webgl-canvas" aria-hidden="true" />
       {active && (project ? (
-        <div className="jesper-project-layer">
-          <Project project={project} featured={featured} experience={experience} transitionFrom={transitionFrom} exitTo={exitTo} onClose={closeProject} onNavigate={navigateProject} />
+        <div className="jesper-project-layer" id="jesper-content" tabIndex={-1}>
+          <Project project={project} featured={featured} experience={experience} transitionFrom={transitionFrom} exitTo={exitTo} onClose={closeProject} onNavigate={navigateProject} avoidDock />
         </div>
-      ) : <Home experience={experience} onOpen={openProject} />)}
+      ) : mode === 'full' ? <FullIndex experience={experience} ready={ready} onOpen={openFullProject} inert={profileOpen} /> : <Home experience={experience} onOpen={openProject} inert={profileOpen} />)}
+      {active && !project && ready && <MobileHud experience={experience} ready={ready} mode={mode} onNavigateView={onNavigateView} onOpenChange={setProfileOpen} />}
     </div>
   );
 }

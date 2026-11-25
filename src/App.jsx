@@ -8,13 +8,18 @@ import Studio from './components/studio/Studio.jsx';
 import { activeTopLevel, formatSegment, resolveSection } from './data/navigation.js';
 import { resolveCarterPage } from './carter/routes.js';
 import { labDescription } from './carter/data/lab-slugs.js';
+import { featured } from './jesper/data/projects.js';
 
 const cleanPath = (pathname) => pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
-// Links into the retired standalone portfolio land on the new homepage rather
-// than leaving a blank legacy route; no old project content is retained.
+// Project pages are part of the phone portfolio island. Keep the host's
+// original redirect on desktop/tablet and for unknown project slugs.
 const readLocation = () => {
   const path = cleanPath(window.location.pathname);
   if (/^\/projects(?:\/|$)/.test(path)) {
+    const slug = path.match(/^\/projects\/([^/]+)$/)?.[1];
+    if (window.matchMedia('(max-width: 649px)').matches && featured.some((item) => item.slug === slug)) {
+      return window.history.state?.jesperFullOrigin ? '/full' : '/';
+    }
     window.history.replaceState({}, '', '/');
     return '/';
   }
@@ -29,20 +34,30 @@ const CarterRoute = lazy(() =>
 
 export default function App() {
   const [path, setPath] = useState(readLocation);
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 649px)').matches);
   const [loading, setLoading] = useState(true);
   const section = useMemo(() => resolveSection(path), [path]);
   const carterPage = useMemo(() => resolveCarterPage(path), [path]);
-  const route = section ? section.menu.key : path === '/' ? 'home' : 'not-found';
-  const activeNav = activeTopLevel(path);
+  const route = section ? section.menu.key : path === '/' ? 'home' : path === '/full' && mobile ? 'full' : 'not-found';
+  const activeNav = route === 'full' ? 'life' : activeTopLevel(path);
 
-  // The reference loader follows the experience's real asset progress and
-  // leaves on the same 650ms schedule. Non-home pages wait for that handoff.
   const [progress, setProgress] = useState(0);
   const [preloaderDone, setPreloaderDone] = useState(false);
+  const [loaderPainted, setLoaderPainted] = useState(false);
+  const [mobileHomeBoot] = useState(() => window.location.pathname === '/' && !window.history.state?.jesperHomeProject && window.matchMedia('(max-width: 649px)').matches);
   const homeEntranceReady = !loading && preloaderDone;
   const finishLoading = useCallback(() => {
     setLoading(false);
-    window.setTimeout(() => setPreloaderDone(true), 650);
+    // The reference retains the loader anchors for 0.5s after boot release.
+    // Keep the existing handoff on other routes and at larger breakpoints.
+    window.setTimeout(() => setPreloaderDone(true), mobileHomeBoot ? 500 : 650);
+  }, [mobileHomeBoot]);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 649px)');
+    const changed = () => setMobile(query.matches);
+    query.addEventListener('change', changed);
+    return () => query.removeEventListener('change', changed);
   }, []);
 
   useEffect(() => {
@@ -58,7 +73,7 @@ export default function App() {
         ? `${carterPage.label} :: Writing`
         : section
           ? section.item ? `${section.item.title} — ${section.menu.label}` : section.menu.label
-          : route === 'home' ? 'Jesper Landberg' : 'Page not found | ReframeHK';
+          : route === 'home' ? 'Jesper Landberg' : route === 'full' ? 'Index — Jesper Landberg' : 'Page not found | ReframeHK';
   }, [route, section, carterPage]);
 
   useEffect(() => {
@@ -83,7 +98,7 @@ export default function App() {
   }, [navigate, path]);
 
   const routeContent = useMemo(() => {
-    if (route === 'home') return null;
+    if (route === 'home' || route === 'full') return null;
     if (route === 'myself' && section.item?.slug === 'contact') return <Contact appReady={homeEntranceReady} />;
     if (route === 'routes' && section.item?.slug === 'studio') return <Studio appReady={homeEntranceReady} />;
     if (carterPage && section) {
@@ -102,10 +117,10 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}`}>
-      {!preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} /></div>}
+      {!preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot} painted={loaderPainted} /></div>}
       <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
-        <a className="skip-link" href={route === 'home' ? '#jesper-content' : '#main-content'}>Skip to content</a>
-        {(route === 'home' || !preloaderDone) && <JesperHome active={route === 'home'} onProgress={setProgress} onReady={finishLoading} />}
+        <a className="skip-link" href={route === 'home' || route === 'full' ? '#jesper-content' : '#main-content'}>Skip to content</a>
+        {(route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
         <div id="main-content">{routeContent}</div>
         <Hud navRouteKey={route} activeKey={activeNav} activePath={path} loading={loading} onNavigate={navigate} onHome={goHome} />
       </div>
