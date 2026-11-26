@@ -1,0 +1,38 @@
+{
+  "home": {
+    "cards": 8,
+    "canvas": 1,
+    "range": "desktop",
+    "a24": true
+  },
+  "wheelMoved": true,
+  "dragMoved": true,
+  "open": {
+    "path": "/projects/casa-di-solare",
+    "title": "Casa Di Solare",
+    "sheet": true,
+    "related": 2
+  },
+  "next": {
+    "path": "/projects/the-lookback",
+    "title": "The Lookback",
+    "changed": true
+  },
+  "close": {
+    "path": "/",
+    "cards": 8,
+    "sheet": false
+  },
+  "full": {
+    "path": "/full",
+    "links": 8,
+    "names": 6
+  },
+  "tablet": {
+    "cards": 8,
+    "range": "tablet",
+    "canvas": 1
+  },
+  "pageErrors": [],
+  "consoleErrors": []
+}

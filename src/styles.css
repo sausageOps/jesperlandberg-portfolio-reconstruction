@@ -141,15 +141,13 @@ input:focus-visible {
    must not sit above the Full index and intercept project-link input. */
 .route-desktop-master #main-content { pointer-events: none; }
 
-/* The captured portfolio draws its Close pill in WebGL and keeps the mirrored
-   DOM link invisible. Expose that same empty hit target to keyboard and AT only
-   on desktop; suppress its utility-class paint so the canvas appearance stays
-   unchanged. The existing visible child continues to provide the hit area. */
+/* The WebGL Close pill reads its colors from this empty DOM hit target. Keep
+   it keyboard-accessible without painting a second background over the canvas. */
 @media (min-width: 1025px) {
   .route-desktop-master #__nuxt a[aria-label="Close project"] {
     visibility: visible;
-    background-color: transparent !important;
-    color: transparent !important;
+    -webkit-background-clip: text;
+    background-clip: text;
   }
   .route-desktop-master #__nuxt a[aria-label="Close project"]:focus-visible {
     z-index: 20;

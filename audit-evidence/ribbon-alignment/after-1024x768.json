@@ -1,0 +1,22 @@
+{
+  "info": {
+    "title": "Jesper Landberg",
+    "cards": 8,
+    "canvases": 1,
+    "range": "tablet",
+    "bank": null,
+    "loaderVisible": false,
+    "canvasRect": [
+      1024,
+      768
+    ]
+  },
+  "errors": [
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_CLOSED"
+  ]
+}
