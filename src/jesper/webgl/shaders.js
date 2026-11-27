@@ -24,6 +24,7 @@ const surfaceChunks = /* glsl */ `
   uniform float u_sheetC;
   uniform float u_sheetP;
   uniform float u_sheetV;
+  uniform float u_sheetRoll;
   uniform float u_hover;
   uniform float u_dent;
   uniform float u_leanA;
@@ -33,6 +34,92 @@ const surfaceChunks = /* glsl */ `
   uniform float u_pillA;
   uniform vec3 u_lens;
   uniform float u_lensA;
+
+  // Reel Flux screen-space edge system (src/engine/ReelFluxEngine.ts draw()).
+  // Edge weight is measured in CSS pixels against the viewport, so the flare,
+  // streak smear and wave follow the screen edges rather than a card's local
+  // world-space frame. Every home mesh (image, title, arrow) shares the same
+  // viewport-space parameters, which keeps the three layers registered.
+  uniform float u_edgeOn;
+  uniform float u_edgeMix;
+  uniform vec2 u_viewport;
+  uniform float u_edgeZone;
+  uniform float u_flare;
+  uniform float u_smear;
+  uniform float u_fringe;
+  uniform float u_freq;
+  uniform float u_wave;
+  uniform float u_waveShift;
+  uniform float u_dpr;
+
+  float edgeWeight(float x) {
+    if (u_edgeOn < 0.5 || u_edgeZone < 1.0) return 0.0;
+    float raw = max(0.0, (u_edgeZone - min(x, u_viewport.x - x)) / u_edgeZone);
+    return raw * raw;
+  }
+  // Cubic source warp (Reel Flux edgeWarp): the screen column at s reads the
+  // source column edgeWarp(s). It streaks and compresses the picture towards
+  // the outer edges and releases it again towards the centre. Outside the
+  // viewport the function continues affinely, so geometry that is still
+  // off-screen is translated, never folded.
+  float edgeWarpKick() { return (u_smear * u_edgeZone) / 3.0; }
+  float edgeWarpPx(float x) {
+    if (u_edgeOn < 0.5 || u_edgeZone < 1.0) return x;
+    if (x <= 0.0) return x + edgeWarpKick();
+    if (x >= u_viewport.x) return x - edgeWarpKick();
+    float k = u_smear / (3.0 * u_edgeZone * u_edgeZone);
+    if (x < u_edgeZone) {
+      float d = u_edgeZone - x;
+      return x + k * d * d * d;
+    }
+    if (x > u_viewport.x - u_edgeZone) {
+      float d = x - u_viewport.x + u_edgeZone;
+      return x - k * d * d * d;
+    }
+    return x;
+  }
+  float edgeWarpSlope(float x) {
+    if (u_edgeOn < 0.5 || u_edgeZone < 1.0) return 1.0;
+    if (x <= 0.0 || x >= u_viewport.x) return 1.0;
+    float k = u_smear / (u_edgeZone * u_edgeZone);
+    if (x < u_edgeZone) {
+      float d = u_edgeZone - x;
+      return max(0.1, 1.0 - k * d * d);
+    }
+    if (x > u_viewport.x - u_edgeZone) {
+      float d = x - u_viewport.x + u_edgeZone;
+      return max(0.1, 1.0 - k * d * d);
+    }
+    return 1.0;
+  }
+  // Edge flare and the velocity wave displace y only, so the horizontal warp
+  // above and these boundaries stay consistent across the layered meshes.
+  vec2 edgeDeform(vec2 p) {
+    if (u_edgeOn < 0.5) return p;
+    float weight = edgeWeight(p.x);
+    float phase = (p.x / max(u_viewport.x, 1.0)) * 6.2831853 * u_freq + u_waveShift;
+    float scale = (1.0 + weight * u_flare)
+      * (1.0 + cos(phase) * abs(u_wave) / max(u_viewport.y, 1.0) * 0.15);
+    return vec2(
+      p.x,
+      u_viewport.y * 0.5 + (p.y - u_viewport.y * 0.5) * scale + sin(phase) * u_wave
+    );
+  }
+  // Inverse of edgeWarpPx (three Newton steps, seeded from the screen column).
+  // The geometry boundary of each card ends up at the warped position, so the
+  // picture stretches towards the viewport edges exactly like the reference
+  // strip warp while neighbouring cards still share one boundary.
+  float edgeUnwarpPx(float y) {
+    if (u_edgeOn < 0.5 || u_edgeZone < 1.0) return y;
+    if (y <= 0.0) return y - edgeWarpKick();
+    if (y >= u_viewport.x) return y + edgeWarpKick();
+    float x = y;
+    for (int i = 0; i < 3; i++) {
+      x -= (edgeWarpPx(x) - y) / edgeWarpSlope(x);
+      x = clamp(x, -u_viewport.x * 0.5, u_viewport.x * 1.5);
+    }
+    return x;
+  }
 
   vec4 pillLens(vec4 w) {
     if (u_pillA < 0.0001 || u_lens.z < 0.0001 || abs(u_lensA) < 0.000001) return w;
@@ -57,7 +144,7 @@ const surfaceChunks = /* glsl */ `
   float sheetZ(float wx) { return -u_sheetD * sheetShape(sheetQ(wx)); }
   float sheetRoll(float wx) {
     if (u_sheetW < 0.001) return 0.0;
-    return SHEET_BANK * sheetShapeSlope(sheetQ(wx)) / PI * u_sheetC * u_sheetP;
+    return SHEET_BANK * sheetShapeSlope(sheetQ(wx)) / PI * u_sheetC * u_sheetP * u_sheetRoll;
   }
   float dome(vec2 uv) {
     vec2 q = uv * 2.0 - 1.0;
@@ -146,7 +233,29 @@ export const surfaceVertex = /* glsl */ `
       float t = clamp(w.y / u_bulgeH, -1.0, 1.0);
       w.z += u_bulgeA * (1.0 - t * t);
     }
-    gl_Position = projectionMatrix * viewMatrix * w;
+    vec4 clip = projectionMatrix * viewMatrix * w;
+    if (u_edgeOn > 0.5 && u_viewport.y > 1.0) {
+      // Screen-space ribbon pass. The edge flare and velocity wave are measured
+      // in CSS pixels against the viewport (y down from the top, like the
+      // reference strip warp) and then written back into clip space, so the
+      // deformation is anchored to the screen edge rather than to each card.
+      // The horizontal streak warp is a source-space remap and runs in the
+      // fragment stage, which keeps neighbouring cards seamless.
+      vec2 ndc = clip.xy / max(clip.w, 0.0001);
+      vec2 px = vec2((ndc.x * 0.5 + 0.5) * u_viewport.x, (0.5 - ndc.y * 0.5) * u_viewport.y);
+      // Horizontal streak: this vertex is drawn where the reference's
+      // edgeWarp(x) places it, so screen column s shows the source column
+      // edgeWarp(s) -- the picture compresses towards the outer edges.
+      float destX = edgeUnwarpPx(px.x);
+      // Flare and wave are evaluated at the *destination* column, so the
+      // boundary height is a function of the screen edge, not of the source.
+      float dyPx = edgeDeform(vec2(destX, px.y)).y - px.y;
+      // u_edgeMix fades the whole pass in after the intro flight and out again
+      // when the ribbon is not the visible surface, so nothing pops.
+      clip.x += (((destX - px.x) * u_edgeMix) / u_viewport.x) * 2.0 * clip.w;
+      clip.y -= ((dyPx * u_edgeMix) / u_viewport.y) * 2.0 * clip.w;
+    }
+    gl_Position = clip;
   }
 `;
 
@@ -334,8 +443,34 @@ export const surfaceFragment = /* glsl */ `
       gl_FragColor = vec4(rgb, alpha);
       return;
     }
-    vec4 tex = u_textMode > 0.5 ? texture2D(u_texture, vUv)
-                                : texture2D(u_texture, uvCover(u_res, u_size, vUv));
+    vec2 texUv = vUv;
+    vec4 tex = u_textMode > 0.5 ? texture2D(u_texture, texUv)
+                                : texture2D(u_texture, uvCover(u_res, u_size, texUv));
+    if (u_textMode < 0.5 && u_edgeOn > 0.5 && u_fringe > 0.001) {
+      // Blue / orange chromatic fringe along the deformed ribbon boundaries,
+      // following the reference's two coloured edge strokes: warm above the
+      // upper boundary, cool below the lower one, ramping in towards the screen
+      // edges. Everything is driven by the same screen-space edge weight as the
+      // flare, and the alpha is untouched, so no halo appears around edges.
+      float wgt = edgeWeight(gl_FragCoord.x / max(u_dpr, 0.5));
+      if (wgt > 0.0001) {
+        float amt = clamp(u_fringe * wgt * u_edgeMix * 1.35, 0.0, 1.0);
+        const vec3 WARM = vec3(1.0, 0.702, 0.278);
+        const vec3 COOL = vec3(0.31, 0.659, 1.0);
+        // Band widths are measured from the undeformed local edge, so the
+        // fringe hugs the curved boundary at every flare amount.
+        float top = 1.0 - smoothstep(0.0, 0.05, vUv.y);
+        float bottom = smoothstep(0.95, 1.0, vUv.y);
+        // Offset the two colour passes across the boundary, like a lens split.
+        float shift = (u_fringe * wgt * 2.0) / max(u_res.y, 1.0);
+        vec3 cold = texture2D(u_texture, uvCover(u_res, u_size, texUv + vec2(0.0, shift))).rgb;
+        vec3 warm = texture2D(u_texture, uvCover(u_res, u_size, texUv - vec2(0.0, shift))).rgb;
+        tex.rgb = mix(tex.rgb, cold, top * amt * 0.9);
+        tex.rgb = mix(tex.rgb, warm, bottom * amt * 0.9);
+        tex.rgb = mix(tex.rgb, COOL, top * amt * 0.55);
+        tex.rgb = mix(tex.rgb, WARM, bottom * amt * 0.55);
+      }
+    }
     if (u_labelMode > 0.5) {
       float disc = u_pillA > 0.0001 ? pillMask() : 0.0;
       vec3 ink = mix(vec3(0.0), vec3(1.0), disc);

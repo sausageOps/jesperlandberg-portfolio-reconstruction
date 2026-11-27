@@ -45,7 +45,19 @@ export default function App() {
   const carterPage = useMemo(() => resolveCarterPage(path), [path]);
   const route = section ? section.menu.key : path === '/' ? 'home' : path === '/full' ? 'full' : 'not-found';
   const activeNav = route === 'full' ? 'life' : activeTopLevel(path);
-  const masterPortfolio = route === 'home' || route === 'full';
+  // Phase 0 renderer gate. The editable WebGL reconstruction
+  // (`src/jesper/webgl/Experience.js`) now drives the desktop/tablet homepage
+  // ribbon, which is where the screen-space edge deformation lives. Mobile
+  // keeps the captured runtime untouched (its phone gallery, HUD and boot are
+  // unchanged) and `/full` keeps it too. `?renderer=master` restores the
+  // captured bundle for either route as an instant rollback while the
+  // reconstruction is verified in the browser.
+  const masterRendererForced = useMemo(() => {
+    const value = new URLSearchParams(window.location.search).get('renderer');
+    return value === 'master';
+  }, []);
+  const reconstructionHome = route === 'home' && !mobile && !masterRendererForced;
+  const masterPortfolio = (route === 'home' && !reconstructionHome) || route === 'full';
   const desktopMasterPortfolio = !mobile && !tablet && masterPortfolio;
 
   const [progress, setProgress] = useState(0);
@@ -161,8 +173,8 @@ export default function App() {
 
   return (
     <div className={`app route-${route}${routeClass}${desktopMasterPortfolio ? ' route-desktop-master' : ''}`}>
-      {!masterPortfolio && !preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot} painted={loaderPainted} /></div>}
-      <div inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
+      {!masterPortfolio && !preloaderDone && <div className="jesper-loader-scope"><Loader progress={progress} leaving={!loading} mobileHome={mobileHomeBoot && reconstructionHome} painted={loaderPainted} /></div>}
+      <div className={reconstructionHome ? 'jesper-host' : undefined} inert={route !== 'home' && loading || undefined} style={{ opacity: route !== 'home' && loading ? 0 : 1 }}>
         <a className="skip-link" href={route === 'home' || route === 'full' ? '#jesper-content' : '#main-content'}>Skip to content</a>
         {masterPortfolio ? <MasterPortfolio range={mobile ? 'mobile' : tablet ? 'tablet' : 'desktop'} onReady={finishLoading} onHistory={() => setPath(readLocation())} /> : (route === 'home' || route === 'full' || !preloaderDone) && <JesperHome active={route === 'home' || route === 'full'} mode={route === 'full' ? 'full' : 'home'} onNavigateView={navigate} onProgress={setProgress} onReady={finishLoading} onLoaderPaint={() => setLoaderPainted(true)} mobileHomeBoot={mobileHomeBoot && !preloaderDone && route === 'home'} ready={!loading} />}
         <div id="main-content">{routeContent}</div>

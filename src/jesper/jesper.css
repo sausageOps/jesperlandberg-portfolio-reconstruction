@@ -65,6 +65,16 @@ html.webgl.grabbing .jesper-scope, html.webgl.grabbing .jesper-scope * { cursor:
   z-index: 20;
 }
 
+/* With the reconstruction as the home renderer the WebGL layer paints the
+   cards, titles and arrows; the DOM anchors stay invisible but interactive
+   (keyboard focus and pointer targets) on top of the canvas. */
+html.webgl .jesper-host .jesper-scope .home-card { background: none; }
+html.webgl .jesper-host .jesper-scope .home-card-title,
+html.webgl .jesper-host .jesper-scope .home-card-arrow,
+html.webgl .jesper-host .jesper-scope .home-card::after,
+html.webgl .jesper-host .jesper-scope .home-card::before { visibility: hidden; }
+html.webgl .jesper-host .jesper-scope .home-card:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+
 .jesper-scope .card-run {
   position: absolute;
   inset: 0;
@@ -579,6 +589,37 @@ html.no-webgl .jesper-scope .award-placeholder {
   html.no-webgl .jesper-scope .home-card {
     width: 100%;
     max-width: none;
+  }
+}
+
+/* Desktop/tablet profile (bundle parity). Mobile uses MobileHud's phone-only
+   profile; this variant is hidden below 650px so mobile stays untouched. */
+.jesper-desktop-profile { display: none; }
+@media (min-width: 650px) {
+  .jesper-desktop-profile { display: block; position: fixed; inset: 0; z-index: 30; pointer-events: none; color: #fff; }
+  .jesper-desktop-profile[data-ready='false'] { opacity: 0; }
+  .jesper-desktop-profile .jesper-profile-outside { position: fixed; inset: 0; pointer-events: auto; }
+  .jesper-desktop-top { position: absolute; top: 2.5rem; right: 4rem; pointer-events: auto; z-index: 2; }
+  .jesper-desktop-top button { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-transform: uppercase; font-size: 1rem; line-height: 1.4; font-weight: 500; cursor: pointer; position: relative; }
+  .jesper-desktop-top button::before { content: ''; position: absolute; inset: -1.5rem; }
+  @media (hover: hover) { .jesper-desktop-top button:hover { opacity: .6; } }
+  .jesper-desktop-disc { position: fixed; left: 50%; top: 50%; width: 60rem; max-width: 90vw; transform: translate(-50%, -50%); pointer-events: none; }
+  .jesper-desktop-disc .jesper-profile-body { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; transition: opacity .22s ease-out; }
+  .jesper-desktop-profile[data-open='true'] .jesper-desktop-disc .jesper-profile-body { opacity: 1; transition: none; }
+  .jesper-desktop-disc .jesper-profile-intro { position: relative; width: 100%; max-width: 45rem; margin: 0; font-size: 1.4rem; line-height: 1.4; font-weight: 400; letter-spacing: -.02em; }
+  .jesper-desktop-disc .jesper-profile-measure { position: absolute; left: 0; top: 0; width: 100%; visibility: hidden; }
+  .jesper-desktop-disc .jesper-profile-line { display: block; overflow: hidden; }
+  .jesper-desktop-disc .jesper-profile-line > span, .jesper-desktop-disc .jesper-profile-line > a { display: block; }
+  .jesper-desktop-profile[data-open='true'] .jesper-desktop-disc .jesper-profile-line > span,
+  .jesper-desktop-profile[data-open='true'] .jesper-desktop-disc .jesper-profile-line > a { animation: jesper-profile-line 1.1s cubic-bezier(.16, 1, .3, 1) var(--line-delay, .2s) both; }
+  .jesper-desktop-disc .jesper-profile-credits { margin: 2.5rem 0 0; font-size: 1rem; line-height: 1.4; font-weight: 500; text-transform: uppercase; opacity: .6; }
+  .jesper-desktop-disc .jesper-profile-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 2rem; row-gap: .8rem; padding: 0; margin: 2.5rem 0 0; list-style: none; font-size: 1rem; line-height: 1.4; font-weight: 500; text-transform: uppercase; }
+  .jesper-desktop-disc .jesper-profile-links a { color: #fff; pointer-events: auto; transition: opacity .3s ease-out; }
+  @media (hover: hover) { .jesper-desktop-disc .jesper-profile-links a:hover { opacity: .6; } }
+  @media (prefers-reduced-motion: reduce) {
+    .jesper-desktop-profile[data-open='true'] .jesper-desktop-disc .jesper-profile-line > span,
+    .jesper-desktop-profile[data-open='true'] .jesper-desktop-disc .jesper-profile-line > a { animation: none; transform: none; }
+    .jesper-desktop-disc .jesper-profile-body { transition: none !important; }
   }
 }
 
