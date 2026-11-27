@@ -22,24 +22,6 @@ const mod = (v, n) => ((v % n) + n) % n;
 const centeredWrap = (v, n) => mod(v + n / 2, n) - n / 2;
 const rangeWrap = (v, min, max) => mod(v - min, max - min) + min;
 const ease = (dt, speed = 6.6) => 1 - Math.exp(-speed * Math.min(dt, 0.05));
-// Desktop/tablet ribbon geometry, adapted from the Reel Flux reference launch
-// configuration (src/config.ts REFERENCE_CONFIG). Values mirror the reference
-// so the resting composition and deformation read the same at equal viewports.
-const RIBBON = {
-  cardWidth: 0.45,
-  aspect: 5 / 3,
-  gap: 9,
-  heightShare: 0.72,
-  edgeZone: 0.26,
-  edgeZoneMin: 0.08,
-  flare: 1,
-  smear: 0.8,
-  fringe: 0.7,
-  frequency: 1,
-  smoothing: 9,
-  waveDepth: 0.07,
-  waveSpeed: 1800,
-};
 const expoInOut = gsap.parseEase('expo.inOut');
 const holeFlightCurves = [
   [0, 0, 0.094, 0.026, 0.124, 0.127, 0.157, 0.29],
@@ -154,12 +136,6 @@ export default class Experience {
     this.homeContentHeight = 1;
     this.homeOffset = { current: 0, target: 0, max: 0 };
     this.homeVelocity = 0;
-    this.ribbon = null;
-    this.ribbonWave = 0;
-    // The flare/wave fade in after the boot cards have landed, so the
-    // preloader flight and the ribbon deformation never fight each other.
-    this.ribbonMix = 0;
-    this.ribbonEdge = { zone: 0, flare: 0 };
     this.homeLayoutReady = false;
     this.activeHomeSlug = null;
     this.project = null;
@@ -384,9 +360,7 @@ export default class Experience {
     this.overlayScene = new THREE.Scene();
     this.scene.add(this.homeGroup, this.projectGroup);
     this.projectGroup.visible = false;
-    // The screen-space edge system needs enough segments to resolve the curved
-    // flare boundary smoothly across a card.
-    this.quadGeometry = new THREE.PlaneGeometry(1, 1, 64, 32);
+    this.quadGeometry = new THREE.PlaneGeometry(1, 1, 32, 16);
     this.blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
     this.blank.needsUpdate = true;
     this.arrowTexture = arrowTexture();
@@ -587,18 +561,6 @@ export default class Experience {
         u_sheetC: { value: 1 },
         u_sheetP: { value: textMode ? 1 : 1 },
         u_sheetV: { value: 0 },
-        u_sheetRoll: { value: 1 },
-        u_edgeOn: { value: 0 },
-        u_edgeMix: { value: 0 },
-        u_viewport: { value: new THREE.Vector2(1, 1) },
-        u_edgeZone: { value: 0 },
-        u_flare: { value: 0 },
-        u_smear: { value: 0 },
-        u_fringe: { value: 0 },
-        u_freq: { value: 1 },
-        u_wave: { value: 0 },
-        u_waveShift: { value: 0 },
-        u_dpr: { value: 1 },
         u_hover: { value: 0 },
         u_arrowMode: { value: 0 },
         u_crossMode: { value: 0 },
@@ -716,20 +678,14 @@ export default class Experience {
     let cursor = 0;
     let gap = this.root;
     if (this.desktop) {
-      // Reel Flux reference geometry (src/config.ts REFERENCE_CONFIG): every
-      // photo occupies the same slot, 45% of the viewport width, cropped to
-      // 5:3, separated by a 9px-equivalent gap. The native aspect ratio is kept
-      // in `u_size`, where uvCover crops rather than distorts it.
-      const width = Math.min(this.vw * RIBBON.cardWidth, this.vh * RIBBON.heightShare * RIBBON.aspect);
-      const height = width / RIBBON.aspect;
-      gap = this.ribbonGap();
+      const height = Math.min(this.vh * 0.435, 55 * this.root);
       this.homeMetrics = this.featured.map((project) => {
+        const width = height * (project.width / project.height);
         const metric = { width, height, center: cursor + width / 2 };
         cursor += width + gap;
         this.homeBase.push(metric.center);
         return metric;
       });
-      this.ribbon = { width, height, gap };
     } else {
       gap = 2 * this.root;
       const width = this.vw - 4 * this.root;
@@ -776,32 +732,6 @@ export default class Experience {
     this.updateHome(0, true);
   }
 
-  // The reference keeps its 9px gap at every viewport width.
-  ribbonGap() {
-    return RIBBON.gap;
-  }
-
-  // Screen-space edge parameters, ported from ReelFluxEngine.draw():
-  //   edgeZone = clamp(R * 26%, max(R * 8%, (R - V - gap) / 2))
-  //   flare    = cfg.flare * 0.9 * min(1, edgeZone / (cardHeight * 0.5))
-  // The zone is what makes the neighbouring photos peel upwards and downwards
-  // while the centred photo stays at its normal height.
-  ribbonEdgeParams() {
-    const width = this.ribbon?.width || 0;
-    const height = this.ribbon?.height || 1;
-    const gap = this.ribbon?.gap || 0;
-    if (!width) return { zone: 0, flare: 0 };
-    const zone = Math.max(
-      1,
-      Math.min(
-        this.vw * RIBBON.edgeZone,
-        Math.max(this.vw * RIBBON.edgeZoneMin, (this.vw - width - gap) / 2),
-      ),
-    );
-    const flare = RIBBON.flare * 0.9 * Math.min(1, zone / (height * 0.5));
-    return { zone, flare };
-  }
-
   homePositionForIndex(index) {
     const center = this.homeBase[index] || 0;
     return center;
@@ -824,11 +754,15 @@ export default class Experience {
   sheetParams() {
     const velocity = Math.min(1, Math.abs(this.homeVelocity));
     if (this.desktop) {
-      // The desktop ribbon is deliberately flat in world space: the Reel Flux
-      // reference has no resting curvature, and the silhouette now comes from
-      // the screen-space edge flare in the shaders. `A` stays 0 so the floor
-      // grid stays aligned with the ribbon's lower boundary.
-      return { W: 0, D: 0, T: 1, C: 0, S: 1, A: 0, V: 0 };
+      return {
+        W: this.frustumW,
+        D: this.frustumW * 0.2 * (1 + 1.1 * velocity),
+        T: 1.15,
+        C: 1,
+        S: 1,
+        A: -0.12 * this.frustumW,
+        V: velocity,
+      };
     }
     return { W: this.frustumW, D: this.frustumW * 0.18, T: 1, C: 0, S: 0.6, A: 0, V: velocity };
   }
@@ -873,120 +807,15 @@ export default class Experience {
     return pose;
   }
 
-  // Screen-space warp applied to a DOM rect, mirroring edgeUnwarpPx/edgeDeform
-  // in the shaders so the anchor and the mesh agree.
-  warpedAnchorRect(rect) {
-    const edge = this.ribbonEdge?.zone ? this.ribbonEdge : this.ribbonEdgeParams();
-    const zone = edge.zone;
-    if (!zone || !this.ribbon) return rect;
-    const wave = this.reducedMotion ? 0 : this.ribbonWave;
-    const shift = (this.homeOffset.current / Math.max(this.vw, 1)) * 1.5;
-    const warp = (x) => {
-      const k = RIBBON.smear / (3 * zone * zone);
-      const left = clamp(zone - x, 0, zone);
-      const right = clamp(x - this.vw + zone, 0, zone);
-      return x + k * left ** 3 - k * right ** 3;
-    };
-    const unwarp = (y) => {
-      // Newton inverse, matching edgeUnwarpPx.
-      let x = y;
-      for (let i = 0; i < 3; i += 1) {
-        const d = clamp(zone - x, 0, zone);
-        const r = clamp(x - this.vw + zone, 0, zone);
-        const slope = Math.max(0.1, 1 - (RIBBON.smear * (d * d + r * r)) / (zone * zone));
-        x -= (warp(x) - y) / slope;
-      }
-      return x;
-    };
-    const deformY = (y, x) => {
-      const raw = Math.max(0, (zone - Math.min(x, this.vw - x)) / zone);
-      const weight = raw * raw;
-      const phase = (x / Math.max(this.vw, 1)) * Math.PI * 2 * RIBBON.frequency + shift;
-      const scale = (1 + weight * edge.flare * this.ribbonMix) * (1 + (Math.cos(phase) * Math.abs(wave)) / this.vh * 0.15);
-      return this.vh / 2 + (y - this.vh / 2) * scale + Math.sin(phase) * wave;
-    };
-    const centre = rect.x + rect.width / 2;
-    const left = unwarp(rect.x);
-    const right = unwarp(rect.x + rect.width);
-    const midX = clamp(centre, 0, this.vw);
-    const top = deformY(rect.y, midX);
-    const bottom = deformY(rect.y + rect.height, midX);
-    return {
-      x: left,
-      y: Math.min(top, bottom),
-      width: Math.max(1, right - left),
-      height: Math.max(1, Math.abs(bottom - top)),
-    };
-  }
-
-  // Motion state for the desktop/tablet ribbon, adapted from ReelFluxEngine.tick:
-  // velocity in px/s drives the wave amplitude, and the wave relaxes
-  // exponentially so the ribbon is clean and flat once movement settles.
-  stepRibbon(dt, previousOffset) {
-    const booting = this.homeCards.some((card) => Boolean(card.boot));
-    if (this.reducedMotion) {
-      this.ribbonWave = 0;
-      this.ribbonMix = 1;
-      return;
-    }
-    const step = Math.max(dt, 0.001);
-    const mixTarget = booting || this.route !== 'home' ? 0 : 1;
-    this.ribbonMix += (mixTarget - this.ribbonMix) * (1 - Math.exp(-3 * step));
-    const velocity = (this.homeOffset.current - previousOffset) / step;
-    const normalized = Math.max(-1, Math.min(1, velocity / RIBBON.waveSpeed));
-    const target = normalized * this.vh * RIBBON.waveDepth;
-    this.ribbonWave += (target - this.ribbonWave) * (1 - Math.exp(-10 * step));
-    if (Math.abs(this.ribbonWave) < 0.05) this.ribbonWave = 0;
-    this.ribbonEdge = this.ribbonEdgeParams();
-  }
-
-  // Push the shared screen-space ribbon parameters into every home surface.
-  // Image, title and arrow meshes receive identical values, which keeps the
-  // three layers registered while the edge system deforms them.
-  syncRibbonUniforms() {
-    if (!this.webgl || !this.homeCards.length) return;
-    const edge = this.ribbonEdge?.zone ? this.ribbonEdge : this.ribbonEdgeParams();
-    // Only the desktop/tablet home ribbon uses the edge system. Mobile, the
-    // Full index and project surfaces keep u_edgeOn = 0 and render unchanged.
-    const on = this.desktop && (this.route === 'home' || this.returningHome) ? 1 : 0;
-    // The reference phases the wave from the ribbon position itself
-    // ((pos / R) * 1.5), so the bands travel with the photos.
-    const shift = (this.homeOffset.current / Math.max(this.vw, 1)) * 1.5;
-    const dpr = this.renderer ? this.renderer.getPixelRatio() : 1;
-    for (const card of this.homeCards) {
-      for (const mesh of [card.mesh, card.titleMesh, card.arrowMesh]) {
-        const u = mesh.material.uniforms;
-        u.u_edgeOn.value = on;
-        u.u_edgeMix.value = this.ribbonMix;
-        u.u_viewport.value.set(this.vw, this.vh);
-        u.u_edgeZone.value = edge.zone;
-        u.u_flare.value = edge.flare;
-        u.u_smear.value = RIBBON.smear;
-        u.u_fringe.value = RIBBON.fringe;
-        u.u_freq.value = RIBBON.frequency;
-        u.u_wave.value = this.reducedMotion ? 0 : this.ribbonWave;
-        u.u_waveShift.value = shift;
-        u.u_dpr.value = dpr;
-      }
-    }
-  }
-
   updateHome(dt, force = false) {
     if (!this.homeMetrics?.length || (!force && this.route !== 'home' && !this.returningHome)) return;
-    const previousOffset = this.homeOffset.current;
     if (!this.reducedMotion) {
-      // The desktop ribbon uses the reference's exponential settling
-      // (1 - exp(-smoothing * dt)) so a released drag keeps gliding and then
-      // comes to rest smoothly instead of stopping with a fixed damping step.
-      const damping = this.desktop
-        ? 1 - Math.exp(-RIBBON.smoothing * Math.max(dt, 0.001))
-        : 0.1 * Math.min((dt * 60) || 1, 2);
+      const damping = 0.1 * Math.min((dt * 60) || 1, 2);
       this.homeOffset.current += (this.homeOffset.target - this.homeOffset.current) * damping;
       this.homeOffset.current = Math.round(this.homeOffset.current * 100) / 100;
     } else this.homeOffset.current = this.homeOffset.target;
     const rawVelocity = Math.tanh((this.homeOffset.target - this.homeOffset.current) / (this.desktop ? 550 : 500));
     this.homeVelocity = this.desktop ? rawVelocity * Math.abs(rawVelocity) : rawVelocity;
-    if (this.desktop) this.stepRibbon(dt, previousOffset);
     const sheet = this.sheetParams();
     const cardSheet = this.desktop ? sheet : null;
     const bulge = this.desktop || this.reducedMotion ? 0 : rawVelocity * Math.abs(rawVelocity) * 0.22 * this.frustumH * 1.3;
@@ -1030,15 +859,11 @@ export default class Experience {
         }
       }
       this.homeRects.set(card.project.slug, rect);
-      // The DOM anchor is the click/hover target. On the desktop ribbon it is
-      // warped with the same screen-space functions as the mesh, so pointer
-      // targets stay on top of the visibly deformed card.
-      const anchor = !parked && this.desktop ? this.warpedAnchorRect(rect) : rect;
       if (card.el && !parked) {
         Object.assign(card.el.style, {
-          width: `${anchor.width}px`,
-          height: `${anchor.height}px`,
-          transform: `translate3d(${anchor.x}px, ${anchor.y}px, 0)`,
+          width: `${rect.width}px`,
+          height: `${rect.height}px`,
+          transform: `translate3d(${rect.x}px, ${rect.y}px, 0)`,
         });
       }
       if (!this.webgl) return;
@@ -1046,9 +871,7 @@ export default class Experience {
       pose.pos.x += card.ox;
       pose.pos.z += card.oz;
       card.mesh.position.copy(pose.pos);
-      // The reference ribbon has crisp, square card edges; mobile keeps its
-      // original rounding.
-      const corner = this.desktop ? 0 : (1.5 * this.root) / rect.height;
+      const corner = (this.desktop ? 2 : 1.5) * this.root / rect.height;
       card.mesh.material.uniforms.u_corner.value = corner;
       if (card.boot) {
         const progress = expoInOut(card.boot.value);
@@ -1092,10 +915,7 @@ export default class Experience {
       if (video) this.playVideo(video, this.route === 'home' && this.isRectVisible(rect, 100));
     });
     this.activeHomeSlug = this.getNearestHomeSlug();
-    if (this.webgl) {
-      this.syncRibbonUniforms();
-      this.syncFloor(sheet);
-    }
+    if (this.webgl) this.syncFloor(sheet);
   }
 
   syncFloor(sheet) {
@@ -1301,10 +1121,6 @@ export default class Experience {
       this.floor.visible = (route === 'home' || this.returningHome) && this.desktop;
     }
     document.documentElement.classList.toggle('grabbable', route === 'home' || route === 'project');
-    // Keep the edge system off any surface that is not the home ribbon, and
-    // drop the mix so returning home re-reveals the deformation.
-    if (route !== 'home' && !this.returningHome) this.ribbonMix = 0;
-    if (this.webgl) this.syncRibbonUniforms();
     if (route === 'home') {
       if (!this.desktop && previousRoute === 'full') this.centerOn(this.featured[0]?.slug, true);
       if (project?.slug) this.centerOn(project.slug, true);
@@ -2919,39 +2735,15 @@ export default class Experience {
     if (!this.interactive || !this.webgl || event?.ctrlKey) return;
     if (this.route === 'project' && this.projectDrag?.axis === 'x') return;
     if (this.route === 'home') {
+      this.homeOffset.target += deltaY + (deltaX || 0);
       if (this.desktop) {
-        // Reel Flux clamps a single wheel/drag delta to two stage widths and then
-        // integrates freely, which keeps the ribbon scrolling continuously
-        // instead of resisting the input as it moves away from the centre.
-        const movement = clamp(deltaY + (deltaX || 0), -this.vw * 2, this.vw * 2);
-        this.homeOffset.target += movement;
-        this.wrapHomeOffset();
-      } else this.homeOffset.target += deltaY + (deltaX || 0);
+        const delta = this.homeOffset.target - this.homeOffset.current;
+        this.homeOffset.target = this.homeOffset.current + Math.tanh(delta / this.vw) * this.vw;
+      }
     } else if (this.route === 'project') {
       this.projectOffset.target += deltaY;
       if (!this.desktop) this.projectOffset.target = clamp(this.projectOffset.target, 0, this.projectOffset.max);
     }
-  }
-
-  // Keep the accumulated offset small enough for float precision while the
-  // ribbon loops infinitely: shift target and current by whole cycles.
-  wrapHomeOffset() {
-    const cycle = this.homeTotal;
-    if (!this.desktop || !cycle || cycle < 1) return;
-    if (Math.abs(this.homeOffset.current) < cycle * 50) return;
-    const wrapped = Math.trunc(this.homeOffset.current / cycle) * cycle;
-    this.homeOffset.current -= wrapped;
-    this.homeOffset.target -= wrapped;
-  }
-
-  // Keyboard stepping for the desktop ribbon (reference: one photo per key),
-  // leaving the existing vertical scroll keys and project navigation intact.
-  stepRibbonKey(direction) {
-    if (!this.homeMetrics?.length || !this.ribbon) return;
-    const slot = this.ribbon.width + this.ribbon.gap;
-    const current = this.homeOffset.current;
-    const index = Math.round(current / slot);
-    this.homeOffset.target = (index + direction) * slot;
   }
 
   flushScroll(ratio) {
@@ -2997,29 +2789,18 @@ export default class Experience {
     this.bound.touchStart = (event) => {
       if (event.target.closest?.('.a24-nav')) return;
       const touch = event.targetTouches?.[0] || event;
-      this.touchScroll = { x: touch.clientX, y: touch.clientY, delta: 0, dx: 0 };
+      this.touchScroll = { y: touch.clientY, delta: 0 };
     };
     this.bound.touchMove = (event) => {
       if (!this.touchScroll) return;
       const touch = event.targetTouches?.[0] || event;
-      // Tablet keeps the desktop ribbon, so a touch drag there moves it
-      // horizontally; the phone gallery still scrolls vertically.
-      const dx = this.touchScroll.x - touch.clientX;
-      const dy = this.touchScroll.y - touch.clientY;
-      this.touchScroll.x = touch.clientX;
+      const delta = this.touchScroll.y - touch.clientY;
       this.touchScroll.y = touch.clientY;
-      this.touchScroll.delta = dy;
-      this.touchScroll.dx = dx;
-      if (this.desktop && this.route === 'home') this.pushScroll(0, dx * 3.25, event);
-      else this.pushScroll(dy * 3.25, 0, event);
+      this.touchScroll.delta = delta;
+      this.pushScroll(delta * 3.25, 0, event);
     };
     this.bound.touchEnd = (event) => {
-      const state = this.touchScroll;
-      if (state) {
-        if (this.desktop && this.route === 'home') {
-          if (state.dx) this.pushScroll(0, state.dx * 35, event);
-        } else if (state.delta) this.pushScroll(state.delta * 35, 0, event);
-      }
+      if (this.touchScroll?.delta) this.pushScroll(this.touchScroll.delta * 35, 0, event);
       this.touchScroll = null;
     };
     this.bound.touchCancel = () => { this.touchScroll = null; };
@@ -3027,14 +2808,6 @@ export default class Experience {
       if (event.metaKey || event.ctrlKey || event.altKey || (event.shiftKey && event.key !== ' ')) return;
       const target = event.target;
       if (target && (target.isContentEditable || /^(input|textarea|select|button|a|summary|audio|video)$/i.test(target.tagName))) return;
-      // Left/right step the desktop ribbon. They are handled before the
-      // vertical scroll keys so a project's own arrow navigation (which runs in
-      // the React layer) keeps priority.
-      if (this.desktop && this.route === 'home' && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-        event.preventDefault();
-        this.stepRibbonKey(event.key === 'ArrowRight' ? 1 : -1);
-        return;
-      }
       const page = this.vh * 0.9;
       let delta = 0;
       if (event.key === 'ArrowDown') delta = 100;
@@ -3154,9 +2927,6 @@ export default class Experience {
     };
     this.bound.pointerDown = (event) => {
       if (event.button !== 0 || event.pointerType !== 'mouse' || !this.interactive || !this.webgl || this.overlay || this.route !== 'home') return;
-      // A press on a ribbon card is a click/activation target, not a drag: the
-      // pointer events there must reach the anchor (and its hover state).
-      if (this.desktop && event.target.closest?.('.home-card')) return;
       if (event.target.closest('button, input, textarea, select, .hud, .full-index, .a24-nav')) return;
       this.suppressClick = false;
       this.drag = {
