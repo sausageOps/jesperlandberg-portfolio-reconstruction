@@ -5,3 +5,27 @@
    the visual and interactive positions remain identical. */
 #__nuxt [aria-label="Close project"] { bottom: calc(1.5rem + var(--master-close-lift, 0px)) !important; }
 #__nuxt[hidden] { display: none !important; }
+@media (min-width: 650px) {
+  html.master-mobile:not([data-gallery-dark="1"]),
+  html.master-mobile:not([data-gallery-dark="1"]) body,
+  html.master-mobile:not([data-gallery-dark="1"]) #__nuxt > div.bg-black,
+  html.master-mobile:not([data-gallery-dark="1"]) #__nuxt > div.bg-black > div.z-99.bg-black {
+    background-color: #e9e9e9;
+  }
+  #__nuxt main > div.s\:flex-row {
+    -moz-column-gap: 7px;
+    column-gap: 7px;
+  }
+  #__nuxt [data-gl="card"] {
+    height: min(43.5svh, 34vw);
+    border-radius: 0px;
+  }
+  /* The HUD is real DOM type (only the profile paragraph is drawn in WebGL),
+     so it cannot ask the renderer for its ink. It reads a variable instead:
+     the manager blends #151515 into #ffffff as the profile's black hole opens
+     and writes the result to --hud-ink every frame it changes. */
+  html.master-mobile #__nuxt .pointer-events-none.fixed.inset-0.z-40,
+  html.master-mobile #__nuxt .pointer-events-none.fixed.inset-0.z-40 * {
+    color: var(--hud-ink, #ffffff) !important;
+  }
+}
